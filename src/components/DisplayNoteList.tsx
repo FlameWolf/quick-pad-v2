@@ -1,16 +1,6 @@
 import { createMemo, createEffect, on, onMount, Show, For } from "solid-js";
 import { A } from "@solidjs/router";
-import {
-	activeNotes,
-	archivedNotes,
-	trashedNotes,
-	searchText,
-	archiveMultiple,
-	unarchiveMultiple,
-	trashMultiple,
-	restoreFromTrashMultiple,
-	permanentlyDeleteMultiple
-} from "@/stores/notes";
+import { activeNotes, archivedNotes, trashedNotes, searchText, archiveMultiple, unarchiveMultiple, trashMultiple, restoreFromTrashMultiple, permanentlyDeleteMultiple } from "@/stores/notes";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
@@ -31,16 +21,7 @@ interface Props {
 export default function DisplayNoteList(props: Props) {
 	const view = createMemo<View>(() => props.view ?? "active");
 	const { importFiles, importErrors, dismissErrors, exportNotes, exportAllNotes } = useFileIO();
-	const {
-		isSelectionMode,
-		selectedCount,
-		enterSelectionMode,
-		exitSelectionMode,
-		toggleSelection,
-		isSelected,
-		selectAll,
-		clearSelection
-	} = useNoteSelection();
+	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
@@ -114,12 +95,7 @@ export default function DisplayNoteList(props: Props) {
 
 	function formatImportErrors(): string {
 		const errs = importErrors();
-		return [
-			"Import failed for the following file",
-			errs.length === 1 ? emptyString : "s",
-			":<hr/>",
-			`<ul>${errs.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`
-		].join(emptyString);
+		return ["Import failed for the following file", errs.length === 1 ? emptyString : "s", ":<hr/>", `<ul>${errs.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`].join(emptyString);
 	}
 
 	function onTileClick(e: MouseEvent, noteId: UUID) {
@@ -261,12 +237,8 @@ export default function DisplayNoteList(props: Props) {
 						<Show when={view() === "active" && !isSearchMode()}>
 							<div class="d-flex flex-column gap-2 align-items-center">
 								<div class="d-flex gap-2 justify-content-center flex-wrap">
-									<A href="/notes/new" class="btn btn-primary">
-										Create a note
-									</A>
-									<button class="btn btn-outline-secondary" onClick={() => importFiles()}>
-										Import from files
-									</button>
+									<A href="/notes/new" class="btn btn-primary">Create a note</A>
+									<button class="btn btn-outline-secondary" onClick={() => importFiles()}>Import from files</button>
 								</div>
 								<div class="d-flex gap-3 justify-content-center flex-wrap">
 									<A href="/notes/archive" class="btn btn-link btn-sm text-decoration-none">
@@ -279,8 +251,7 @@ export default function DisplayNoteList(props: Props) {
 							</div>
 						</Show>
 					</div>
-				}
-			>
+				}>
 				<div>
 					<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
 						<Show
@@ -291,13 +262,7 @@ export default function DisplayNoteList(props: Props) {
 										<label for="sort-by-select" class="form-label text-muted small mb-0 me-1">
 											Sort:
 										</label>
-										<select
-											id="sort-by-select"
-											class="form-select form-select-sm sort-select"
-											value={sortBy()}
-											onChange={onSortFieldChange}
-											aria-label="Sort notes by"
-										>
+										<select id="sort-by-select" class="form-select form-select-sm sort-select" value={sortBy()} onChange={onSortFieldChange} aria-label="Sort notes by">
 											<option value="modifiedAt">Updated</option>
 											<option value="createdAt">Created</option>
 											<option value="title">Title</option>
@@ -305,32 +270,14 @@ export default function DisplayNoteList(props: Props) {
 											<option value="wordCount">Words</option>
 											<option value="characterCount">Characters</option>
 										</select>
-										<button
-											class="btn btn-outline-secondary btn-sm"
-											onClick={() => toggleSortDirection()}
-											aria-label={
-												sortDirection() === "asc"
-													? "Sort ascending, click to switch to descending"
-													: "Sort descending, click to switch to ascending"
-											}
-											title={sortDirection() === "asc" ? "Ascending" : "Descending"}
-										>
-											<i
-												class={`bi ${sortDirection() === "asc" ? "bi-sort-up" : "bi-sort-down"}`}
-												aria-hidden="true"
-											></i>
+										<button class="btn btn-outline-secondary btn-sm" onClick={() => toggleSortDirection()} aria-label={sortDirection() === "asc" ? "Sort ascending, click to switch to descending" : "Sort descending, click to switch to ascending"} title={sortDirection() === "asc" ? "Ascending" : "Descending"}>
+											<i class={`bi ${sortDirection() === "asc" ? "bi-sort-up" : "bi-sort-down"}`} aria-hidden="true"></i>
 										</button>
 									</div>
-									<button class="btn btn-outline-secondary btn-sm" onClick={() => enterSelectionMode()}>
-										Select
-									</button>
+									<button class="btn btn-outline-secondary btn-sm" onClick={() => enterSelectionMode()}>Select</button>
 									<Show when={view() === "active"}>
-										<button class="btn btn-outline-secondary btn-sm" onClick={() => importFiles()}>
-											Import
-										</button>
-										<button class="btn btn-outline-secondary btn-sm" onClick={() => exportAllNotes()}>
-											Export All
-										</button>
+										<button class="btn btn-outline-secondary btn-sm" onClick={() => importFiles()}>Import</button>
+										<button class="btn btn-outline-secondary btn-sm" onClick={() => exportAllNotes()}>Export All</button>
 										<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
 											<i class="bi bi-archive me-1" aria-hidden="true"></i>Archived
 										</A>
@@ -344,14 +291,9 @@ export default function DisplayNoteList(props: Props) {
 										</button>
 									</Show>
 								</>
-							}
-						>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => toggleSelectAll()}>
-								{allSelected() ? "Deselect All" : "Select All"}
-							</button>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => exitSelectionMode()}>
-								Cancel
-							</button>
+							}>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => toggleSelectAll()}>{allSelected() ? "Deselect All" : "Select All"}</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => exitSelectionMode()}>Cancel</button>
 						</Show>
 					</div>
 					<div class="notes-grid">
@@ -364,12 +306,7 @@ export default function DisplayNoteList(props: Props) {
 						</Show>
 						<For each={sortedNotes()}>
 							{note => (
-								<A
-									href={`/notes/${note.id}`}
-									class="card note-card text-decoration-none"
-									classList={{ selected: isSelectionMode() && isSelected(note.id) }}
-									onClick={e => onTileClick(e, note.id)}
-								>
+								<A href={`/notes/${note.id}`} class="card note-card text-decoration-none" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
 									<div class="card-body d-flex flex-column position-relative">
 										<Show when={isSelectionMode()}>
 											<input
@@ -403,22 +340,11 @@ export default function DisplayNoteList(props: Props) {
 						</For>
 					</div>
 					<Show when={isSelectionMode() && selectedCount() > 0}>
-						<SelectionActionBar
-							selectedCount={selectedCount()}
-							actions={selectionActions()}
-							onAction={handleSelectionAction}
-							onCancel={() => exitSelectionMode()}
-						/>
+						<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={() => exitSelectionMode()}/>
 					</Show>
 				</div>
 			</Show>
-			<Toast
-				message={formatImportErrors()}
-				type="error"
-				visible={importErrors().length > 0}
-				timeStamp={Date.now()}
-				onDismiss={() => dismissErrors()}
-			/>
+			<Toast message={formatImportErrors()} type="error" visible={importErrors().length > 0} timeStamp={Date.now()} onDismiss={() => dismissErrors()}/>
 		</>
 	);
 }

@@ -35,11 +35,7 @@ export const notes = () => state.notes;
 export const searchText = () => state.searchText;
 export const setSearchText = (value: string) => setState("searchText", value);
 
-const searchResults = createMemo(() =>
-	state.searchText.trim()
-		? state.notes.filter(note => contains(note.title, state.searchText) || contains(note.content, state.searchText))
-		: state.notes
-);
+const searchResults = createMemo(() => (state.searchText.trim() ? state.notes.filter(note => contains(note.title, state.searchText) || contains(note.content, state.searchText)) : state.notes));
 
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
 export const archivedNotes = createMemo(() => searchResults().filter(note => note.archivedAt && !note.deletedAt));

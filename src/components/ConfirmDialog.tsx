@@ -33,21 +33,14 @@ export default function ConfirmDialog() {
 				if (e.target === e.currentTarget) {
 					onCancel();
 				}
-			}}
-		>
+			}}>
 			<Show when={state.visible}>
 				<div class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-					<h5 id="confirm-title" class="confirm-title">
-						{state.title}
-					</h5>
+					<h5 id="confirm-title" class="confirm-title">{state.title}</h5>
 					<p class="confirm-message">{state.message}</p>
 					<div class="confirm-actions">
-						<button type="button" class="btn btn-outline-secondary" onClick={() => onCancel()}>
-							{state.cancelText}
-						</button>
-						<button type="button" class={`btn btn-${state.variant}`} onClick={() => onConfirm()} autofocus>
-							{state.confirmText}
-						</button>
+						<button type="button" class="btn btn-outline-secondary" onClick={() => onCancel()}>{state.cancelText}</button>
+						<button type="button" class={`btn btn-${state.variant}`} onClick={() => onConfirm()} autofocus>{state.confirmText}</button>
 					</div>
 				</div>
 			</Show>

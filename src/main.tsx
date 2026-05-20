@@ -5,13 +5,6 @@ import { Routes } from "./router";
 import { registerServiceWorker } from "./registerServiceWorker";
 import "./styles.css";
 
-render(
-	() => (
-		<Router root={App}>
-			{Routes()}
-		</Router>
-	),
-	document.getElementById("app")!
-);
+render(() => <Router root={App}>{Routes()}</Router>, document.getElementById("app")!);
 
 registerServiceWorker();

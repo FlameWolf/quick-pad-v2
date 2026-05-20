@@ -20,18 +20,10 @@ export default function SelectionActionBar(props: Props) {
 			<div class="d-flex gap-2 flex-wrap">
 				<For each={props.actions}>
 					{action => (
-						<button
-							type="button"
-							class={`btn btn-sm btn-${action.variant}`}
-							onClick={() => props.onAction(action.key)}
-						>
-							{action.label}
-						</button>
+						<button type="button" class={`btn btn-sm btn-${action.variant}`} onClick={() => props.onAction(action.key)}>{action.label}</button>
 					)}
 				</For>
-				<button type="button" class="btn btn-outline-secondary btn-sm" onClick={() => props.onCancel()}>
-					Cancel
-				</button>
+				<button type="button" class="btn btn-outline-secondary btn-sm" onClick={() => props.onCancel()}>Cancel</button>
 			</div>
 		</div>
 	);

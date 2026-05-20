@@ -167,7 +167,9 @@ textarea.form-control {
 	pointer-events: none;
 	transform: translateX(100%);
 	opacity: 0;
-	transition: transform 0.3s ease, opacity 0.3s ease;
+	transition:
+		transform 0.3s ease,
+		opacity 0.3s ease;
 }
 .toast-container[data-visible="true"] {
 	transform: translateX(0);

@@ -1,15 +1,6 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
-import {
-	getNote,
-	addNote,
-	updateNote,
-	archiveNote,
-	unarchiveNote,
-	trashNote,
-	restoreFromTrash,
-	permanentlyDelete
-} from "@/stores/notes";
+import { getNote, addNote, updateNote, archiveNote, unarchiveNote, trashNote, restoreFromTrash, permanentlyDelete } from "@/stores/notes";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
@@ -35,7 +26,7 @@ export default function EditNote() {
 	let editTextArea!: HTMLTextAreaElement;
 	const undoRedo = useUndoRedo<string>(editContent());
 
-	const displayContent = createMemo(() => (isEditing() ? editContent() : existingNote()?.content ?? ""));
+	const displayContent = createMemo(() => (isEditing() ? editContent() : (existingNote()?.content ?? "")));
 	const sentenceCount = createMemo(() => getSentenceCount(displayContent()));
 	const wordCount = createMemo(() => getWordCount(displayContent()));
 	const characterCount = createMemo(() => getCharacterCount(displayContent()));
@@ -283,102 +274,52 @@ export default function EditNote() {
 				</A>
 				<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
 					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-primary btn-sm" onClick={() => restoreNote()}>
-							Restore
-						</button>
+						<button class="btn btn-outline-primary btn-sm" onClick={() => restoreNote()}>Restore</button>
 						<Show when={existingNote()}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>
-								Export
-							</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>Export</button>
 						</Show>
-						<button class="btn btn-outline-danger btn-sm" onClick={() => permanentlyDeleteNote()}>
-							Delete Permanently
-						</button>
+						<button class="btn btn-outline-danger btn-sm" onClick={() => permanentlyDeleteNote()}>Delete Permanently</button>
 					</div>
 				</Show>
 				<Show when={!isCreateMode() && !isEditing() && !isTrashed()}>
 					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-primary btn-sm" onClick={() => startEditing()}>
-							Edit
-						</button>
+						<button class="btn btn-outline-primary btn-sm" onClick={() => startEditing()}>Edit</button>
 						<Show when={existingNote()}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>
-								Export
-							</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>Export</button>
 						</Show>
 						<Show
 							when={isArchived()}
 							fallback={
-								<button class="btn btn-outline-secondary btn-sm" onClick={() => archiveCurrent()}>
-									Archive
-								</button>
-							}
-						>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => unarchiveCurrent()}>
-								Unarchive
-							</button>
+								<button class="btn btn-outline-secondary btn-sm" onClick={() => archiveCurrent()}>Archive</button>
+							}>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => unarchiveCurrent()}>Unarchive</button>
 						</Show>
-						<button class="btn btn-outline-danger btn-sm" onClick={() => deleteNote()}>
-							Delete
-						</button>
+						<button class="btn btn-outline-danger btn-sm" onClick={() => deleteNote()}>Delete</button>
 					</div>
 				</Show>
 				<Show when={isEditing()}>
 					<div class="d-flex flex-wrap gap-2">
-						<button
-							class="btn btn-outline-secondary btn-sm"
-							disabled={!undoRedo.canUndo()}
-							onClick={() => doUndo()}
-							title="Undo"
-							aria-label="Undo"
-						>
+						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={() => doUndo()} title="Undo" aria-label="Undo">
 							<IconArrowBackUp stroke="2"/>
 						</button>
-						<button
-							class="btn btn-outline-secondary btn-sm"
-							disabled={!undoRedo.canRedo()}
-							onClick={() => doRedo()}
-							title="Redo"
-							aria-label="Redo"
-						>
+						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={() => doRedo()} title="Redo" aria-label="Redo">
 							<IconArrowForwardUp stroke="2"/>
 						</button>
-						<button class="btn btn-primary btn-sm" onClick={() => saveNote()}>
-							Save
-						</button>
-						<button class="btn btn-outline-secondary btn-sm" onClick={() => cancelEditing()}>
-							Cancel
-						</button>
+						<button class="btn btn-primary btn-sm" onClick={() => saveNote()}>Save</button>
+						<button class="btn btn-outline-secondary btn-sm" onClick={() => cancelEditing()}>Cancel</button>
 					</div>
 				</Show>
 			</div>
 			<Show when={!isEditing() && existingNote()}>
 				<h2 class="mb-3">{existingNote()!.title}</h2>
 				<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
-					<div class="text-muted small mb-3">
-						{existingNote()!.modifiedAt
-							? `Modified ${formatDate(existingNote()!.modifiedAt)}`
-							: `Created ${formatDate(existingNote()!.createdAt)}`}
-					</div>
+					<div class="text-muted small mb-3">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
 				</Show>
 				<div class="note-content">{existingNote()!.content}</div>
 			</Show>
 			<Show when={isEditing()}>
-				<input
-					value={editTitle()}
-					onInput={e => setEditTitle(e.currentTarget.value)}
-					type="text"
-					class="form-control form-control-lg mb-3"
-					placeholder="Title"
-				/>
-				<textarea
-					ref={editTextArea}
-					value={editContent()}
-					onInput={onContentInput}
-					class="form-control note-textarea"
-					placeholder="Start writing..."
-					rows="12"
-				></textarea>
+				<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg mb-3" placeholder="Title"/>
+				<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
 			</Show>
 			<Show when={displayContent()}>
 				<div class="d-flex flex-wrap gap-2 mt-3">

@@ -82,10 +82,7 @@ export function useNotesSync() {
 			const merged = mergeNotesByModifiedAt(notesAccessor(), remoteNotes);
 			replaceAllNotes(merged);
 			purgeExpiredTrash();
-			await writeJSON(
-				SYNC_FILENAME,
-				notesAccessor().map(toJSON)
-			);
+			await writeJSON(SYNC_FILENAME, notesAccessor().map(toJSON));
 			const now = new Date();
 			setLastSyncedAt(now);
 			persistLastSynced(now);

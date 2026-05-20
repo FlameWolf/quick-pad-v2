@@ -6,7 +6,6 @@ import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { useFileIO } from "@/composables/useFileIO";
 import { createNote } from "@/models/Note";
-import { IconArrowBackUp, IconArrowForwardUp } from "@tabler/icons-solidjs";
 import { getSentenceCount, getWordCount, getCharacterCount, emptyString, debounce } from "@/library";
 import type { UUID } from "crypto";
 
@@ -300,10 +299,10 @@ export default function EditNote() {
 				<Show when={isEditing()}>
 					<div class="d-flex flex-wrap gap-2">
 						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
-							<IconArrowBackUp stroke="2"/>
+							<i class="bi bi-arrow-counterclockwise"></i>
 						</button>
 						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
-							<IconArrowForwardUp stroke="2"/>
+							<i class="bi bi-arrow-clockwise"></i>
 						</button>
 						<button class="btn btn-primary btn-sm" onClick={saveNote}>Save</button>
 						<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing}>Cancel</button>

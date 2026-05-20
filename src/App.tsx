@@ -76,11 +76,10 @@ export default function App(props: AppProps) {
 
 	function scrollToPosition(position: "top" | "bottom") {
 		const element = document.documentElement;
-		if (position === "top") {
-			element.scrollTo({ top: 0, behavior: "smooth" });
-		} else if (position === "bottom") {
-			element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
-		}
+		element.scrollTo({
+			top: position === "top" ? 0 : element.scrollHeight,
+			behavior: "smooth"
+		});
 	}
 
 	const lastSyncedLabel = createMemo(() => {

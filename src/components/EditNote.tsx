@@ -274,39 +274,39 @@ export default function EditNote() {
 				</A>
 				<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
 					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-primary btn-sm" onClick={() => restoreNote()}>Restore</button>
+						<button class="btn btn-outline-primary btn-sm" onClick={restoreNote}>Restore</button>
 						<Show when={existingNote()}>
 							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>Export</button>
 						</Show>
-						<button class="btn btn-outline-danger btn-sm" onClick={() => permanentlyDeleteNote()}>Delete Permanently</button>
+						<button class="btn btn-outline-danger btn-sm" onClick={permanentlyDeleteNote}>Delete Permanently</button>
 					</div>
 				</Show>
 				<Show when={!isCreateMode() && !isEditing() && !isTrashed()}>
 					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-primary btn-sm" onClick={() => startEditing()}>Edit</button>
+						<button class="btn btn-outline-primary btn-sm" onClick={startEditing}>Edit</button>
 						<Show when={existingNote()}>
 							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>Export</button>
 						</Show>
 						<Show
 							when={isArchived()}
 							fallback={
-								<button class="btn btn-outline-secondary btn-sm" onClick={() => archiveCurrent()}>Archive</button>
+								<button class="btn btn-outline-secondary btn-sm" onClick={archiveCurrent}>Archive</button>
 							}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => unarchiveCurrent()}>Unarchive</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={unarchiveCurrent}>Unarchive</button>
 						</Show>
-						<button class="btn btn-outline-danger btn-sm" onClick={() => deleteNote()}>Delete</button>
+						<button class="btn btn-outline-danger btn-sm" onClick={deleteNote}>Delete</button>
 					</div>
 				</Show>
 				<Show when={isEditing()}>
 					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={() => doUndo()} title="Undo" aria-label="Undo">
+						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
 							<IconArrowBackUp stroke="2"/>
 						</button>
-						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={() => doRedo()} title="Redo" aria-label="Redo">
+						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
 							<IconArrowForwardUp stroke="2"/>
 						</button>
-						<button class="btn btn-primary btn-sm" onClick={() => saveNote()}>Save</button>
-						<button class="btn btn-outline-secondary btn-sm" onClick={() => cancelEditing()}>Cancel</button>
+						<button class="btn btn-primary btn-sm" onClick={saveNote}>Save</button>
+						<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing}>Cancel</button>
 					</div>
 				</Show>
 			</div>

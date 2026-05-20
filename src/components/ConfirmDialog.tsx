@@ -5,16 +5,16 @@ export default function ConfirmDialog() {
 	const { state, onConfirm, onCancel } = useConfirmDialog();
 
 	function onKeyDown(e: KeyboardEvent) {
-		if (!state.visible) {
+		const handlers: Record<string, (() => void) | undefined> = {
+			Escape: props.onCancel,
+			Enter: props.onConfirm
+		};
+		if (!(e.key in handlers)) {
 			return;
 		}
-		if (e.key === "Escape") {
-			e.preventDefault();
-			onCancel();
-		} else if (e.key === "Enter") {
-			e.preventDefault();
-			onConfirm();
-		}
+		e.preventDefault();
+		setIsOpen(false);
+		handlers[e.key]?.();
 	}
 
 	onMount(() => {
@@ -39,8 +39,8 @@ export default function ConfirmDialog() {
 					<h5 id="confirm-title" class="confirm-title">{state.title}</h5>
 					<p class="confirm-message">{state.message}</p>
 					<div class="confirm-actions">
-						<button type="button" class="btn btn-outline-secondary" onClick={() => onCancel()}>{state.cancelText}</button>
-						<button type="button" class={`btn btn-${state.variant}`} onClick={() => onConfirm()} autofocus>{state.confirmText}</button>
+						<button type="button" class="btn btn-outline-secondary" onClick={onCancel}>{state.cancelText}</button>
+						<button type="button" class={`btn btn-${state.variant}`} onClick={onConfirm} autofocus>{state.confirmText}</button>
 					</div>
 				</div>
 			</Show>

@@ -138,9 +138,9 @@ export default function App(props: AppProps) {
 						<img class="logo" src="/logo.svg" alt="QuickPad Logo"/>
 					</A>
 					<div class="me-auto position-relative">
-						<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={searchDisabled()} onInput={() => debouncedSearch()}/>
+						<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={searchDisabled()} onInput={debouncedSearch}/>
 						<Show when={isSearchMode()}>
-							<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={() => clearSearch()}></button>
+							<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={clearSearch}></button>
 						</Show>
 					</div>
 					<div class="d-flex align-items-center gap-2">
@@ -164,12 +164,12 @@ export default function App(props: AppProps) {
 								<Show
 									when={isSignedIn()}
 									fallback={
-										<button class="btn btn-outline-primary btn-sm" onClick={() => signIn()} aria-label="Sign in with Google">
+										<button class="btn btn-outline-primary btn-sm" onClick={signIn} aria-label="Sign in with Google">
 											<i class="bi bi-google" aria-hidden="true"></i>
 										</button>
 									}>
 									<div class="position-relative">
-										<button class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={() => toggleSyncMenu()} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+										<button class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
 											<Show
 												when={!isSyncing()}
 												fallback={
@@ -207,15 +207,15 @@ export default function App(props: AppProps) {
 												<div class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</div>
 												<div class="dropdown-divider"></div>
 												<label class="dropdown-item sync-dropdown-item d-flex align-items-center gap-2 mb-0">
-													<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input m-0" onChange={() => handleToggleAutoSync()}/>
+													<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input m-0" onChange={handleToggleAutoSync}/>
 													<span>Auto-sync</span>
 												</label>
 												<div class="dropdown-divider"></div>
-												<button class="dropdown-item sync-dropdown-item" onClick={() => handleSave()} disabled={isSyncing()}>
+												<button class="dropdown-item sync-dropdown-item" onClick={handleSave} disabled={isSyncing()}>
 													<i class="bi bi-cloud-upload me-2" aria-hidden="true"></i>
 													<span>Save to Drive</span>
 												</button>
-												<button class="dropdown-item sync-dropdown-item" onClick={() => handleLoad()} disabled={isSyncing()}>
+												<button class="dropdown-item sync-dropdown-item" onClick={handleLoad} disabled={isSyncing()}>
 													<i class="bi bi-cloud-download me-2" aria-hidden="true"></i>
 													<span>Load from Drive</span>
 												</button>
@@ -223,7 +223,7 @@ export default function App(props: AppProps) {
 													<div class="dropdown-header text-muted small px-3 py-1">Last synced: {lastSyncedLabel()}</div>
 												</Show>
 												<div class="dropdown-divider"></div>
-												<button class="dropdown-item sync-dropdown-item text-danger" onClick={() => handleSignOut()}>
+												<button class="dropdown-item sync-dropdown-item text-danger" onClick={handleSignOut}>
 													<i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>
 													<span>Sign out</span>
 												</button>
@@ -231,12 +231,12 @@ export default function App(props: AppProps) {
 										</Show>
 									</div>
 									<Show when={showSyncMenu()}>
-										<div class="sync-backdrop" onClick={() => closeSyncMenu()}></div>
+										<div class="sync-backdrop" onClick={closeSyncMenu}></div>
 									</Show>
 								</Show>
 							</Show>
 						</Show>
-						<button class="btn btn-secondary btn-sm" onClick={() => toggleTheme()}>
+						<button class="btn btn-secondary btn-sm" onClick={toggleTheme}>
 							<i class={`bi ${isDark() ? "bi-moon-stars-fill" : "bi-sun-fill"}`}></i>
 						</button>
 					</div>
@@ -254,7 +254,7 @@ export default function App(props: AppProps) {
 				</div>
 			</main>
 			<Show when={lastSyncMessage()}>
-				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} visible={!!lastSyncMessage()} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={() => dismissMessage()}/>
+				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} visible={!!lastSyncMessage()} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={dismissMessage}/>
 			</Show>
 			<ConfirmDialog/>
 		</>

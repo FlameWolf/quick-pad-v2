@@ -40,13 +40,14 @@ export default function DisplayNoteList(props: Props) {
 	const hasNotes = createMemo(() => sourceNotes().length > 0);
 	const allSelected = createMemo(() => sourceNotes().length > 0 && selectedCount() === sourceNotes().length);
 	const pageTitle = createMemo(() => {
-		if (view() === "archived") {
-			return "Archived";
+		switch (view()) {
+			case "archived":
+				return "Archived Notes";
+			case "trash":
+				return "Trash";
+			default:
+				return "Notes";
 		}
-		if (view() === "trash") {
-			return "Trash";
-		}
-		return "Notes";
 	});
 	const emptyMessage = createMemo(() => {
 		if (isSearchMode()) {
@@ -210,7 +211,7 @@ export default function DisplayNoteList(props: Props) {
 		exitSelectionMode();
 	});
 
-	createEffect(on(view, () => exitSelectionMode(), { defer: true }));
+	createEffect(on(view, exitSelectionMode, { defer: true }));
 
 	return (
 		<>
@@ -238,7 +239,7 @@ export default function DisplayNoteList(props: Props) {
 							<div class="d-flex flex-column gap-2 align-items-center">
 								<div class="d-flex gap-2 justify-content-center flex-wrap">
 									<A href="/notes/new" class="btn btn-primary">Create a note</A>
-									<button class="btn btn-outline-secondary" onClick={() => importFiles()}>Import from files</button>
+									<button class="btn btn-outline-secondary" onClick={importFiles}>Import from files</button>
 								</div>
 								<div class="d-flex gap-3 justify-content-center flex-wrap">
 									<A href="/notes/archive" class="btn btn-link btn-sm text-decoration-none">
@@ -270,14 +271,14 @@ export default function DisplayNoteList(props: Props) {
 											<option value="wordCount">Words</option>
 											<option value="characterCount">Characters</option>
 										</select>
-										<button class="btn btn-outline-secondary btn-sm" onClick={() => toggleSortDirection()} aria-label={sortDirection() === "asc" ? "Sort ascending, click to switch to descending" : "Sort descending, click to switch to ascending"} title={sortDirection() === "asc" ? "Ascending" : "Descending"}>
+										<button class="btn btn-outline-secondary btn-sm" onClick={toggleSortDirection} aria-label={sortDirection() === "asc" ? "Sort ascending, click to switch to descending" : "Sort descending, click to switch to ascending"} title={sortDirection() === "asc" ? "Ascending" : "Descending"}>
 											<i class={`bi ${sortDirection() === "asc" ? "bi-sort-up" : "bi-sort-down"}`} aria-hidden="true"></i>
 										</button>
 									</div>
-									<button class="btn btn-outline-secondary btn-sm" onClick={() => enterSelectionMode()}>Select</button>
+									<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>Select</button>
 									<Show when={view() === "active"}>
-										<button class="btn btn-outline-secondary btn-sm" onClick={() => importFiles()}>Import</button>
-										<button class="btn btn-outline-secondary btn-sm" onClick={() => exportAllNotes()}>Export All</button>
+										<button class="btn btn-outline-secondary btn-sm" onClick={importFiles}>Import</button>
+										<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>Export All</button>
 										<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
 											<i class="bi bi-archive me-1" aria-hidden="true"></i>Archived
 										</A>
@@ -286,14 +287,14 @@ export default function DisplayNoteList(props: Props) {
 										</A>
 									</Show>
 									<Show when={view() === "trash"}>
-										<button class="btn btn-outline-danger btn-sm" onClick={() => handleEmptyTrash()}>
+										<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
 											<i class="bi bi-trash me-1" aria-hidden="true"></i>Empty Trash
 										</button>
 									</Show>
 								</>
 							}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => toggleSelectAll()}>{allSelected() ? "Deselect All" : "Select All"}</button>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => exitSelectionMode()}>Cancel</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll}>{allSelected() ? "Deselect All" : "Select All"}</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode}>Cancel</button>
 						</Show>
 					</div>
 					<div class="notes-grid">
@@ -340,11 +341,11 @@ export default function DisplayNoteList(props: Props) {
 						</For>
 					</div>
 					<Show when={isSelectionMode() && selectedCount() > 0}>
-						<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={() => exitSelectionMode()}/>
+						<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
 					</Show>
 				</div>
 			</Show>
-			<Toast message={formatImportErrors()} type="error" visible={importErrors().length > 0} timeStamp={Date.now()} onDismiss={() => dismissErrors()}/>
+			<Toast message={formatImportErrors()} type="error" visible={importErrors().length > 0} timeStamp={Date.now()} onDismiss={dismissErrors}/>
 		</>
 	);
 }

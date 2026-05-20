@@ -53,7 +53,7 @@ export default function Toast(props: Props) {
 						</Show>
 					</span>
 					<span class="toast-text" innerHTML={props.message}></span>
-					<button class="btn-close align-self-start ms-auto" onClick={() => props.onDismiss()}></button>
+					<button class="btn-close align-self-start ms-auto" onClick={props.onDismiss}></button>
 				</div>
 			</Show>
 		</div>

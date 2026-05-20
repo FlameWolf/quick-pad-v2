@@ -75,18 +75,10 @@ export function fromJSON(data: NoteJSON): Note {
 	};
 }
 
-export function noteSummary(note: Note): string {
-	return getSummary(note.content);
-}
+export const noteSummary = (note: Note): string => getSummary(note.content);
 
-export function noteSentenceCount(note: Note): number {
-	return getSentenceCount(note.content);
-}
+export const noteSentenceCount = (note: Note): number => getSentenceCount(note.content);
 
-export function noteWordCount(note: Note): number {
-	return getWordCount(note.content);
-}
+export const noteWordCount = (note: Note): number => getWordCount(note.content);
 
-export function noteCharacterCount(note: Note): number {
-	return getCharacterCount(note.content);
-}
+export const noteCharacterCount = (note: Note): number => getCharacterCount(note.content);

@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onMount, onCleanup, Show, type JSX } from "solid-js";
+import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.min.css";
@@ -103,11 +103,13 @@ export default function App(props: AppProps) {
 		return ts.toLocaleDateString();
 	});
 
-	createEffect(() => {
-		if (isSignedIn() && autoSyncEnabled()) {
-			saveToCloud();
-		}
-	});
+	createEffect(
+		on([isSignedIn, autoSyncEnabled], ([signedIn, autoEnabled]) => {
+			if (signedIn && autoEnabled) {
+				saveToCloud();
+			}
+		})
+	);
 
 	onMount(() => {
 		purgeExpiredTrash();

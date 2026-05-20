@@ -4,6 +4,7 @@ import { createSignal, createMemo } from "solid-js";
 let tokenClient: any | null = null;
 let tokenExpiresAt = 0;
 let gsiReadyPromise: Promise<boolean> | null = null;
+let popupInFlight: Promise<string> | null = null;
 const CLIENT_ID = import.meta.env.VITE_GOOG_OAUTH_CLIENT_ID ?? emptyString;
 const SCOPES = "https://www.googleapis.com/auth/drive.appdata openid email profile";
 const SESSION_KEY = "google_session_hint";
@@ -159,16 +160,49 @@ function tryRestoreSession() {
 	setIsReady(true);
 }
 
+function requestToken(prompt: string): Promise<string> {
+	if (popupInFlight) {
+		return popupInFlight;
+	}
+	popupInFlight = (async () => {
+		try {
+			const loaded = await waitForGoogleIdentity();
+			if (!loaded || !initClient()) {
+				throw new Error("Google Sign-In is unavailable");
+			}
+			return await new Promise<string>((resolve, reject) => {
+				const original = tokenClient!.callback;
+				tokenClient!.callback = (response: any) => {
+					tokenClient!.callback = original;
+					original(response);
+					if (response.error) {
+						reject(new Error(response.error));
+					} else {
+						resolve(response.access_token);
+					}
+				};
+				const params: { prompt: string; hint?: string } = { prompt };
+				if (prompt === emptyString) {
+					const u = user();
+					if (u?.email) {
+						params.hint = u.email;
+					}
+				}
+				tokenClient!.requestAccessToken(params);
+			});
+		} finally {
+			popupInFlight = null;
+		}
+	})();
+	return popupInFlight;
+}
+
 async function signIn() {
 	if (!CLIENT_ID) {
 		return;
 	}
-	const loaded = await waitForGoogleIdentity();
-	if (!loaded || !initClient()) {
-		return;
-	}
 	try {
-		tokenClient!.requestAccessToken({ prompt: "consent" });
+		await requestToken("consent");
 	} catch {
 		console.log("Consent popup blocked or GSI not ready");
 	}
@@ -190,28 +224,7 @@ async function getAccessToken(): Promise<string> {
 	if (token && Date.now() < tokenExpiresAt - TOKEN_REFRESH_BUFFER_MS) {
 		return token;
 	}
-	const loaded = await waitForGoogleIdentity();
-	if (!loaded || !initClient()) {
-		throw new Error("Google Sign-In is unavailable");
-	}
-	return new Promise((resolve, reject) => {
-		const original = tokenClient!.callback;
-		tokenClient!.callback = (response: any) => {
-			tokenClient!.callback = original;
-			original(response);
-			if (response.error) {
-				reject(new Error(response.error));
-			} else {
-				resolve(response.access_token);
-			}
-		};
-		const params: { prompt: string; hint?: string } = { prompt: emptyString };
-		const u = user();
-		if (u?.email) {
-			params.hint = u.email;
-		}
-		tokenClient!.requestAccessToken(params);
-	});
+	return requestToken(emptyString);
 }
 
 export function useGoogleAuth() {

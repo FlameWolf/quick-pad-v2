@@ -35,12 +35,12 @@ export default function App(props: AppProps) {
 		applyTheme(next);
 	}
 
-	const debouncedSearch = debounce(() => {
+	const doSearch = debounce(() => {
 		setSearchText(searchInput?.value?.trim() ?? emptyString);
 	}, 300);
 
 	function clearSearch() {
-		debouncedSearch.cancel();
+		doSearch.cancel();
 		setSearchText(emptyString);
 		if (searchInput) {
 			searchInput.value = emptyString;
@@ -138,7 +138,7 @@ export default function App(props: AppProps) {
 						<img class="logo" src="/logo.svg" alt="QuickPad Logo"/>
 					</A>
 					<div class="me-auto position-relative">
-						<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={searchDisabled()} onInput={debouncedSearch}/>
+						<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={searchDisabled()} onInput={doSearch}/>
 						<Show when={isSearchMode()}>
 							<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={clearSearch}></button>
 						</Show>

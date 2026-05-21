@@ -19,6 +19,8 @@ export interface Note {
 	modifiedAt?: Date;
 	archivedAt?: Date;
 	deletedAt?: Date;
+	updatedInRemote?: boolean;
+	updatedInLocal?: boolean;
 }
 
 export function createNote(title: string, content: string): Note {

@@ -71,12 +71,12 @@ export default function EditNote() {
 		}
 	}
 
-	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
+	const pushUndo = debounce((value: string) => undoRedo.push(value), 300);
 
 	function onContentInput(e: Event) {
 		const value = (e.target as HTMLTextAreaElement).value;
 		setEditContent(value);
-		debouncedPushUndo(value);
+		pushUndo(value);
 	}
 
 	function doUndo() {
@@ -242,7 +242,7 @@ export default function EditNote() {
 	});
 
 	onCleanup(() => {
-		debouncedPushUndo.cancel();
+		pushUndo.cancel();
 		window.removeEventListener("resize", adjustTextAreaHeight);
 		window.removeEventListener("beforeunload", onBeforeUnload);
 	});

@@ -18,11 +18,9 @@ interface AppProps {
 export default function App(props: AppProps) {
 	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
 	let searchInput!: HTMLInputElement;
-
 	const { isDark, setIsDark, applyTheme } = useTheme();
 	const { isSignedIn, isReady, isConfigured, user, tryRestoreSession, signIn, signOut } = useGoogleAuth();
-	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, lastSyncMessage, saveToCloud, loadFromCloud, setAutoSync, dismissMessage } = useNotesSync();
-
+	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, lastSyncMessage, saveToCloud, loadFromCloud, requestSync, setAutoSync, dismissMessage } = useNotesSync();
 	const location = useLocation();
 	const [showSyncMenu, setShowSyncMenu] = createSignal(false);
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
@@ -35,12 +33,12 @@ export default function App(props: AppProps) {
 		applyTheme(next);
 	}
 
-	const doSearch = debounce(() => {
+	const debouncedSearch = debounce(() => {
 		setSearchText(searchInput?.value?.trim() ?? emptyString);
 	}, 300);
 
 	function clearSearch() {
-		doSearch.cancel();
+		debouncedSearch.cancel();
 		setSearchText(emptyString);
 		if (searchInput) {
 			searchInput.value = emptyString;
@@ -104,15 +102,19 @@ export default function App(props: AppProps) {
 	});
 
 	createEffect(
-		on([isSignedIn, autoSyncEnabled], ([signedIn, autoEnabled]) => {
+		on([isSignedIn, autoSyncEnabled], async ([signedIn, autoEnabled]) => {
 			if (signedIn && autoEnabled) {
-				saveToCloud();
+				await loadFromCloud();
+				await saveToCloud();
 			}
 		})
 	);
 
 	onMount(() => {
-		purgeExpiredTrash();
+		const purgedIds = purgeExpiredTrash();
+		if (purgedIds.length > 0) {
+			requestSync(purgedIds);
+		}
 		if (isConfigured()) {
 			readyTimeout = setTimeout(() => {
 				if (!isReady()) {
@@ -138,7 +140,7 @@ export default function App(props: AppProps) {
 						<img class="logo" src="/logo.svg" alt="QuickPad Logo"/>
 					</A>
 					<div class="me-auto position-relative">
-						<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={searchDisabled()} onInput={doSearch}/>
+						<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={searchDisabled()} onInput={debouncedSearch}/>
 						<Show when={isSearchMode()}>
 							<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={clearSearch}></button>
 						</Show>

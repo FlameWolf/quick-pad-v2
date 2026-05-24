@@ -5,7 +5,7 @@ import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { useFileIO } from "@/composables/useFileIO";
-import { createNote } from "@/models/Note";
+import { create } from "@/models/Note";
 import { getSentenceCount, getWordCount, getCharacterCount, emptyString, debounce } from "@/library";
 import type { UUID } from "crypto";
 
@@ -71,12 +71,12 @@ export default function EditNote() {
 		}
 	}
 
-	const pushUndo = debounce((value: string) => undoRedo.push(value), 300);
+	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
 
 	function onContentInput(e: Event) {
 		const value = (e.target as HTMLTextAreaElement).value;
 		setEditContent(value);
-		pushUndo(value);
+		debouncedPushUndo(value);
 	}
 
 	function doUndo() {
@@ -130,7 +130,7 @@ export default function EditNote() {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
 		if (isCreateMode()) {
-			const note = createNote(title, content);
+			const note = create(title, content);
 			addNote(note);
 			setIsEditing(false);
 			requestSync();
@@ -211,9 +211,8 @@ export default function EditNote() {
 		if (!ok) {
 			return;
 		}
-		const idToPurge = note.id;
-		permanentlyDelete(idToPurge);
-		requestSync([idToPurge]);
+		permanentlyDelete(note.id);
+		requestSync();
 		navigate("/notes/trash");
 	}
 
@@ -242,7 +241,7 @@ export default function EditNote() {
 	});
 
 	onCleanup(() => {
-		pushUndo.cancel();
+		debouncedPushUndo.cancel();
 		window.removeEventListener("resize", adjustTextAreaHeight);
 		window.removeEventListener("beforeunload", onBeforeUnload);
 	});

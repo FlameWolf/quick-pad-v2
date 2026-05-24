@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { noteCharacterCount, noteSentenceCount, noteWordCount, type Note } from "@/models/Note";
+import { characterCount, sentenceCount, wordCount, type Note } from "@/models/Note";
 
 export type SortField = "createdAt" | "modifiedAt" | "title" | "sentenceCount" | "wordCount" | "characterCount";
 export type SortDirection = "asc" | "desc";
@@ -34,11 +34,11 @@ function compareNotes(a: Note, b: Note, field: SortField): number {
 			return aTime - bTime;
 		}
 		case "sentenceCount":
-			return noteSentenceCount(a) - noteSentenceCount(b);
+			return sentenceCount(a) - sentenceCount(b);
 		case "wordCount":
-			return noteWordCount(a) - noteWordCount(b);
+			return wordCount(a) - wordCount(b);
 		case "characterCount":
-			return noteCharacterCount(a) - noteCharacterCount(b);
+			return characterCount(a) - characterCount(b);
 	}
 }
 

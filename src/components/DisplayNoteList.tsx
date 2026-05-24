@@ -7,7 +7,7 @@ import { useNoteSort, type SortField } from "@/composables/useNoteSort";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { emptyString } from "@/library";
-import { noteCharacterCount, noteSentenceCount, noteSummary, noteWordCount, type Note } from "@/models/Note";
+import { characterCount, sentenceCount, summary, wordCount, type Note } from "@/models/Note";
 import SelectionActionBar, { type SelectionAction } from "./SelectionActionBar";
 import Toast from "./Toast";
 import type { UUID } from "crypto";
@@ -179,7 +179,7 @@ export default function DisplayNoteList(props: Props) {
 					return;
 				}
 				permanentlyDeleteMultiple(ids);
-				requestSync(ids);
+				requestSync();
 				exitSelectionMode();
 				break;
 			}
@@ -202,9 +202,8 @@ export default function DisplayNoteList(props: Props) {
 		if (!ok) {
 			return;
 		}
-		const idsToPurge = trashed.map(n => n.id);
-		permanentlyDeleteMultiple(idsToPurge);
-		requestSync(idsToPurge);
+		permanentlyDeleteMultiple(trashed.map(n => n.id));
+		requestSync();
 	}
 
 	onMount(() => {
@@ -324,17 +323,17 @@ export default function DisplayNoteList(props: Props) {
 										<h6 class="card-title text-truncate mb-1">{note.title}</h6>
 										<small class="text-muted mb-2">{formatDate(note.modifiedAt ?? note.createdAt)}</small>
 										<div class="d-flex gap-2 flex-wrap small">
-											<Show when={noteSentenceCount(note)}>
-												<div class="badge text-bg-secondary">{noteSentenceCount(note)} sentences</div>
+											<Show when={sentenceCount(note)}>
+												<div class="badge text-bg-secondary">{sentenceCount(note)} sentences</div>
 											</Show>
-											<Show when={noteWordCount(note)}>
-												<div class="badge text-bg-secondary">{noteWordCount(note)} words</div>
+											<Show when={wordCount(note)}>
+												<div class="badge text-bg-secondary">{wordCount(note)} words</div>
 											</Show>
-											<Show when={noteCharacterCount(note)}>
-												<div class="badge text-bg-secondary">{noteCharacterCount(note)} characters</div>
+											<Show when={characterCount(note)}>
+												<div class="badge text-bg-secondary">{characterCount(note)} characters</div>
 											</Show>
 										</div>
-										<p class="card-text text-muted small flex-grow-1 overflow-hidden">{noteSummary(note)}</p>
+										<p class="card-text text-muted small flex-grow-1 overflow-hidden">{summary(note)}</p>
 									</div>
 								</A>
 							)}

@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 import { activeNotes, addNote } from "@/stores/notes";
-import { createNote, type Note } from "@/models/Note";
+import { create, type Note } from "@/models/Note";
 import { emptyString, isTextFile } from "@/library";
 import JSZip from "jszip";
 
@@ -49,7 +49,7 @@ export function useFileIO() {
 					try {
 						const content = await file.text();
 						const title = file.name.replace(/\.txt$/i, emptyString) || "Untitled";
-						addNote(createNote(title, content));
+						addNote(create(title, content));
 						count++;
 					} catch {
 						setImportErrors([...importErrors(), { fileName: file.name, message: "Failed to read file" }]);

@@ -5,6 +5,8 @@ const wordMatchRegExp = /[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}]+/u;
 
 export const emptyString = "";
 export const summaryLength = 100;
+export const LEGACY_STORAGE_KEY = "quick-pad-notes";
+export const STORAGE_KEY = "qp-note:";
 export const getSummary = (text: string): string => {
 	return text.length > summaryLength ? text.substring(0, summaryLength) + "\u2026" : text;
 };

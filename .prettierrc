@@ -5,6 +5,7 @@
 	"htmlWhitespaceSensitivity": "css",
 	"jsxBracketSameLine": true,
 	"jsxSingleQuote": false,
+	"singleAttributePerLine": false,
 	"printWidth": 281474976710656,
 	"proseWrap": "never",
 	"quoteProps": "as-needed",
@@ -14,6 +15,5 @@
 	"trailingComma": "none",
 	"useEditorConfig": false,
 	"useTabs": true,
-	"vueIndentScriptAndStyle": true,
 	"withNodeModules": false
 }

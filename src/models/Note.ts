@@ -23,15 +23,71 @@ export interface Note {
 	deletedAt?: Date;
 	purgedAt?: Date;
 	stateChangedAt?: Date;
+	summary?: string;
+	sentenceCount?: number;
+	wordCount?: number;
+	characterCount?: number;
+}
+
+function computeDerived(note: Note): void {
+	note.summary = getSummary(note.content);
+	note.sentenceCount = getSentenceCount(note.content);
+	note.wordCount = getWordCount(note.content);
+	note.characterCount = getCharacterCount(note.content);
 }
 
 export function create(title: string, content: string): Note {
-	return {
+	const note: Note = {
 		id: crypto.randomUUID() as UUID,
 		title,
 		content,
-		createdAt: new Date()
+		createdAt: new Date(),
+		modifiedAt: undefined,
+		archivedAt: undefined,
+		deletedAt: undefined,
+		purgedAt: undefined,
+		stateChangedAt: undefined
 	};
+	computeDerived(note);
+	return note;
+}
+
+export function update(note: Note, title: string, content: string): void {
+	note.title = title;
+	note.content = content;
+	note.modifiedAt = new Date();
+	computeDerived(note);
+}
+
+export function archive(note: Note): void {
+	const now = new Date();
+	note.archivedAt = now;
+	note.stateChangedAt = now;
+}
+
+export function unarchive(note: Note): void {
+	note.archivedAt = undefined;
+	note.stateChangedAt = new Date();
+}
+
+export function trash(note: Note): void {
+	const now = new Date();
+	note.deletedAt = now;
+	note.stateChangedAt = now;
+}
+
+export function restore(note: Note): void {
+	note.deletedAt = undefined;
+	note.stateChangedAt = new Date();
+}
+
+export function purge(note: Note): void {
+	const now = new Date();
+	note.purgedAt = now;
+	note.stateChangedAt = now;
+	note.title = emptyString;
+	note.content = emptyString;
+	computeDerived(note);
 }
 
 export function toJSON(note: Note): NoteJSON {
@@ -49,7 +105,7 @@ export function toJSON(note: Note): NoteJSON {
 }
 
 export function fromJSON(data: NoteJSON): Note {
-	return {
+	const note = {
 		id: data.id as UUID,
 		title: data.title,
 		content: data.content,
@@ -60,12 +116,6 @@ export function fromJSON(data: NoteJSON): Note {
 		purgedAt: data.purgedAt ? new Date(data.purgedAt) : undefined,
 		stateChangedAt: data.stateChangedAt ? new Date(data.stateChangedAt) : undefined
 	};
+	computeDerived(note);
+	return note;
 }
-
-export const summary = (note: Note): string => getSummary(note.content);
-
-export const sentenceCount = (note: Note): number => getSentenceCount(note.content);
-
-export const wordCount = (note: Note): number => getWordCount(note.content);
-
-export const characterCount = (note: Note): number => getCharacterCount(note.content);

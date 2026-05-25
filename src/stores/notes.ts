@@ -1,6 +1,6 @@
 import { createStore, produce } from "solid-js/store";
 import { createMemo, createEffect, on, mapArray } from "solid-js";
-import { fromJSON, toJSON, type Note } from "@/models/Note";
+import { archive, fromJSON, purge, restore, toJSON, trash, unarchive, update, type Note } from "@/models/Note";
 import { noteEffectiveTime } from "@/composables/useNotesSync";
 import { contains, emptyString, LEGACY_STORAGE_KEY, STORAGE_KEY } from "@/library";
 import type { UUID } from "crypto";
@@ -92,117 +92,59 @@ export function updateNote(id: UUID, title: string, content: string) {
 	setStore(
 		"notes",
 		note => note.id === id,
-		produce(note => {
-			note.title = title;
-			note.content = content;
-			note.modifiedAt = new Date();
-		})
+		produce(note => update(note, title, content))
 	);
 }
 
 export function archiveNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(note => {
-			const now = new Date();
-			note.archivedAt = now;
-			note.stateChangedAt = now;
-		})
-	);
+	setStore("notes", note => note.id === id, produce(archive));
 }
 
 export function archiveMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		note => idSet.has(note.id),
-		produce(note => {
-			const now = new Date();
-			note.archivedAt = now;
-			note.stateChangedAt = now;
-		})
-	);
+	setStore("notes", note => idSet.has(note.id), produce(archive));
 }
 
 export function unarchiveNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(note => {
-			note.archivedAt = undefined;
-			note.stateChangedAt = new Date();
-		})
-	);
+	setStore("notes", note => note.id === id, produce(unarchive));
 }
 
 export function unarchiveMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		note => idSet.has(note.id),
-		produce(note => {
-			note.archivedAt = undefined;
-			note.stateChangedAt = new Date();
-		})
-	);
+	setStore("notes", note => idSet.has(note.id), produce(unarchive));
 }
 
 export function trashNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(note => {
-			const now = new Date();
-			note.deletedAt = now;
-			note.stateChangedAt = now;
-		})
-	);
+	setStore("notes", note => note.id === id, produce(trash));
 }
 
 export function trashMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		note => idSet.has(note.id),
-		produce(note => {
-			const now = new Date();
-			note.deletedAt = now;
-			note.stateChangedAt = now;
-		})
-	);
+	setStore("notes", note => idSet.has(note.id), produce(trash));
 }
 
 export function restoreFromTrash(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(note => {
-			note.deletedAt = undefined;
-			note.stateChangedAt = new Date();
-		})
-	);
+	setStore("notes", note => note.id === id, produce(restore));
 }
 
 export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		note => idSet.has(note.id),
-		produce(note => {
-			note.deletedAt = undefined;
-			note.stateChangedAt = new Date();
-		})
-	);
+	setStore("notes", note => idSet.has(note.id), produce(restore));
 }
 
 export function permanentlyDelete(id: UUID) {
-	setStore("notes", items => items.filter(note => note.id !== id));
+	const index = store.notes.findIndex(note => note.id === id);
+	if (index === -1) {
+		return;
+	}
+	purge(store.notes[index] as Note);
+	setStore("notes", items => items.toSpliced(index, 1));
 	removeNote(id);
 }
 
 export function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
+	store.notes.filter(note => idSet.has(note.id)).forEach(purge);
 	setStore("notes", items => items.filter(note => !idSet.has(note.id)));
 	idSet.forEach(removeNote);
 }

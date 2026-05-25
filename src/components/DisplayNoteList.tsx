@@ -7,9 +7,9 @@ import { useNoteSort, type SortField } from "@/composables/useNoteSort";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { emptyString } from "@/library";
-import { characterCount, sentenceCount, summary, wordCount, type Note } from "@/models/Note";
 import SelectionActionBar, { type SelectionAction } from "./SelectionActionBar";
 import Toast from "./Toast";
+import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 
 type View = "active" | "archived" | "trash";
@@ -341,17 +341,17 @@ export default function DisplayNoteList(props: Props) {
 										<h6 class="card-title text-truncate mb-1">{note.title}</h6>
 										<small class="text-muted mb-2">{formatDate(note.modifiedAt ?? note.createdAt)}</small>
 										<div class="d-flex gap-2 flex-wrap small">
-											<Show when={sentenceCount(note)}>
-												<div class="badge text-bg-secondary">{sentenceCount(note)} sentences</div>
+											<Show when={note.sentenceCount}>
+												<div class="badge text-bg-secondary">{note.sentenceCount} sentences</div>
 											</Show>
-											<Show when={wordCount(note)}>
-												<div class="badge text-bg-secondary">{wordCount(note)} words</div>
+											<Show when={note.wordCount}>
+												<div class="badge text-bg-secondary">{note.wordCount} words</div>
 											</Show>
-											<Show when={characterCount(note)}>
-												<div class="badge text-bg-secondary">{characterCount(note)} characters</div>
+											<Show when={note.characterCount}>
+												<div class="badge text-bg-secondary">{note.characterCount} characters</div>
 											</Show>
 										</div>
-										<p class="card-text text-muted small flex-grow-1 overflow-hidden">{summary(note)}</p>
+										<p class="card-text text-muted small flex-grow-1 overflow-hidden">{note.summary}</p>
 									</div>
 								</A>
 							)}

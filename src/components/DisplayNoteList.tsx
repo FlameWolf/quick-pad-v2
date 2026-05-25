@@ -19,6 +19,7 @@ interface Props {
 }
 
 export default function DisplayNoteList(props: Props) {
+	const stableNoteCache = new Map<UUID, Note>();
 	const view = createMemo<View>(() => props.view ?? "active");
 	const { importFiles, importErrors, dismissErrors, exportNotes, exportAllNotes } = useFileIO();
 	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
@@ -36,7 +37,24 @@ export default function DisplayNoteList(props: Props) {
 				return activeNotes();
 		}
 	});
-	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
+	const stableNotes = createMemo<Note[]>(() => {
+		const seen = new Set<UUID>();
+		const result = getSortedNotes(sourceNotes()).map(note => {
+			seen.add(note.id);
+			const cached = stableNoteCache.get(note.id);
+			if (cached && cached.title === note.title && cached.content === note.content && cached.modifiedAt?.getTime() === note.modifiedAt?.getTime() && cached.archivedAt?.getTime() === note.archivedAt?.getTime() && cached.deletedAt?.getTime() === note.deletedAt?.getTime() && cached.purgedAt?.getTime() === note.purgedAt?.getTime()) {
+				return cached;
+			}
+			stableNoteCache.set(note.id, note);
+			return note;
+		});
+		for (const id of stableNoteCache.keys()) {
+			if (!seen.has(id)) {
+				stableNoteCache.delete(id);
+			}
+		}
+		return result;
+	});
 	const hasNotes = createMemo(() => sourceNotes().length > 0);
 	const allSelected = createMemo(() => sourceNotes().length > 0 && selectedCount() === sourceNotes().length);
 	const pageTitle = createMemo(() => {
@@ -304,7 +322,7 @@ export default function DisplayNoteList(props: Props) {
 								</div>
 							</A>
 						</Show>
-						<For each={sortedNotes()}>
+						<For each={stableNotes()}>
 							{note => (
 								<A href={`/notes/${note.id}`} class="card note-card text-decoration-none" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
 									<div class="card-body d-flex flex-column position-relative">

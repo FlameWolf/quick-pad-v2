@@ -1,15 +1,15 @@
-import { onMount, onCleanup, Show, createSignal } from "solid-js";
+import { onMount, onCleanup, Show } from "solid-js";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 
 export default function ConfirmDialog() {
 	const { state, onConfirm, onCancel } = useConfirmDialog();
+	const handlers: Record<string, (() => void) | undefined> = {
+		Escape: onCancel,
+		Enter: onConfirm
+	};
 
 	function onKeyDown(e: KeyboardEvent) {
-		const handlers: Record<string, (() => void) | undefined> = {
-			Escape: onCancel,
-			Enter: onConfirm
-		};
-		if (!(e.key in handlers)) {
+		if (!(e.key in handlers && state.visible)) {
 			return;
 		}
 		e.preventDefault();

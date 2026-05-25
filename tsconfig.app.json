@@ -1,5 +1,4 @@
 {
-	"extends": "@tsconfig/node24/tsconfig.json",
 	"include": ["env.d.ts", "src/**/*"],
 	"exclude": ["src/**/__tests__/*"],
 	"compilerOptions": {

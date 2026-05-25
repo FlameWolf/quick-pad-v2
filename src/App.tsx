@@ -1,7 +1,5 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.min.css";
 import { useTheme } from "@/composables/useTheme";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { useNotesSync } from "@/composables/useNotesSync";
@@ -133,7 +131,6 @@ export default function App(props: AppProps) {
 
 	return (
 		<>
-			<ScrollRestore/>
 			<nav class="navbar navbar-expand bg-body-tertiary border-bottom px-2 mb-4">
 				<div class="container gap-2">
 					<A href="/notes" class="navbar-brand">
@@ -259,6 +256,7 @@ export default function App(props: AppProps) {
 				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} visible={!!lastSyncMessage()} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={dismissMessage}/>
 			</Show>
 			<ConfirmDialog/>
+			<ScrollRestore/>
 		</>
 	);
 }

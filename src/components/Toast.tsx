@@ -46,7 +46,7 @@ export default function Toast(props: Props) {
 	return (
 		<div class="toast-container" data-visible={props.visible}>
 			<Show when={props.visible}>
-				<div class={`toast-notification ${props.type}`}>
+				<div class={`toast-notification rounded ${props.type}`}>
 					<span class="toast-icon">
 						<Show when={props.type === "success"} fallback={<i class="bi bi-exclamation-triangle"></i>}>
 							<i class="bi bi-check2"></i>

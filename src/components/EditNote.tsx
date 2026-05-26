@@ -7,6 +7,7 @@ import { useNotesSync } from "@/composables/useNotesSync";
 import { useFileIO } from "@/composables/useFileIO";
 import { create } from "@/models/Note";
 import { getSentenceCount, getWordCount, getCharacterCount, emptyString, debounce } from "@/library";
+import Toast from "@/components/Toast";
 import type { UUID } from "crypto";
 
 export default function EditNote() {
@@ -16,16 +17,22 @@ export default function EditNote() {
 	const { exportNote } = useFileIO();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
-
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? getNote(params.id) : undefined));
+	const [isCopying, setIsCopying] = createSignal(false);
+	const [copyResult, setCopyResult] = createSignal<{
+		status: "success" | "error";
+		message: string;
+	}>({
+		status: "success",
+		message: emptyString
+	});
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());
 	const [editTitle, setEditTitle] = createSignal(existingNote()?.title ?? emptyString);
 	const [editContent, setEditContent] = createSignal(existingNote()?.content ?? emptyString);
 	let editTextArea!: HTMLTextAreaElement;
 	const undoRedo = useUndoRedo<string>(editContent());
-
-	const displayContent = createMemo(() => (isEditing() ? editContent() : (existingNote()?.content ?? "")));
+	const displayContent = createMemo(() => (isEditing() ? editContent() : (existingNote()?.content ?? emptyString)));
 	const sentenceCount = createMemo(() => getSentenceCount(displayContent()));
 	const wordCount = createMemo(() => getWordCount(displayContent()));
 	const characterCount = createMemo(() => getCharacterCount(displayContent()));
@@ -87,6 +94,24 @@ export default function EditNote() {
 	function doRedo() {
 		undoRedo.redo();
 		setEditContent(undoRedo.current());
+	}
+
+	function copyToClipboard() {
+		setIsCopying(true);
+		navigator.clipboard
+			.writeText(existingNote()?.content as string)
+			.then(() => {
+				setCopyResult({
+					status: "success",
+					message: "Copied to clipboard"
+				});
+			})
+			.catch(err => {
+				setCopyResult({
+					status: "error",
+					message: `Failed to copy: ${(err as Error).message}`
+				});
+			});
 	}
 
 	function startEditing() {
@@ -264,74 +289,100 @@ export default function EditNote() {
 	createEffect(on(editContent, adjustTextAreaHeight, { defer: true }));
 
 	return (
-		<div class="edit-note">
-			<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-				<A href={backRoute()} class="btn btn-outline-secondary btn-sm" aria-label="Back to notes">
-					<i class="bi bi-chevron-left"></i>
-					<span>&#xA0;Back</span>
-				</A>
-				<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
-					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-primary btn-sm" onClick={restoreNote}>Restore</button>
-						<Show when={existingNote()}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>Export</button>
-						</Show>
-						<button class="btn btn-outline-danger btn-sm" onClick={permanentlyDeleteNote}>Delete Permanently</button>
-					</div>
-				</Show>
-				<Show when={!isCreateMode() && !isEditing() && !isTrashed()}>
-					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-primary btn-sm" onClick={startEditing}>Edit</button>
-						<Show when={existingNote()}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)}>Export</button>
-						</Show>
-						<Show
-							when={isArchived()}
-							fallback={
-								<button class="btn btn-outline-secondary btn-sm" onClick={archiveCurrent}>Archive</button>
-							}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={unarchiveCurrent}>Unarchive</button>
-						</Show>
-						<button class="btn btn-outline-danger btn-sm" onClick={deleteNote}>Delete</button>
-					</div>
+		<>
+			<div class="edit-note">
+				<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+					<A href={backRoute()} class="btn btn-outline-secondary btn-sm" aria-label="Back to notes">
+						<i class="bi bi-chevron-left"></i>
+						<span>&#xA0;Back</span>
+					</A>
+					<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
+						<div class="d-flex flex-wrap gap-2">
+							<button class="btn btn-outline-primary btn-sm" onClick={restoreNote} title="Restore" aria-label="Restore">
+								<i class="bi bi-arrow-bar-up"></i>
+							</button>
+							<Show when={existingNote()}>
+								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
+									<i class="bi bi-download"></i>
+								</button>
+							</Show>
+							<button class="btn btn-outline-danger btn-sm" onClick={permanentlyDeleteNote} title="Delete Permanently" aria-label="Delete Permanently">
+								<i class="bi bi-trash-fill"></i>
+							</button>
+						</div>
+					</Show>
+					<Show when={!isCreateMode() && !isEditing() && !isTrashed()}>
+						<div class="d-flex flex-wrap gap-2">
+							<button class="btn btn-outline-primary btn-sm" onClick={startEditing} title="Edit" aria-label="Edit">
+								<i class="bi bi-pen"></i>
+							</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={copyToClipboard} title="Copy to clipboard" aria-label="Copy to clipboard">
+								<i class="bi bi-copy"></i>
+							</button>
+							<Show when={existingNote()}>
+								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
+									<i class="bi bi-download"></i>
+								</button>
+							</Show>
+							<Show
+								when={isArchived()}
+								fallback={
+									<button class="btn btn-outline-secondary btn-sm" onClick={archiveCurrent} title="Archive" aria-label="Archive">
+										<i class="bi bi-archive"></i>
+									</button>
+								}>
+								<button class="btn btn-outline-secondary btn-sm" onClick={unarchiveCurrent} title="Unarchive" aria-label="Unarchive">
+									<i class="bi bi-box-arrow-up"></i>
+								</button>
+							</Show>
+							<button class="btn btn-outline-danger btn-sm" onClick={deleteNote} title="Delete" aria-label="Delete">
+								<i class="bi bi-trash"></i>
+							</button>
+						</div>
+					</Show>
+					<Show when={isEditing()}>
+						<div class="d-flex flex-wrap gap-2">
+							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
+								<i class="bi bi-arrow-counterclockwise"></i>
+							</button>
+							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
+								<i class="bi bi-arrow-clockwise"></i>
+							</button>
+							<button class="btn btn-primary btn-sm" onClick={saveNote} title="Save" aria-label="Save">
+								<i class="bi bi-floppy"></i>
+							</button>
+							<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing} title="Cancel" aria-label="Cancel">
+								<i class="bi bi-x-lg"></i>
+							</button>
+						</div>
+					</Show>
+				</div>
+				<Show when={!isEditing() && existingNote()}>
+					<h2 class="mb-3">{existingNote()!.title}</h2>
+					<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
+						<div class="text-muted small mb-3">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
+					</Show>
+					<div class="note-content">{existingNote()!.content}</div>
 				</Show>
 				<Show when={isEditing()}>
-					<div class="d-flex flex-wrap gap-2">
-						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
-							<i class="bi bi-arrow-counterclockwise"></i>
-						</button>
-						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
-							<i class="bi bi-arrow-clockwise"></i>
-						</button>
-						<button class="btn btn-primary btn-sm" onClick={saveNote}>Save</button>
-						<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing}>Cancel</button>
+					<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg mb-3" placeholder="Title"/>
+					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
+				</Show>
+				<Show when={displayContent()}>
+					<div class="d-flex flex-wrap gap-2 mt-3">
+						<Show when={sentenceCount()}>
+							<span class="badge text-bg-secondary">{sentenceCount()} sentences</span>
+						</Show>
+						<Show when={wordCount()}>
+							<span class="badge text-bg-secondary">{wordCount()} words</span>
+						</Show>
+						<Show when={characterCount()}>
+							<span class="badge text-bg-secondary">{characterCount()} characters</span>
+						</Show>
 					</div>
 				</Show>
 			</div>
-			<Show when={!isEditing() && existingNote()}>
-				<h2 class="mb-3">{existingNote()!.title}</h2>
-				<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
-					<div class="text-muted small mb-3">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
-				</Show>
-				<div class="note-content">{existingNote()!.content}</div>
-			</Show>
-			<Show when={isEditing()}>
-				<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg mb-3" placeholder="Title"/>
-				<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
-			</Show>
-			<Show when={displayContent()}>
-				<div class="d-flex flex-wrap gap-2 mt-3">
-					<Show when={sentenceCount()}>
-						<span class="badge text-bg-secondary">{sentenceCount()} sentences</span>
-					</Show>
-					<Show when={wordCount()}>
-						<span class="badge text-bg-secondary">{wordCount()} words</span>
-					</Show>
-					<Show when={characterCount()}>
-						<span class="badge text-bg-secondary">{characterCount()} characters</span>
-					</Show>
-				</div>
-			</Show>
-		</div>
+			<Toast message={copyResult().message} type={copyResult().status} visible={isCopying()} timeStamp={Date.now()} onDismiss={() => void 0}/>
+		</>
 	);
 }

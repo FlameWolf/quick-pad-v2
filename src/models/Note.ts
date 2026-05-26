@@ -11,6 +11,10 @@ export interface NoteJSON {
 	deletedAt?: string;
 	purgedAt?: string;
 	stateChangedAt?: string;
+	summary?: string;
+	sentenceCount?: number;
+	wordCount?: number;
+	characterCount?: number;
 }
 
 export interface Note {
@@ -29,11 +33,13 @@ export interface Note {
 	characterCount?: number;
 }
 
-function computeDerived(note: Note): void {
-	note.summary = getSummary(note.content);
-	note.sentenceCount = getSentenceCount(note.content);
-	note.wordCount = getWordCount(note.content);
-	note.characterCount = getCharacterCount(note.content);
+async function computeDerived(note: Note) {
+	Object.assign(note, {
+		summary: getSummary(note.content),
+		sentenceCount: getSentenceCount(note.content),
+		wordCount: getWordCount(note.content),
+		characterCount: getCharacterCount(note.content)
+	});
 }
 
 export function create(title: string, content: string): Note {
@@ -100,12 +106,16 @@ export function toJSON(note: Note): NoteJSON {
 		archivedAt: note.archivedAt?.toISOString(),
 		deletedAt: note.deletedAt?.toISOString(),
 		purgedAt: note.purgedAt?.toISOString(),
-		stateChangedAt: note.stateChangedAt?.toISOString()
+		stateChangedAt: note.stateChangedAt?.toISOString(),
+		summary: note.summary,
+		sentenceCount: note.sentenceCount,
+		wordCount: note.wordCount,
+		characterCount: note.characterCount
 	};
 }
 
 export function fromJSON(data: NoteJSON): Note {
-	const note = {
+	const note: Note = {
 		id: data.id as UUID,
 		title: data.title,
 		content: data.content,
@@ -116,6 +126,14 @@ export function fromJSON(data: NoteJSON): Note {
 		purgedAt: data.purgedAt ? new Date(data.purgedAt) : undefined,
 		stateChangedAt: data.stateChangedAt ? new Date(data.stateChangedAt) : undefined
 	};
-	computeDerived(note);
+	if (data.summary && data.sentenceCount && data.wordCount && data.characterCount) {
+		note.summary = data.summary;
+		note.sentenceCount = data.sentenceCount;
+		note.wordCount = data.wordCount;
+		note.characterCount = data.characterCount;
+	} else {
+		computeDerived(note);
+		note.stateChangedAt = new Date();
+	}
 	return note;
 }

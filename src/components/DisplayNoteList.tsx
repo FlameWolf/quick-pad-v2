@@ -312,8 +312,8 @@ export default function DisplayNoteList(props: Props) {
 							</Show>
 							<For each={sortedNotes()}>
 								{note => (
-									<A href={`/notes/${note.id}`} class="card note-card text-decoration-none" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
-										<div class="card-body d-flex flex-column position-relative">
+									<A href={`/notes/${note.id}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
+										<div class="card-body d-flex flex-column">
 											<Show when={isSelectionMode()}>
 												<input
 													type="checkbox"
@@ -323,23 +323,22 @@ export default function DisplayNoteList(props: Props) {
 														e.stopPropagation();
 														e.preventDefault();
 														toggleSelection(note.id);
-													}}
-												/>
+													}}/>
 											</Show>
 											<h6 class="card-title text-truncate mb-1">{note.title}</h6>
 											<small class="text-muted mb-2">{formatDate(note.modifiedAt ?? note.createdAt)}</small>
-											<div class="d-flex gap-2 flex-wrap small">
-												<Show when={note.sentenceCount}>
-													<div class="badge text-bg-secondary">{note.sentenceCount} sentences</div>
-												</Show>
-												<Show when={note.wordCount}>
-													<div class="badge text-bg-secondary">{note.wordCount} words</div>
-												</Show>
-												<Show when={note.characterCount}>
-													<div class="badge text-bg-secondary">{note.characterCount} characters</div>
-												</Show>
-											</div>
-											<p class="card-text text-muted small flex-grow-1 overflow-hidden">{note.summary}</p>
+											<p class="card-text text-muted small overflow-hidden">{note.summary}</p>
+										</div>
+										<div class="d-flex gap-1 bg-body small w-100 position-absolute bottom-0 px-2 py-2 border-top">
+											<Show when={note.sentenceCount}>
+												<div class="badge text-bg-secondary">{note.sentenceCount} sentences</div>
+											</Show>
+											<Show when={note.wordCount}>
+												<div class="badge text-bg-secondary">{note.wordCount} words</div>
+											</Show>
+											<Show when={note.characterCount}>
+												<div class="badge text-bg-secondary">{note.characterCount} characters</div>
+											</Show>
 										</div>
 									</A>
 								)}

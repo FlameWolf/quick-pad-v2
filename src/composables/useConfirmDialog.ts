@@ -1,4 +1,5 @@
 import { createStore } from "solid-js/store";
+import { emptyString } from "@/library";
 
 export type ConfirmVariant = "danger" | "primary" | "warning";
 
@@ -21,8 +22,8 @@ export interface ConfirmState {
 
 const [state, setState] = createStore<ConfirmState>({
 	visible: false,
-	title: "",
-	message: "",
+	title: emptyString,
+	message: emptyString,
 	confirmText: "Confirm",
 	cancelText: "Cancel",
 	variant: "primary"

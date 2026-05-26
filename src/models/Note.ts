@@ -33,7 +33,7 @@ export interface Note {
 	characterCount?: number;
 }
 
-async function computeDerived(note: Note) {
+function computeDerived(note: Note) {
 	Object.assign(note, {
 		summary: getSummary(note.content),
 		sentenceCount: getSentenceCount(note.content),

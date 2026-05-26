@@ -293,7 +293,7 @@ export default function DisplayNoteList(props: Props) {
 										</Show>
 										<Show when={view() === "trash"}>
 											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
-												<i class="bi bi-trash me-1" aria-hidden="true"></i>Empty Trash
+												<i class="bi bi-trash-fill me-1" aria-hidden="true"></i>Empty Trash
 											</button>
 										</Show>
 									</>
@@ -325,8 +325,10 @@ export default function DisplayNoteList(props: Props) {
 														toggleSelection(note.id);
 													}}/>
 											</Show>
-											<h6 class="card-title text-truncate mb-1">{note.title}</h6>
-											<small class="text-muted mb-2">{formatDate(note.modifiedAt ?? note.createdAt)}</small>
+											<div class="d-flex gap-1 mb-2">
+												<div class="text-truncate">{note.title}</div>
+												<div class="badge align-self-center text-muted border ms-auto">{formatDate(note.modifiedAt ?? note.createdAt)}</div>
+											</div>
 											<p class="card-text text-muted small overflow-hidden">{note.summary}</p>
 										</div>
 										<div class="d-flex gap-1 bg-body small w-100 position-absolute bottom-0 px-2 py-2 border-top">

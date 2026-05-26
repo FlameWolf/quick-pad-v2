@@ -1,5 +1,5 @@
 import { createStore, produce } from "solid-js/store";
-import { createMemo, createEffect, on, mapArray } from "solid-js";
+import { createMemo, createEffect, on, mapArray, createSignal } from "solid-js";
 import { archive, fromJSON, purge, restore, toJSON, trash, unarchive, update, type Note } from "@/models/Note";
 import { noteEffectiveTime } from "@/composables/useNotesSync";
 import { contains, emptyString, LEGACY_STORAGE_KEY, STORAGE_KEY } from "@/library";
@@ -12,6 +12,7 @@ interface NotesState {
 
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+export const [isLoading, setIsLoading] = createSignal(true);
 const noteKey = (id: UUID) => `${STORAGE_KEY}${id}`;
 const migrateFromLegacy = () => {
 	const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -39,6 +40,7 @@ const loadFromStorage = () => {
 			void 0;
 		}
 	}
+	setIsLoading(false);
 	return storedNotes;
 };
 const persistNote = (note: Note) => {

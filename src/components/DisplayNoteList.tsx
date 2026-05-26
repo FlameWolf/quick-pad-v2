@@ -1,6 +1,6 @@
-import { createMemo, createEffect, on, onMount, Show, For } from "solid-js";
+import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from "solid-js";
 import { A } from "@solidjs/router";
-import { activeNotes, archivedNotes, trashedNotes, searchText, archiveMultiple, unarchiveMultiple, trashMultiple, restoreFromTrashMultiple, permanentlyDeleteMultiple } from "@/stores/notes";
+import { activeNotes, archivedNotes, trashedNotes, searchText, archiveMultiple, unarchiveMultiple, trashMultiple, restoreFromTrashMultiple, permanentlyDeleteMultiple, isLoading } from "@/stores/notes";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
@@ -223,9 +223,14 @@ export default function DisplayNoteList(props: Props) {
 					</A>
 				</div>
 			</Show>
-			<Show
-				when={hasNotes()}
-				fallback={
+			<Switch>
+				<Match when={isLoading()}>
+					<div class="d-flex flex-column justify-content-center align-items-center">
+						<div class="spinner-border" aria-hidden="true"></div>
+						<div class="mt-3" role="status">Loading notes...</div>
+					</div>
+				</Match>
+				<Match when={!hasNotes()}>
 					<div class="empty-state text-center py-5">
 						<div class="text-muted mb-3">
 							<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
@@ -251,99 +256,101 @@ export default function DisplayNoteList(props: Props) {
 							</div>
 						</Show>
 					</div>
-				}>
-				<div>
-					<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
-						<Show
-							when={isSelectionMode()}
-							fallback={
-								<>
-									<div class="d-flex gap-1 align-items-center sort-controls">
-										<label for="sort-by-select" class="form-label text-muted small mb-0 me-1">
-											Sort:
-										</label>
-										<select id="sort-by-select" class="form-select form-select-sm sort-select" value={sortBy()} onChange={onSortFieldChange} aria-label="Sort notes by">
-											<option value="modifiedAt">Updated</option>
-											<option value="createdAt">Created</option>
-											<option value="title">Title</option>
-											<option value="sentenceCount">Sentences</option>
-											<option value="wordCount">Words</option>
-											<option value="characterCount">Characters</option>
-										</select>
-										<button class="btn btn-outline-secondary btn-sm" onClick={toggleSortDirection} aria-label={sortDirection() === "asc" ? "Sort ascending, click to switch to descending" : "Sort descending, click to switch to ascending"} title={sortDirection() === "asc" ? "Ascending" : "Descending"}>
-											<i class={`bi ${sortDirection() === "asc" ? "bi-sort-up" : "bi-sort-down"}`} aria-hidden="true"></i>
-										</button>
-									</div>
-									<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>Select</button>
-									<Show when={view() === "active"}>
-										<button class="btn btn-outline-secondary btn-sm" onClick={importFiles}>Import</button>
-										<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>Export All</button>
-										<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
-											<i class="bi bi-archive me-1" aria-hidden="true"></i>Archived
-										</A>
-										<A href="/notes/trash" class="btn btn-outline-secondary btn-sm">
-											<i class="bi bi-trash me-1" aria-hidden="true"></i>Trash
-										</A>
-									</Show>
-									<Show when={view() === "trash"}>
-										<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
-											<i class="bi bi-trash me-1" aria-hidden="true"></i>Empty Trash
-										</button>
-									</Show>
-								</>
-							}>
-							<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll}>{allSelected() ? "Deselect All" : "Select All"}</button>
-							<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode}>Cancel</button>
-						</Show>
-					</div>
-					<div class="notes-grid">
-						<Show when={view() === "active" && !isSelectionMode()}>
-							<A href="/notes/new" class="card note-card new-note-card text-decoration-none">
-								<div class="card-body d-flex align-items-center justify-content-center">
-									<span class="fs-1 text-muted">+</span>
-								</div>
-							</A>
-						</Show>
-						<For each={sortedNotes()}>
-							{note => (
-								<A href={`/notes/${note.id}`} class="card note-card text-decoration-none" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
-									<div class="card-body d-flex flex-column position-relative">
-										<Show when={isSelectionMode()}>
-											<input
-												type="checkbox"
-												class="form-check-input selection-checkbox"
-												checked={isSelected(note.id)}
-												onClick={e => {
-													e.stopPropagation();
-													e.preventDefault();
-													toggleSelection(note.id);
-												}}
-											/>
-										</Show>
-										<h6 class="card-title text-truncate mb-1">{note.title}</h6>
-										<small class="text-muted mb-2">{formatDate(note.modifiedAt ?? note.createdAt)}</small>
-										<div class="d-flex gap-2 flex-wrap small">
-											<Show when={note.sentenceCount}>
-												<div class="badge text-bg-secondary">{note.sentenceCount} sentences</div>
-											</Show>
-											<Show when={note.wordCount}>
-												<div class="badge text-bg-secondary">{note.wordCount} words</div>
-											</Show>
-											<Show when={note.characterCount}>
-												<div class="badge text-bg-secondary">{note.characterCount} characters</div>
-											</Show>
+				</Match>
+				<Match when={hasNotes()}>
+					<div>
+						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
+							<Show
+								when={isSelectionMode()}
+								fallback={
+									<>
+										<div class="d-flex gap-1 align-items-center sort-controls">
+											<label for="sort-by-select" class="form-label text-muted small mb-0 me-1">
+												Sort:
+											</label>
+											<select id="sort-by-select" class="form-select form-select-sm sort-select" value={sortBy()} onChange={onSortFieldChange} aria-label="Sort notes by">
+												<option value="modifiedAt">Updated</option>
+												<option value="createdAt">Created</option>
+												<option value="title">Title</option>
+												<option value="sentenceCount">Sentences</option>
+												<option value="wordCount">Words</option>
+												<option value="characterCount">Characters</option>
+											</select>
+											<button class="btn btn-outline-secondary btn-sm" onClick={toggleSortDirection} aria-label={sortDirection() === "asc" ? "Sort ascending, click to switch to descending" : "Sort descending, click to switch to ascending"} title={sortDirection() === "asc" ? "Ascending" : "Descending"}>
+												<i class={`bi ${sortDirection() === "asc" ? "bi-sort-up" : "bi-sort-down"}`} aria-hidden="true"></i>
+											</button>
 										</div>
-										<p class="card-text text-muted small flex-grow-1 overflow-hidden">{note.summary}</p>
+										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>Select</button>
+										<Show when={view() === "active"}>
+											<button class="btn btn-outline-secondary btn-sm" onClick={importFiles}>Import</button>
+											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>Export All</button>
+											<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
+												<i class="bi bi-archive me-1" aria-hidden="true"></i>Archived
+											</A>
+											<A href="/notes/trash" class="btn btn-outline-secondary btn-sm">
+												<i class="bi bi-trash me-1" aria-hidden="true"></i>Trash
+											</A>
+										</Show>
+										<Show when={view() === "trash"}>
+											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
+												<i class="bi bi-trash me-1" aria-hidden="true"></i>Empty Trash
+											</button>
+										</Show>
+									</>
+								}>
+								<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll}>{allSelected() ? "Deselect All" : "Select All"}</button>
+								<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode}>Cancel</button>
+							</Show>
+						</div>
+						<div class="notes-grid">
+							<Show when={view() === "active" && !isSelectionMode()}>
+								<A href="/notes/new" class="card note-card new-note-card text-decoration-none">
+									<div class="card-body d-flex align-items-center justify-content-center">
+										<span class="fs-1 text-muted">+</span>
 									</div>
 								</A>
-							)}
-						</For>
+							</Show>
+							<For each={sortedNotes()}>
+								{note => (
+									<A href={`/notes/${note.id}`} class="card note-card text-decoration-none" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
+										<div class="card-body d-flex flex-column position-relative">
+											<Show when={isSelectionMode()}>
+												<input
+													type="checkbox"
+													class="form-check-input selection-checkbox"
+													checked={isSelected(note.id)}
+													onClick={e => {
+														e.stopPropagation();
+														e.preventDefault();
+														toggleSelection(note.id);
+													}}
+												/>
+											</Show>
+											<h6 class="card-title text-truncate mb-1">{note.title}</h6>
+											<small class="text-muted mb-2">{formatDate(note.modifiedAt ?? note.createdAt)}</small>
+											<div class="d-flex gap-2 flex-wrap small">
+												<Show when={note.sentenceCount}>
+													<div class="badge text-bg-secondary">{note.sentenceCount} sentences</div>
+												</Show>
+												<Show when={note.wordCount}>
+													<div class="badge text-bg-secondary">{note.wordCount} words</div>
+												</Show>
+												<Show when={note.characterCount}>
+													<div class="badge text-bg-secondary">{note.characterCount} characters</div>
+												</Show>
+											</div>
+											<p class="card-text text-muted small flex-grow-1 overflow-hidden">{note.summary}</p>
+										</div>
+									</A>
+								)}
+							</For>
+						</div>
+						<Show when={isSelectionMode() && selectedCount() > 0}>
+							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
+						</Show>
 					</div>
-					<Show when={isSelectionMode() && selectedCount() > 0}>
-						<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
-					</Show>
-				</div>
-			</Show>
+				</Match>
+			</Switch>
 			<Toast message={formatImportErrors()} type="error" visible={importErrors().length > 0} timeStamp={Date.now()} onDismiss={dismissErrors}/>
 		</>
 	);

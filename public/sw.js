@@ -1,6 +1,7 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "__CACHE_VERSION__";
 const CACHE_NAME = `quickpad-${CACHE_VERSION}`;
-const APP_SHELL = ["/", "/index.html", "/favicon.svg", "/manifest.webmanifest"];
+const APP_SHELL = ["__PRECACHE_MANIFEST__"];
+const NAVIGATION_FALLBACK = "/index.html";
 
 self.addEventListener("install", event => {
 	event.waitUntil(
@@ -30,6 +31,14 @@ function isCacheableResponse(response) {
 	return response && response.status === 200 && (response.type === "basic" || response.type === "default");
 }
 
+function cachePut(cacheKey, response) {
+	if (isCacheableResponse(response)) {
+		const copy = response.clone();
+		caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, copy));
+	}
+	return response;
+}
+
 self.addEventListener("fetch", event => {
 	const request = event.request;
 	if (request.method !== "GET") {
@@ -41,15 +50,16 @@ self.addEventListener("fetch", event => {
 	}
 	if (request.mode === "navigate") {
 		event.respondWith(
-			fetch(request)
-				.then(response => {
-					if (isCacheableResponse(response)) {
-						const copy = response.clone();
-						caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-					}
-					return response;
-				})
-				.catch(() => caches.match(request).then(cached => cached || caches.match("/index.html")))
+			caches.match(NAVIGATION_FALLBACK).then(cached => {
+				const networkFetch = fetch(request)
+					.then(response => cachePut(NAVIGATION_FALLBACK, response))
+					.catch(() => null);
+				if (cached) {
+					event.waitUntil(networkFetch);
+					return cached;
+				}
+				return networkFetch.then(response => response || caches.match(NAVIGATION_FALLBACK));
+			})
 		);
 		return;
 	}
@@ -59,13 +69,7 @@ self.addEventListener("fetch", event => {
 				return cached;
 			}
 			return fetch(request)
-				.then(response => {
-					if (isCacheableResponse(response)) {
-						const copy = response.clone();
-						caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-					}
-					return response;
-				})
+				.then(response => cachePut(request, response))
 				.catch(() => cached);
 		})
 	);

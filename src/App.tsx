@@ -3,7 +3,7 @@ import { A, useLocation } from "@solidjs/router";
 import { useTheme } from "@/composables/useTheme";
 import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { useNotesSync } from "@/composables/useNotesSync";
-import { searchText, setSearchText, purgeExpiredTrash } from "@/stores/notes";
+import { searchText, setSearchText, purgeExpiredTrash, isLoading } from "@/stores/notes";
 import { listViewRoutes, ScrollRestore } from "@/router";
 import { debounce, emptyString } from "@/library";
 import Toast from "@/components/Toast";
@@ -100,19 +100,33 @@ export default function App(props: AppProps) {
 	});
 
 	createEffect(
-		on([isSignedIn, autoSyncEnabled], async ([signedIn, autoEnabled]) => {
+		on([isSignedIn, autoSyncEnabled], ([signedIn, autoEnabled]) => {
 			if (signedIn && autoEnabled) {
-				await loadFromCloud();
-				await saveToCloud();
+				setTimeout(async () => {
+					await loadFromCloud();
+					await saveToCloud();
+				});
 			}
 		})
 	);
 
+	createEffect(
+		on(
+			isLoading,
+			loading => {
+				if (loading) {
+					return;
+				}
+				const purgedIds = purgeExpiredTrash();
+				if (purgedIds.length > 0) {
+					requestSync(purgedIds);
+				}
+			},
+			{ defer: true }
+		)
+	);
+
 	onMount(() => {
-		const purgedIds = purgeExpiredTrash();
-		if (purgedIds.length > 0) {
-			requestSync(purgedIds);
-		}
 		if (isConfigured()) {
 			readyTimeout = setTimeout(() => {
 				if (!isReady()) {

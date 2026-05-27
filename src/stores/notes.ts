@@ -14,7 +14,7 @@ const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 export const [isLoading, setIsLoading] = createSignal(true);
 const noteKey = (id: UUID) => `${STORAGE_KEY}${id}`;
-const migrateFromLegacy = () => {
+const migrateFromLegacy = async (): Promise<Note[]> => {
 	const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
 	if (!raw) {
 		return [];
@@ -27,22 +27,6 @@ const migrateFromLegacy = () => {
 		localStorage.removeItem(LEGACY_STORAGE_KEY);
 	}
 };
-const loadFromStorage = () => {
-	const storedNotes: Note[] = migrateFromLegacy();
-	for (let index = 0; index < localStorage.length; index++) {
-		const key = localStorage.key(index);
-		if (!key?.startsWith(STORAGE_KEY)) {
-			continue;
-		}
-		try {
-			storedNotes.push(fromJSON(JSON.parse(localStorage.getItem(key) as string)));
-		} catch {
-			void 0;
-		}
-	}
-	setIsLoading(false);
-	return storedNotes;
-};
 const persistNote = (note: Note) => {
 	if (note.purgedAt) {
 		removeNote(note.id);
@@ -54,8 +38,24 @@ const removeNote = (id: UUID) => {
 	localStorage.removeItem(noteKey(id));
 };
 const [store, setStore] = createStore<NotesState>({
-	notes: loadFromStorage(),
+	notes: [],
 	searchText: emptyString
+});
+setTimeout(async () => {
+	const storedNotes: Note[] = await migrateFromLegacy();
+	for (let index = 0; index < localStorage.length; index++) {
+		const key = localStorage.key(index);
+		if (!key?.startsWith(STORAGE_KEY)) {
+			continue;
+		}
+		try {
+			storedNotes.push(fromJSON(JSON.parse(localStorage.getItem(key) as string)));
+		} catch {
+			void 0;
+		}
+	}
+	setStore("notes", storedNotes);
+	setIsLoading(false);
 });
 createEffect(
 	mapArray(

@@ -349,7 +349,7 @@ export default function EditNote() {
 							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
 								<i class="bi bi-arrow-clockwise"></i>
 							</button>
-							<button class="btn btn-primary btn-sm" onClick={saveNote} title="Save" aria-label="Save">
+							<button class="btn btn-primary btn-sm" disabled={!hasUnsavedChanges()} onClick={saveNote} title="Save" aria-label="Save">
 								<i class="bi bi-floppy"></i>
 							</button>
 							<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing} title="Cancel" aria-label="Cancel">

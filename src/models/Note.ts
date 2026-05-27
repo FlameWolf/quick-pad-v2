@@ -133,7 +133,6 @@ export function fromJSON(data: NoteJSON): Note {
 		note.characterCount = data.characterCount;
 	} else {
 		computeDerived(note);
-		note.stateChangedAt = new Date();
 	}
 	return note;
 }

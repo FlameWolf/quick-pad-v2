@@ -236,8 +236,9 @@ export default function EditNote() {
 		if (!ok) {
 			return;
 		}
-		permanentlyDelete(note.id);
-		requestSync();
+		const noteId = note.id;
+		permanentlyDelete(noteId);
+		requestSync([noteId]);
 		navigate("/notes/trash");
 	}
 

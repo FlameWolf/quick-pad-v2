@@ -179,7 +179,7 @@ export default function DisplayNoteList(props: Props) {
 					return;
 				}
 				permanentlyDeleteMultiple(ids);
-				requestSync();
+				requestSync(ids);
 				exitSelectionMode();
 				break;
 			}
@@ -202,8 +202,9 @@ export default function DisplayNoteList(props: Props) {
 		if (!ok) {
 			return;
 		}
-		permanentlyDeleteMultiple(trashed.map(n => n.id));
-		requestSync();
+		const trashedNoteIds = trashed.map(n => n.id);
+		permanentlyDeleteMultiple(trashedNoteIds);
+		requestSync(trashedNoteIds);
 	}
 
 	onMount(() => {

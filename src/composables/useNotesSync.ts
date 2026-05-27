@@ -128,6 +128,17 @@ export function useNotesSync() {
 		return notes.concat(await migrateFromLegacy());
 	}
 
+	async function purgeRemoteFiles(fileIdsToPurge: ReadonlyArray<UUID>) {
+		fileIdsToPurge.forEach(Set.prototype.add, pendingPurges);
+		if (pendingPurges.size > 0) {
+			persistPendingPurges(pendingPurges);
+			const purgeSnapshot = Array.from(pendingPurges);
+			await Promise.all(purgeSnapshot.map(getFileName).map(deleteFile));
+			purgeSnapshot.forEach(Set.prototype.delete, pendingPurges);
+			persistPendingPurges(pendingPurges);
+		}
+	}
+
 	async function uploadNote(note: Note): Promise<"uploaded" | "conflict"> {
 		const fileName = getFileName(note.id);
 		const remoteFile = await findFile(fileName);
@@ -141,7 +152,7 @@ export function useNotesSync() {
 					await writeJSONById(remoteFile.id, toJSON(note));
 					return "uploaded";
 				}
-				if (remoteEffectiveTime > remoteEffectiveTime) {
+				if (remoteEffectiveTime > localEffectiveTime) {
 					store.replaceNote(remoteNote);
 					return "conflict";
 				}
@@ -158,22 +169,12 @@ export function useNotesSync() {
 		}
 		setIsSyncing(true);
 		setSyncError(null);
-		let conflictCount = 0;
-		if (purged.length > 0) {
-			for (const id of purged) {
-				pendingPurges.add(id);
-			}
-			persistPendingPurges(pendingPurges);
-		}
-		const purgeSnapshot = Array.from(pendingPurges);
 		try {
 			const syncStartedAt = new Date();
-			await Promise.all(purgeSnapshot.map(getFileName).map(deleteFile));
-			purgeSnapshot.forEach(id => pendingPurges.delete(id));
-			persistPendingPurges(pendingPurges);
+			await purgeRemoteFiles(purged);
 			const dirtyNotes = store.notes().filter(note => noteEffectiveTime(note) > (lastSyncedToCloudAt()?.getTime() ?? 0));
 			const uploadResults = await Promise.all(dirtyNotes.map(uploadNote));
-			conflictCount = uploadResults.filter(result => result === "conflict").length;
+			const conflictCount = uploadResults.filter(result => result === "conflict").length;
 			if (lastSyncedToLocalAt()) {
 				await deleteFromLegacy();
 			}
@@ -219,16 +220,7 @@ export function useNotesSync() {
 			if (changes.length > 0) {
 				store.replaceMultiple(changes);
 			}
-			const expiredIds = store.purgeExpiredTrash();
-			if (expiredIds.length > 0) {
-				for (const id of expiredIds) {
-					pendingPurges.add(id);
-				}
-				persistPendingPurges(pendingPurges);
-				await Promise.all(expiredIds.map(getFileName).map(deleteFile));
-				expiredIds.forEach(id => pendingPurges.delete(id));
-				persistPendingPurges(pendingPurges);
-			}
+			await purgeRemoteFiles(store.purgeExpiredTrash());
 			setLastSyncedToLocalAt(syncStartedAt);
 			persistLastSyncedToLocal(syncStartedAt);
 			setLastSyncMessage({

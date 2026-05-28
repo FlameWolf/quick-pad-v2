@@ -125,24 +125,22 @@ export default function DisplayNoteList(props: Props) {
 		if (ids.length === 0) {
 			return;
 		}
+		let syncNotes = true;
+		let purgeNotes = false;
 		const noun = ids.length === 1 ? "note" : "notes";
 		switch (key) {
 			case "export": {
 				const selected = sourceNotes().filter(n => isSelected(n.id));
 				await exportNotes(selected);
-				exitSelectionMode();
+				syncNotes = false;
 				break;
 			}
 			case "archive": {
 				archiveMultiple(ids);
-				requestSync();
-				exitSelectionMode();
 				break;
 			}
 			case "unarchive": {
 				unarchiveMultiple(ids);
-				requestSync();
-				exitSelectionMode();
 				break;
 			}
 			case "trash": {
@@ -157,14 +155,10 @@ export default function DisplayNoteList(props: Props) {
 					return;
 				}
 				trashMultiple(ids);
-				requestSync();
-				exitSelectionMode();
 				break;
 			}
 			case "restore": {
 				restoreFromTrashMultiple(ids);
-				requestSync();
-				exitSelectionMode();
 				break;
 			}
 			case "permanent": {
@@ -179,11 +173,14 @@ export default function DisplayNoteList(props: Props) {
 					return;
 				}
 				await permanentlyDeleteMultiple(ids);
-				requestSync(ids);
-				exitSelectionMode();
+				purgeNotes = true;
 				break;
 			}
 		}
+		if (syncNotes) {
+			requestSync(purgeNotes ? ids : undefined);
+		}
+		exitSelectionMode();
 	}
 
 	async function handleEmptyTrash() {

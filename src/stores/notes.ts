@@ -189,7 +189,3 @@ export function replaceMultiple(updatedNotes: Note[]) {
 	}
 	updatedNotes.forEach(replaceNote);
 }
-
-export function replaceAllNotes(newNotes: Note[]) {
-	setStore("notes", newNotes);
-}

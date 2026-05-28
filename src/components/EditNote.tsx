@@ -300,7 +300,7 @@ export default function EditNote() {
 					<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
 						<div class="d-flex flex-wrap gap-2">
 							<button class="btn btn-outline-primary btn-sm" onClick={restoreNote} title="Restore" aria-label="Restore">
-								<i class="bi bi-arrow-bar-up"></i>
+								<i class="bi bi-reply"></i>
 							</button>
 							<Show when={existingNote()}>
 								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">

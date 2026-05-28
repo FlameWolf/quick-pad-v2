@@ -1,16 +1,20 @@
-import { emptyString } from "@/library";
 import { createSignal, createMemo } from "solid-js";
+import { deleteKV, getKV, setKV } from "@/storage/db";
+import { emptyString } from "@/library";
 
+let cachedToken: string | null = null;
+let cachedExpiry = 0;
+let cachedUser: { email: string; name: string } | null = null;
 let tokenClient: any | null = null;
 let tokenExpiresAt = 0;
 let gsiReadyPromise: Promise<boolean> | null = null;
 let popupInFlight: Promise<string> | null = null;
 const CLIENT_ID = import.meta.env.VITE_GOOG_OAUTH_CLIENT_ID ?? emptyString;
 const SCOPES = "https://www.googleapis.com/auth/drive.appdata openid email profile";
-const SESSION_KEY = "google_session_hint";
-const TOKEN_KEY = "google_access_token";
-const EXPIRY_KEY = "google_token_expires_at";
-const USER_KEY = "google_user_info";
+const SESSION_KEY = "google-session-hint";
+const TOKEN_KEY = "google-access-token";
+const EXPIRY_KEY = "google-token-expires-at";
+const USER_KEY = "google-user-info";
 const TOKEN_REFRESH_BUFFER_MS = 60_000;
 const GSI_WAIT_MS = 6000;
 
@@ -19,34 +23,28 @@ const [user, setUser] = createSignal<{ email: string; name: string } | null>(nul
 const [isReady, setIsReady] = createSignal(false);
 const [isSignedIn, setIsSignedIn] = createSignal(false);
 
+export async function hydrateAuthState(): Promise<void> {
+	cachedToken = (await getKV<string>(TOKEN_KEY)) ?? null;
+	cachedExpiry = (await getKV<number>(EXPIRY_KEY)) ?? 0;
+	const stored = await getKV<{ email: unknown; name: unknown }>(USER_KEY);
+	if (stored && typeof stored.email === "string" && typeof stored.name === "string") {
+		cachedUser = { email: stored.email, name: stored.name };
+	} else {
+		cachedUser = null;
+	}
+}
+
 function persistAuthState(token: string, expiresAt: number) {
-	localStorage.setItem(TOKEN_KEY, token);
-	localStorage.setItem(EXPIRY_KEY, String(expiresAt));
+	setKV(TOKEN_KEY, token);
+	setKV(EXPIRY_KEY, expiresAt);
 }
 
 function persistUserInfo(info: { email: string; name: string } | null) {
 	if (info) {
-		localStorage.setItem(USER_KEY, JSON.stringify(info));
+		setKV(USER_KEY, info);
 	} else {
-		localStorage.removeItem(USER_KEY);
+		deleteKV(USER_KEY);
 	}
-}
-
-function loadStoredUser(): { email: string; name: string } | null {
-	const raw = localStorage.getItem(USER_KEY);
-	if (!raw) {
-		return null;
-	}
-	try {
-		const parsed = JSON.parse(raw);
-		if (parsed && typeof parsed.email === "string" && typeof parsed.name === "string") {
-			return {
-				email: parsed.email,
-				name: parsed.name
-			};
-		}
-	} catch {}
-	return null;
 }
 
 function waitForGoogleIdentity(): Promise<boolean> {
@@ -77,13 +75,13 @@ const isConfigured = createMemo(() => Boolean(CLIENT_ID));
 function clearSession(keepUser = false) {
 	setAccessToken(null);
 	tokenExpiresAt = 0;
-	localStorage.removeItem(TOKEN_KEY);
-	localStorage.removeItem(EXPIRY_KEY);
+	deleteKV(TOKEN_KEY);
+	deleteKV(EXPIRY_KEY);
 	if (!keepUser) {
 		setUser(null);
 		setIsSignedIn(false);
-		localStorage.removeItem(SESSION_KEY);
-		localStorage.removeItem(USER_KEY);
+		deleteKV(SESSION_KEY);
+		deleteKV(USER_KEY);
 	}
 }
 
@@ -121,9 +119,9 @@ function initClient(): boolean {
 				setIsReady(true);
 				return;
 			}
-			setAccessToken(response.access_token);
 			tokenExpiresAt = Date.now() + response.expires_in * 1000;
-			localStorage.setItem(SESSION_KEY, "true");
+			setAccessToken(response.access_token);
+			setKV(SESSION_KEY, true);
 			persistAuthState(response.access_token, tokenExpiresAt);
 			if (!user()) {
 				await fetchUserInfo(response.access_token);
@@ -144,17 +142,13 @@ function tryRestoreSession() {
 		setIsReady(true);
 		return;
 	}
-	const storedToken = localStorage.getItem(TOKEN_KEY);
-	const storedExpiryRaw = localStorage.getItem(EXPIRY_KEY);
-	const storedExpiry = storedExpiryRaw ? Number(storedExpiryRaw) : 0;
-	const storedUser = loadStoredUser();
-	if (storedToken && storedExpiry && Date.now() < storedExpiry - TOKEN_REFRESH_BUFFER_MS) {
-		setAccessToken(storedToken);
-		tokenExpiresAt = storedExpiry;
-		setUser(storedUser);
+	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
+		tokenExpiresAt = cachedExpiry;
+		setAccessToken(cachedToken);
+		setUser(cachedUser);
 		setIsSignedIn(true);
-	} else if (storedUser) {
-		setUser(storedUser);
+	} else if (cachedUser) {
+		setUser(cachedUser);
 		setIsSignedIn(true);
 	}
 	setIsReady(true);

@@ -15,6 +15,7 @@
 		"@solidjs/router": "^0.15.3",
 		"bootstrap": "^5.3.8",
 		"bootstrap-icons": "^1.13.1",
+		"idb": "^8.0.3",
 		"jszip": "^3.10.1",
 		"solid-js": "^1.9.5"
 	},

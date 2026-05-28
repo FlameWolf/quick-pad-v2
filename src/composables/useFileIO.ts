@@ -49,7 +49,7 @@ export function useFileIO() {
 					try {
 						const content = await file.text();
 						const title = file.name.replace(/\.txt$/i, emptyString) || "Untitled";
-						addNote(create(title, content));
+						await addNote(create(title, content));
 						count++;
 					} catch {
 						setImportErrors([...importErrors(), { fileName: file.name, message: "Failed to read file" }]);

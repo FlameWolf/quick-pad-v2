@@ -1,26 +1,38 @@
-import { createSignal } from "solid-js";
+import { createEffect, createSignal, on } from "solid-js";
+import { getKV, setKV } from "@/storage/db";
 import type { Note } from "@/models/Note";
 
 export type SortField = "createdAt" | "modifiedAt" | "title" | "sentenceCount" | "wordCount" | "characterCount";
 export type SortDirection = "asc" | "desc";
 
-const SORT_BY_KEY = "quick-pad-sort-by";
-const SORT_DIRECTION_KEY = "quick-pad-sort-direction";
+const SORT_BY_KEY = "sort-by";
+const SORT_DIRECTION_KEY = "sort-direction";
 const SORT_FIELDS: ReadonlyArray<SortField> = ["createdAt", "modifiedAt", "title", "characterCount"];
 const SORT_DIRECTIONS: ReadonlyArray<SortDirection> = ["asc", "desc"];
+const [sortBy, setSortBy] = createSignal<SortField>("modifiedAt");
+const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
 
-function loadSortBy(): SortField {
-	const raw = localStorage.getItem(SORT_BY_KEY);
-	return SORT_FIELDS.includes(raw as SortField) ? (raw as SortField) : "modifiedAt";
+createEffect(
+	on(sortBy, field => {
+		setKV(SORT_BY_KEY, field);
+	})
+);
+createEffect(
+	on(sortDirection, direction => {
+		setKV(SORT_DIRECTION_KEY, direction);
+	})
+);
+
+export async function hydrateSortPrefs(): Promise<void> {
+	const storedBy = await getKV<string>(SORT_BY_KEY);
+	if (SORT_FIELDS.includes(storedBy as SortField)) {
+		setSortBy(storedBy as SortField);
+	}
+	const storedDir = await getKV<string>(SORT_DIRECTION_KEY);
+	if (SORT_DIRECTIONS.includes(storedDir as SortDirection)) {
+		setSortDirection(storedDir as SortDirection);
+	}
 }
-
-function loadSortDirection(): SortDirection {
-	const raw = localStorage.getItem(SORT_DIRECTION_KEY);
-	return SORT_DIRECTIONS.includes(raw as SortDirection) ? (raw as SortDirection) : "desc";
-}
-
-const [sortBy, setSortByInternal] = createSignal<SortField>(loadSortBy());
-const [sortDirection, setSortDirectionInternal] = createSignal<SortDirection>(loadSortDirection());
 
 function compareNotes(a: Note, b: Note, field: SortField): number {
 	switch (field) {
@@ -43,23 +55,13 @@ function compareNotes(a: Note, b: Note, field: SortField): number {
 }
 
 export function useNoteSort() {
-	function setSortBy(field: SortField) {
-		setSortByInternal(field);
-		localStorage.setItem(SORT_BY_KEY, field);
-	}
-
-	function setSortDirection(direction: SortDirection) {
-		setSortDirectionInternal(direction);
-		localStorage.setItem(SORT_DIRECTION_KEY, direction);
-	}
-
 	function toggleSortDirection() {
 		setSortDirection(sortDirection() === "asc" ? "desc" : "asc");
 	}
 
 	function getSortedNotes(notes: ReadonlyArray<Note>): Note[] {
 		const multiplier = sortDirection() === "asc" ? 1 : -1;
-		return [...notes].sort((a, b) => compareNotes(a, b, sortBy()) * multiplier);
+		return (notes as Note[]).sort((a, b) => compareNotes(a, b, sortBy()) * multiplier);
 	}
 
 	return {

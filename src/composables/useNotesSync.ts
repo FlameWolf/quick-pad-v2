@@ -3,70 +3,63 @@ import { useGoogleDrive } from "./useGoogleDrive";
 import { useGoogleAuth } from "./useGoogleAuth";
 import * as store from "@/stores/notes";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
+import { deleteKV, getKV, setKV } from "@/storage/db";
 import { debounce, emptyString, STORAGE_KEY } from "@/library";
 import type { UUID } from "crypto";
 
 const LEGACY_SYNC_FILENAME = "quick-pad-notes.json";
-const LAST_SYNCED_TO_LOCAL_KEY = "quick-pad-last-synced-to-local";
-const LAST_SYNCED_TO_CLOUD_KEY = "quick-pad-last-synced-to-cloud";
-const AUTO_SYNC_KEY = "quick-pad-auto-sync";
-const PENDING_PURGES_KEY = "quick-pad-pending-purges";
+const LAST_SYNCED_TO_LOCAL_KEY = "last-synced-to-local";
+const LAST_SYNCED_TO_CLOUD_KEY = "last-synced-to-cloud";
+const AUTO_SYNC_KEY = "auto-sync";
+const PENDING_PURGES_KEY = "pending-purges";
 const DEBOUNCE_MS = 3000;
 const [isSyncing, setIsSyncing] = createSignal(false);
-const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(loadLastSyncedToLocal());
-const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(loadLastSyncedToCloud());
-const [autoSyncEnabled, setAutoSyncEnabled] = createSignal<boolean>(loadAutoSync());
+const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
+const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
+const [autoSyncEnabled, setAutoSyncEnabled] = createSignal<boolean>(true);
 const [lastSyncMessage, setLastSyncMessage] = createSignal<{
 	text: string;
 	type: "success" | "error";
 	timeStamp: number;
 } | null>(null);
 const [syncError, setSyncError] = createSignal<string | null>(null);
-const pendingPurges = loadPendingPurges();
+const pendingPurges = new Set<UUID>();
 
-function loadLastSyncedToLocal(): Date | null {
-	const raw = localStorage.getItem(LAST_SYNCED_TO_LOCAL_KEY);
-	return raw ? new Date(raw) : null;
-}
-
-function loadLastSyncedToCloud(): Date | null {
-	const raw = localStorage.getItem(LAST_SYNCED_TO_CLOUD_KEY);
-	return raw ? new Date(raw) : null;
-}
-
-function loadAutoSync(): boolean {
-	const raw = localStorage.getItem(AUTO_SYNC_KEY);
-	return raw === null ? true : raw === "true";
+export async function hydrateSyncMetadata(): Promise<void> {
+	const storedLocal = await getKV<string>(LAST_SYNCED_TO_LOCAL_KEY);
+	const storedCloud = await getKV<string>(LAST_SYNCED_TO_CLOUD_KEY);
+	const storedAutoSync = await getKV<boolean>(AUTO_SYNC_KEY);
+	setLastSyncedToLocalAt(storedLocal ? new Date(storedLocal) : null);
+	setLastSyncedToCloudAt(storedCloud ? new Date(storedCloud) : null);
+	setAutoSyncEnabled(storedAutoSync === undefined ? true : storedAutoSync);
+	try {
+		const storedPurges = await getKV<UUID[]>(PENDING_PURGES_KEY);
+		if (Array.isArray(storedPurges)) {
+			storedPurges.forEach(Set.prototype.add, pendingPurges);
+		}
+	} catch {
+		void 0;
+	}
 }
 
 function persistAutoSync(val: boolean) {
-	localStorage.setItem(AUTO_SYNC_KEY, String(val));
+	setKV(AUTO_SYNC_KEY, val);
 }
 
 function persistLastSyncedToLocal(date: Date) {
-	localStorage.setItem(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
+	setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
 }
 
 function persistLastSyncedToCloud(date: Date) {
-	localStorage.setItem(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
-}
-
-function loadPendingPurges(): Set<UUID> {
-	try {
-		const raw = localStorage.getItem(PENDING_PURGES_KEY);
-		const ids: UUID[] = raw ? JSON.parse(raw) : [];
-		return new Set(ids);
-	} catch {
-		return new Set();
-	}
+	setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
 }
 
 function persistPendingPurges(set: Set<UUID>) {
 	if (set.size === 0) {
-		localStorage.removeItem(PENDING_PURGES_KEY);
+		deleteKV(PENDING_PURGES_KEY);
 		return;
 	}
-	localStorage.setItem(PENDING_PURGES_KEY, JSON.stringify(Array.from(set)));
+	setKV(PENDING_PURGES_KEY, Array.from(set));
 }
 
 export function noteEffectiveTime(note: Note): number {
@@ -220,7 +213,7 @@ export function useNotesSync() {
 			if (changes.length > 0) {
 				store.replaceMultiple(changes);
 			}
-			await purgeRemoteFiles(store.purgeExpiredTrash());
+			await purgeRemoteFiles(await store.purgeExpiredTrash());
 			setLastSyncedToLocalAt(syncStartedAt);
 			persistLastSyncedToLocal(syncStartedAt);
 			setLastSyncMessage({

@@ -178,7 +178,7 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				permanentlyDeleteMultiple(ids);
+				await permanentlyDeleteMultiple(ids);
 				requestSync(ids);
 				exitSelectionMode();
 				break;
@@ -203,7 +203,7 @@ export default function DisplayNoteList(props: Props) {
 			return;
 		}
 		const trashedNoteIds = trashed.map(n => n.id);
-		permanentlyDeleteMultiple(trashedNoteIds);
+		await permanentlyDeleteMultiple(trashedNoteIds);
 		requestSync(trashedNoteIds);
 	}
 

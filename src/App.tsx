@@ -113,11 +113,11 @@ export default function App(props: AppProps) {
 	createEffect(
 		on(
 			isLoading,
-			loading => {
+			async loading => {
 				if (loading) {
 					return;
 				}
-				const purgedIds = purgeExpiredTrash();
+				const purgedIds = await purgeExpiredTrash();
 				if (purgedIds.length > 0) {
 					requestSync(purgedIds);
 				}

@@ -151,12 +151,12 @@ export default function EditNote() {
 		}
 	}
 
-	function saveNote() {
+	async function saveNote() {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
 		if (isCreateMode()) {
 			const note = create(title, content);
-			addNote(note);
+			await addNote(note);
 			setIsEditing(false);
 			requestSync();
 			navigate(`/notes/${note.id}`);
@@ -237,7 +237,7 @@ export default function EditNote() {
 			return;
 		}
 		const noteId = note.id;
-		permanentlyDelete(noteId);
+		await permanentlyDelete(noteId);
 		requestSync([noteId]);
 		navigate("/notes/trash");
 	}

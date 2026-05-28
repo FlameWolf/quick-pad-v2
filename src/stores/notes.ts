@@ -1,8 +1,9 @@
 import { createStore, produce } from "solid-js/store";
 import { createMemo, createEffect, on, mapArray, createSignal } from "solid-js";
 import { archive, fromJSON, purge, restore, toJSON, trash, unarchive, update, type Note } from "@/models/Note";
+import { deleteNote, deleteNotes, getAllNotes, putNote, putNotes } from "@/storage/db";
 import { noteEffectiveTime } from "@/composables/useNotesSync";
-import { contains, emptyString, LEGACY_STORAGE_KEY, STORAGE_KEY } from "@/library";
+import { contains, emptyString } from "@/library";
 import type { UUID } from "crypto";
 
 interface NotesState {
@@ -10,53 +11,52 @@ interface NotesState {
 	searchText: string;
 }
 
+let flushScheduled = false;
+const pendingNotes = new Set<Note>();
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 export const [isLoading, setIsLoading] = createSignal(true);
-const noteKey = (id: UUID) => `${STORAGE_KEY}${id}`;
-const migrateFromLegacy = async (): Promise<Note[]> => {
-	const raw = localStorage.getItem(LEGACY_STORAGE_KEY);
-	if (!raw) {
-		return [];
-	}
+export async function hydrateNotes(): Promise<void> {
 	try {
-		return JSON.parse(raw).map(fromJSON);
+		const raw = await getAllNotes();
+		setStore("notes", raw.map(fromJSON));
 	} catch {
-		return [];
+		setStore("notes", []);
 	} finally {
-		localStorage.removeItem(LEGACY_STORAGE_KEY);
+		setIsLoading(false);
 	}
+}
+const persistNote = async (note: Note) => {
+	await putNote(toJSON(note));
 };
-const persistNote = (note: Note) => {
-	if (note.purgedAt) {
-		removeNote(note.id);
-		return;
-	}
-	localStorage.setItem(noteKey(note.id), JSON.stringify(toJSON(note)));
+const persistNotes = async (notes: Note[]) => {
+	await putNotes(notes.map(toJSON));
 };
-const removeNote = (id: UUID) => {
-	localStorage.removeItem(noteKey(id));
+const removeNote = async (id: UUID) => {
+	await deleteNote(id);
+};
+const removeNotes = async (ids: UUID[]) => {
+	await deleteNotes(ids);
 };
 const [store, setStore] = createStore<NotesState>({
 	notes: [],
 	searchText: emptyString
 });
-setTimeout(async () => {
-	const storedNotes: Note[] = await migrateFromLegacy();
-	for (let index = 0; index < localStorage.length; index++) {
-		const key = localStorage.key(index);
-		if (!key?.startsWith(STORAGE_KEY)) {
-			continue;
-		}
-		try {
-			storedNotes.push(fromJSON(JSON.parse(localStorage.getItem(key) as string)));
-		} catch {
-			void 0;
-		}
+const flushPending = async () => {
+	const toFlush = Array.from(pendingNotes);
+	if (toFlush.length > 0) {
+		await persistNotes(toFlush);
 	}
-	setStore("notes", storedNotes);
-	setIsLoading(false);
-});
+	pendingNotes.clear();
+	flushScheduled = false;
+};
+const schedulePersist = (note: Note) => {
+	pendingNotes.add(note);
+	if (!flushScheduled) {
+		queueMicrotask(flushPending);
+		flushScheduled = true;
+	}
+};
 createEffect(
 	mapArray(
 		() => store.notes,
@@ -64,10 +64,8 @@ createEffect(
 			createEffect(
 				on(
 					() => noteEffectiveTime(note),
-					() => persistNote(note),
-					{
-						defer: true
-					}
+					() => schedulePersist(note),
+					{ defer: true }
 				)
 			);
 		}
@@ -85,9 +83,9 @@ export function getNote(id: UUID): Note | undefined {
 	return store.notes.find(note => note.id === id);
 }
 
-export function addNote(note: Note) {
+export async function addNote(note: Note) {
 	setStore("notes", items => items.concat([note]));
-	persistNote(note);
+	await persistNote(note);
 }
 
 export function updateNote(id: UUID, title: string, content: string) {
@@ -134,24 +132,24 @@ export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 	setStore("notes", note => idSet.has(note.id), produce(restore));
 }
 
-export function permanentlyDelete(id: UUID) {
+export async function permanentlyDelete(id: UUID) {
 	const index = store.notes.findIndex(note => note.id === id);
 	if (index === -1) {
 		return;
 	}
 	purge(store.notes[index] as Note);
 	setStore("notes", items => items.toSpliced(index, 1));
-	removeNote(id);
+	await removeNote(id);
 }
 
-export function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
+export async function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
 	store.notes.filter(note => idSet.has(note.id)).forEach(purge);
 	setStore("notes", items => items.filter(note => !idSet.has(note.id)));
-	idSet.forEach(removeNote);
+	await removeNotes(Array.from(idSet));
 }
 
-export function purgeExpiredTrash() {
+export async function purgeExpiredTrash() {
 	const cutoff = Date.now() - TRASH_RETENTION_MS;
 	const expiredIds = store.notes
 		.filter(note => {
@@ -168,7 +166,7 @@ export function purgeExpiredTrash() {
 	if (expiredIds.length > 0) {
 		const expiredSet = new Set<UUID>(expiredIds);
 		setStore("notes", ns => ns.filter(note => !expiredSet.has(note.id)));
-		expiredSet.forEach(removeNote);
+		await removeNotes(Array.from(expiredSet));
 	}
 	return expiredIds;
 }

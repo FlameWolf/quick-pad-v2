@@ -13,13 +13,13 @@ const [sortBy, setSortBy] = createSignal<SortField>("modifiedAt");
 const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
 
 createEffect(
-	on(sortBy, field => {
-		setKV(SORT_BY_KEY, field);
+	on(sortBy, async field => {
+		await setKV(SORT_BY_KEY, field);
 	})
 );
 createEffect(
-	on(sortDirection, direction => {
-		setKV(SORT_DIRECTION_KEY, direction);
+	on(sortDirection, async direction => {
+		await setKV(SORT_DIRECTION_KEY, direction);
 	})
 );
 

@@ -33,16 +33,16 @@ export async function hydrateSyncMetadata(): Promise<void> {
 	setAutoSyncEnabled(storedAutoSync === undefined ? true : storedAutoSync);
 }
 
-function persistAutoSync(val: boolean) {
-	setKV(AUTO_SYNC_KEY, val);
+async function persistAutoSync(val: boolean) {
+	await setKV(AUTO_SYNC_KEY, val);
 }
 
-function persistLastSyncedToLocal(date: Date) {
-	setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
+async function persistLastSyncedToLocal(date: Date) {
+	await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
 }
 
-function persistLastSyncedToCloud(date: Date) {
-	setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
+async function persistLastSyncedToCloud(date: Date) {
+	await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
 }
 
 export function noteEffectiveTime(note: Note): number {
@@ -153,7 +153,7 @@ export function useNotesSync() {
 				await deleteFromLegacy();
 			}
 			setLastSyncedToCloudAt(syncStartedAt);
-			persistLastSyncedToCloud(syncStartedAt);
+			await persistLastSyncedToCloud(syncStartedAt);
 			setLastSyncMessage({
 				text: `Notes saved to Drive${conflictCount > 0 ? ` with ${conflictCount} conflict${conflictCount > 1 ? "s" : emptyString} resolved` : emptyString}`,
 				type: "success",
@@ -196,7 +196,7 @@ export function useNotesSync() {
 			}
 			await purgeRemoteFiles(await store.purgeExpiredTrash());
 			setLastSyncedToLocalAt(syncStartedAt);
-			persistLastSyncedToLocal(syncStartedAt);
+			await persistLastSyncedToLocal(syncStartedAt);
 			setLastSyncMessage({
 				text: remoteNotes.length === 0 ? "No notes found on Drive" : "Notes loaded from Drive",
 				type: "success",
@@ -234,9 +234,9 @@ export function useNotesSync() {
 		}
 	);
 
-	function setAutoSync(enabled: boolean) {
+	async function setAutoSync(enabled: boolean) {
 		setAutoSyncEnabled(enabled);
-		persistAutoSync(enabled);
+		await persistAutoSync(enabled);
 		if (!enabled) {
 			requestSync.cancel();
 		}

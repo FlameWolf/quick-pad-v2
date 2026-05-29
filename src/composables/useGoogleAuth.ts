@@ -34,16 +34,16 @@ export async function hydrateAuthState(): Promise<void> {
 	}
 }
 
-function persistAuthState(token: string, expiresAt: number) {
-	setKV(TOKEN_KEY, token);
-	setKV(EXPIRY_KEY, expiresAt);
+async function persistAuthState(token: string, expiresAt: number) {
+	await setKV(TOKEN_KEY, token);
+	await setKV(EXPIRY_KEY, expiresAt);
 }
 
-function persistUserInfo(info: { email: string; name: string } | null) {
+async function persistUserInfo(info: { email: string; name: string } | null) {
 	if (info) {
-		setKV(USER_KEY, info);
+		await setKV(USER_KEY, info);
 	} else {
-		deleteKV(USER_KEY);
+		await deleteKV(USER_KEY);
 	}
 }
 
@@ -72,16 +72,16 @@ function waitForGoogleIdentity(): Promise<boolean> {
 
 const isConfigured = createMemo(() => Boolean(CLIENT_ID));
 
-function clearSession(keepUser = false) {
+async function clearSession(keepUser = false) {
 	setAccessToken(null);
 	tokenExpiresAt = 0;
-	deleteKV(TOKEN_KEY);
-	deleteKV(EXPIRY_KEY);
+	await deleteKV(TOKEN_KEY);
+	await deleteKV(EXPIRY_KEY);
 	if (!keepUser) {
 		setUser(null);
 		setIsSignedIn(false);
-		deleteKV(SESSION_KEY);
-		deleteKV(USER_KEY);
+		await deleteKV(SESSION_KEY);
+		await deleteKV(USER_KEY);
 	}
 }
 
@@ -115,17 +115,17 @@ function initClient(): boolean {
 		scope: SCOPES,
 		callback: async (response: any) => {
 			if (response.error) {
-				clearSession(user() !== null);
+				await clearSession(user() !== null);
 				setIsReady(true);
 				return;
 			}
 			tokenExpiresAt = Date.now() + response.expires_in * 1000;
 			setAccessToken(response.access_token);
-			setKV(SESSION_KEY, true);
-			persistAuthState(response.access_token, tokenExpiresAt);
+			await setKV(SESSION_KEY, true);
+			await persistAuthState(response.access_token, tokenExpiresAt);
 			if (!user()) {
 				await fetchUserInfo(response.access_token);
-				persistUserInfo(user());
+				await persistUserInfo(user());
 			}
 			setIsSignedIn(true);
 			setIsReady(true);
@@ -202,14 +202,14 @@ async function signIn() {
 	}
 }
 
-function signOut() {
+async function signOut() {
 	const token = accessToken();
 	if (token && typeof google !== "undefined" && google?.accounts?.oauth2) {
-		google.accounts.oauth2.revoke(token, () => {
-			clearSession();
+		google.accounts.oauth2.revoke(token, async () => {
+			await clearSession();
 		});
 	} else {
-		clearSession();
+		await clearSession();
 	}
 }
 

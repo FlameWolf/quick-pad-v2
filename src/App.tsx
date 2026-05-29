@@ -61,13 +61,13 @@ export default function App(props: AppProps) {
 		await loadFromCloud();
 	}
 
-	function handleSignOut() {
+	async function handleSignOut() {
 		closeSyncMenu();
-		signOut();
+		await signOut();
 	}
 
-	function handleToggleAutoSync() {
-		setAutoSync(!autoSyncEnabled());
+	async function handleToggleAutoSync() {
+		await setAutoSync(!autoSyncEnabled());
 	}
 
 	function scrollToPosition(position: "top" | "bottom") {

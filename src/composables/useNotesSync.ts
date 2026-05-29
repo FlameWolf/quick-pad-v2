@@ -1,4 +1,4 @@
-import { createMemo, createSignal } from "solid-js";
+import { createEffect, createMemo, createSignal, on } from "solid-js";
 import { useGoogleDrive } from "./useGoogleDrive";
 import { useGoogleAuth } from "./useGoogleAuth";
 import * as store from "@/stores/notes";
@@ -31,18 +31,33 @@ export async function hydrateSyncMetadata(): Promise<void> {
 	setLastSyncedToLocalAt(storedLocal ? new Date(storedLocal) : null);
 	setLastSyncedToCloudAt(storedCloud ? new Date(storedCloud) : null);
 	setAutoSyncEnabled(storedAutoSync === undefined ? true : storedAutoSync);
-}
-
-async function persistAutoSync(val: boolean) {
-	await setKV(AUTO_SYNC_KEY, val);
-}
-
-async function persistLastSyncedToLocal(date: Date) {
-	await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
-}
-
-async function persistLastSyncedToCloud(date: Date) {
-	await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
+	createEffect(
+		on(
+			autoSyncEnabled,
+			async flag => {
+				await setKV(AUTO_SYNC_KEY, flag);
+			},
+			{ defer: true }
+		)
+	);
+	createEffect(
+		on(
+			lastSyncedToLocalAt,
+			async date => {
+				await setKV(LAST_SYNCED_TO_LOCAL_KEY, date);
+			},
+			{ defer: true }
+		)
+	);
+	createEffect(
+		on(
+			lastSyncedToCloudAt,
+			async date => {
+				await setKV(LAST_SYNCED_TO_CLOUD_KEY, date);
+			},
+			{ defer: true }
+		)
+	);
 }
 
 export function noteEffectiveTime(note: Note): number {
@@ -153,7 +168,6 @@ export function useNotesSync() {
 				await deleteFromLegacy();
 			}
 			setLastSyncedToCloudAt(syncStartedAt);
-			await persistLastSyncedToCloud(syncStartedAt);
 			setLastSyncMessage({
 				text: `Notes saved to Drive${conflictCount > 0 ? ` with ${conflictCount} conflict${conflictCount > 1 ? "s" : emptyString} resolved` : emptyString}`,
 				type: "success",
@@ -196,7 +210,6 @@ export function useNotesSync() {
 			}
 			await purgeRemoteFiles(await store.purgeExpiredTrash());
 			setLastSyncedToLocalAt(syncStartedAt);
-			await persistLastSyncedToLocal(syncStartedAt);
 			setLastSyncMessage({
 				text: remoteNotes.length === 0 ? "No notes found on Drive" : "Notes loaded from Drive",
 				type: "success",
@@ -236,7 +249,6 @@ export function useNotesSync() {
 
 	async function setAutoSync(enabled: boolean) {
 		setAutoSyncEnabled(enabled);
-		await persistAutoSync(enabled);
 		if (!enabled) {
 			requestSync.cancel();
 		}

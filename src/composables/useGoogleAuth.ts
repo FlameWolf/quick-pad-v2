@@ -1,12 +1,16 @@
-import { createSignal, createMemo } from "solid-js";
+import { createSignal, createMemo, createEffect, on } from "solid-js";
 import { deleteKV, getKV, setKV } from "@/storage/db";
 import { emptyString } from "@/library";
 
+type UserInfo = {
+	email: string;
+	name: string;
+};
+
 let cachedToken: string | null = null;
-let cachedExpiry = 0;
-let cachedUser: { email: string; name: string } | null = null;
+let cachedExpiry: number = 0;
+let cachedUser: UserInfo | null = null;
 let tokenClient: any | null = null;
-let tokenExpiresAt = 0;
 let gsiReadyPromise: Promise<boolean> | null = null;
 let popupInFlight: Promise<string> | null = null;
 const CLIENT_ID = import.meta.env.VITE_GOOG_OAUTH_CLIENT_ID ?? emptyString;
@@ -17,11 +21,45 @@ const EXPIRY_KEY = "google-token-expires-at";
 const USER_KEY = "google-user-info";
 const TOKEN_REFRESH_BUFFER_MS = 60_000;
 const GSI_WAIT_MS = 6000;
-
 const [accessToken, setAccessToken] = createSignal<string | null>(null);
-const [user, setUser] = createSignal<{ email: string; name: string } | null>(null);
+const [tokenExpiresAt, setTokenExpiresAt] = createSignal(0);
+const [user, setUser] = createSignal<UserInfo | null>(null);
 const [isReady, setIsReady] = createSignal(false);
 const [isSignedIn, setIsSignedIn] = createSignal(false);
+
+createEffect(
+	on(
+		[accessToken, tokenExpiresAt],
+		async ([token, expiresAt]) => {
+			if (!token || !expiresAt) {
+				await deleteKV(TOKEN_KEY);
+				await deleteKV(EXPIRY_KEY);
+				return;
+			}
+			if (token !== cachedToken || expiresAt !== cachedExpiry) {
+				await setKV(TOKEN_KEY, token);
+				await setKV(EXPIRY_KEY, expiresAt);
+			}
+		},
+		{ defer: true }
+	)
+);
+
+createEffect(
+	on(
+		user,
+		async info => {
+			if (!info) {
+				await deleteKV(USER_KEY);
+				return;
+			}
+			if (info && (info.email !== cachedUser?.email || info.name !== cachedUser?.name)) {
+				await setKV(USER_KEY, info);
+			}
+		},
+		{ defer: true }
+	)
+);
 
 export async function hydrateAuthState(): Promise<void> {
 	cachedToken = (await getKV<string>(TOKEN_KEY)) ?? null;
@@ -31,19 +69,6 @@ export async function hydrateAuthState(): Promise<void> {
 		cachedUser = { email: stored.email, name: stored.name };
 	} else {
 		cachedUser = null;
-	}
-}
-
-async function persistAuthState(token: string, expiresAt: number) {
-	await setKV(TOKEN_KEY, token);
-	await setKV(EXPIRY_KEY, expiresAt);
-}
-
-async function persistUserInfo(info: { email: string; name: string } | null) {
-	if (info) {
-		await setKV(USER_KEY, info);
-	} else {
-		await deleteKV(USER_KEY);
 	}
 }
 
@@ -74,14 +99,11 @@ const isConfigured = createMemo(() => Boolean(CLIENT_ID));
 
 async function clearSession(keepUser = false) {
 	setAccessToken(null);
-	tokenExpiresAt = 0;
-	await deleteKV(TOKEN_KEY);
-	await deleteKV(EXPIRY_KEY);
+	setTokenExpiresAt(0);
 	if (!keepUser) {
 		setUser(null);
 		setIsSignedIn(false);
 		await deleteKV(SESSION_KEY);
-		await deleteKV(USER_KEY);
 	}
 }
 
@@ -119,13 +141,11 @@ function initClient(): boolean {
 				setIsReady(true);
 				return;
 			}
-			tokenExpiresAt = Date.now() + response.expires_in * 1000;
 			setAccessToken(response.access_token);
+			setTokenExpiresAt(Date.now() + response.expires_in * 1000);
 			await setKV(SESSION_KEY, true);
-			await persistAuthState(response.access_token, tokenExpiresAt);
 			if (!user()) {
 				await fetchUserInfo(response.access_token);
-				await persistUserInfo(user());
 			}
 			setIsSignedIn(true);
 			setIsReady(true);
@@ -143,8 +163,8 @@ function tryRestoreSession() {
 		return;
 	}
 	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
-		tokenExpiresAt = cachedExpiry;
 		setAccessToken(cachedToken);
+		setTokenExpiresAt(cachedExpiry);
 		setUser(cachedUser);
 		setIsSignedIn(true);
 	} else if (cachedUser) {
@@ -215,7 +235,7 @@ async function signOut() {
 
 async function getAccessToken(): Promise<string> {
 	const token = accessToken();
-	if (token && Date.now() < tokenExpiresAt - TOKEN_REFRESH_BUFFER_MS) {
+	if (token && Date.now() < tokenExpiresAt() - TOKEN_REFRESH_BUFFER_MS) {
 		return token;
 	}
 	return requestToken(emptyString);

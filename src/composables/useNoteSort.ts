@@ -12,17 +12,6 @@ const SORT_DIRECTIONS: ReadonlyArray<SortDirection> = ["asc", "desc"];
 const [sortBy, setSortBy] = createSignal<SortField>("modifiedAt");
 const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
 
-createEffect(
-	on(sortBy, async field => {
-		await setKV(SORT_BY_KEY, field);
-	})
-);
-createEffect(
-	on(sortDirection, async direction => {
-		await setKV(SORT_DIRECTION_KEY, direction);
-	})
-);
-
 export async function hydrateSortPrefs(): Promise<void> {
 	const storedBy = await getKV<string>(SORT_BY_KEY);
 	if (SORT_FIELDS.includes(storedBy as SortField)) {
@@ -32,6 +21,24 @@ export async function hydrateSortPrefs(): Promise<void> {
 	if (SORT_DIRECTIONS.includes(storedDir as SortDirection)) {
 		setSortDirection(storedDir as SortDirection);
 	}
+	createEffect(
+		on(
+			sortBy,
+			async field => {
+				await setKV(SORT_BY_KEY, field);
+			},
+			{ defer: true }
+		)
+	);
+	createEffect(
+		on(
+			sortDirection,
+			async direction => {
+				await setKV(SORT_DIRECTION_KEY, direction);
+			},
+			{ defer: true }
+		)
+	);
 }
 
 function compareNotes(a: Note, b: Note, field: SortField): number {

@@ -1,5 +1,5 @@
 import { Route, Navigate, useBeforeLeave, useLocation } from "@solidjs/router";
-import { createEffect, createSignal, Show } from "solid-js";
+import { createEffect, createSignal, on, Show } from "solid-js";
 import DisplayNoteList from "@/components/DisplayNoteList";
 import EditNote from "@/components/EditNote";
 
@@ -18,14 +18,18 @@ export function ScrollRestore() {
 		setIsNavigating(true);
 	});
 
-	createEffect(() => {
-		const toPath = location.pathname;
-		const scrollTop = (listViewRoutes.includes(toPath) && scrollPositions.get(toPath)) || 0;
-		setTimeout(() => {
-			globalThis.scrollTo(0, scrollTop);
-		});
-		setIsNavigating(false);
-	});
+	createEffect(
+		on(
+			() => location.pathname,
+			toPath => {
+				const scrollTop = (listViewRoutes.includes(toPath) && scrollPositions.get(toPath)) || 0;
+				setTimeout(() => {
+					globalThis.scrollTo(0, scrollTop);
+				});
+				setIsNavigating(false);
+			}
+		)
+	);
 
 	return (
 		<Show when={isNavigating()}>

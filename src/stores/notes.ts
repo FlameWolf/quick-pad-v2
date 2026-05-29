@@ -15,17 +15,6 @@ let flushScheduled = false;
 const pendingNotes = new Set<Note>();
 const TRASH_RETENTION_DAYS = 30;
 const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-export const [isLoading, setIsLoading] = createSignal(true);
-export async function hydrateNotes(): Promise<void> {
-	try {
-		const raw = await getAllNotes();
-		setStore("notes", raw.map(fromJSON));
-	} catch {
-		setStore("notes", []);
-	} finally {
-		setIsLoading(false);
-	}
-}
 const persistNote = async (note: Note) => {
 	await putNote(toJSON(note));
 };
@@ -38,10 +27,6 @@ const removeNote = async (id: UUID) => {
 const removeNotes = async (ids: UUID[]) => {
 	await deleteNotes(ids);
 };
-const [store, setStore] = createStore<NotesState>({
-	notes: [],
-	searchText: emptyString
-});
 const flushPending = async () => {
 	const toFlush = Array.from(pendingNotes);
 	if (toFlush.length > 0) {
@@ -57,20 +42,11 @@ const schedulePersist = (note: Note) => {
 		flushScheduled = true;
 	}
 };
-createEffect(
-	mapArray(
-		() => store.notes,
-		note => {
-			createEffect(
-				on(
-					() => noteEffectiveTime(note),
-					() => schedulePersist(note),
-					{ defer: true }
-				)
-			);
-		}
-	)
-);
+const [store, setStore] = createStore<NotesState>({
+	notes: [],
+	searchText: emptyString
+});
+export const [isLoading, setIsLoading] = createSignal(true);
 export const notes = () => store.notes;
 export const searchText = () => store.searchText;
 export const setSearchText = (value: string) => setStore("searchText", value);
@@ -78,6 +54,31 @@ const searchResults = createMemo(() => (store.searchText.trim() ? store.notes.fi
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt && !note.purgedAt));
 export const archivedNotes = createMemo(() => searchResults().filter(note => note.archivedAt && !note.deletedAt && !note.purgedAt));
 export const trashedNotes = createMemo(() => searchResults().filter(note => note.deletedAt && !note.purgedAt));
+
+export async function hydrateNotes(): Promise<void> {
+	try {
+		const raw = await getAllNotes();
+		setStore("notes", raw.map(fromJSON));
+	} catch {
+		setStore("notes", []);
+	} finally {
+		setIsLoading(false);
+		createEffect(
+			mapArray(
+				() => store.notes,
+				note => {
+					createEffect(
+						on(
+							() => noteEffectiveTime(note),
+							() => schedulePersist(note),
+							{ defer: true }
+						)
+					);
+				}
+			)
+		);
+	}
+}
 
 export function getNote(id: UUID): Note | undefined {
 	return store.notes.find(note => note.id === id);

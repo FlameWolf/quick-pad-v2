@@ -97,7 +97,7 @@ export function useNotesSync() {
 	}
 
 	async function readRemoteNotes(): Promise<Note[]> {
-		const files = await listFiles(NOTE_PREFIX);
+		const files = await listFiles(NOTE_PREFIX, lastSyncedToLocalAt());
 		const notes: Note[] = [];
 		await Promise.all(
 			files.map(async file => {

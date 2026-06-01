@@ -34,14 +34,20 @@ export function useGoogleDrive() {
 		};
 	}
 
-	async function listFiles(namePrefix?: string): Promise<DriveFile[]> {
-		const baseQ = "'appDataFolder' in parents and trashed=false";
+	async function listFiles(namePrefix?: string, modifiedTime?: Date | null): Promise<DriveFile[]> {
+		const queryParts = ["'appDataFolder' in parents", "trashed=false"];
+		if (namePrefix) {
+			queryParts.push(`name contains '${namePrefix}'`);
+		}
+		if (modifiedTime) {
+			queryParts.push(`modifiedTime >= '${modifiedTime.toISOString()}'`);
+		}
 		const files: DriveFile[] = [];
 		let pageToken: string | undefined;
 		do {
 			const params = new URLSearchParams({
 				spaces: "appDataFolder",
-				q: namePrefix ? `${baseQ} and name contains '${namePrefix}'` : baseQ,
+				q: queryParts.join(" and "),
 				fields: "files(id,name),nextPageToken",
 				pageSize: "1000"
 			});

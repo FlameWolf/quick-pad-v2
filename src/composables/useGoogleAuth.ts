@@ -1,6 +1,6 @@
 import { createSignal, createMemo, createEffect, on } from "solid-js";
 import { deleteKV, getKV, setKV } from "@/storage/db";
-import { CLIENT_ID, emptyString, EXPIRY_KEY, GSI_WAIT_MS, SCOPES, SESSION_KEY, TOKEN_KEY, TOKEN_REFRESH_BUFFER_MS, USER_KEY } from "@/library";
+import { CLIENT_ID, emptyString, EXPIRY_KEY, GSI_WAIT_MS, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, SCOPES, SESSION_KEY, TOKEN_KEY, TOKEN_REFRESH_BUFFER_MS, USER_KEY } from "@/library";
 
 type UserInfo = {
 	email: string;
@@ -92,10 +92,15 @@ const isConfigured = createMemo(() => Boolean(CLIENT_ID));
 async function clearSession(keepUser = false) {
 	setAccessToken(null);
 	setTokenExpiresAt(0);
+	cachedToken = null;
+	cachedExpiry = 0;
 	if (!keepUser) {
 		setUser(null);
 		setIsSignedIn(false);
+		cachedUser = null;
 		await deleteKV(SESSION_KEY);
+		await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
+		await deleteKV(LAST_SYNCED_TO_LOCAL_KEY);
 	}
 }
 

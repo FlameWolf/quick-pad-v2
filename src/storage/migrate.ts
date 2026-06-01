@@ -1,25 +1,10 @@
 import { getKV, putNote, setKV } from "./db";
+import { KV_MAPPINGS, MIGRATION_FLAG, LEGACY_NOTES_KEY, NOTE_PREFIX } from "@/library";
 import type { NoteJSON } from "@/models/Note";
 
-type Coercion = "string" | "number" | "boolean" | "json";
+type Coercion = (typeof KV_MAPPINGS)[number][2];
 
-const MIGRATION_FLAG = "__migrated-to-idb";
-const LEGACY_NOTES_KEY = "quick-pad-notes";
-const NOTE_PREFIX = "qp-note:";
-const KV_MAPPINGS: ReadonlyArray<readonly [string, string, Coercion]> = [
-	["quick-pad-sort-by", "sort-by", "string"],
-	["quick-pad-sort-direction", "sort-direction", "string"],
-	["quick-pad-last-synced-to-local", "last-synced-to-local", "string"],
-	["quick-pad-last-synced-to-cloud", "last-synced-to-cloud", "string"],
-	["quick-pad-auto-sync", "auto-sync", "boolean"],
-	["quick-pad-pending-purges", "pending-purges", "json"],
-	["google_session_hint", "google-session-hint", "string"],
-	["google_access_token", "google-access-token", "string"],
-	["google_token_expires_at", "google-token-expires-at", "number"],
-	["google_user_info", "google-user-info", "json"]
-];
-
-function coerce(raw: string, type: Coercion): unknown {
+function coerce(raw: string, type: Coercion): FromName<Coercion> {
 	switch (type) {
 		case "string":
 			return raw;
@@ -29,6 +14,8 @@ function coerce(raw: string, type: Coercion): unknown {
 			return raw === "true";
 		case "json":
 			return JSON.parse(raw);
+		default:
+			throw new Error(`Unsupported coercion type: ${type}`);
 	}
 }
 

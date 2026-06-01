@@ -4,14 +4,9 @@ import { useGoogleAuth } from "./useGoogleAuth";
 import * as store from "@/stores/notes";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
 import { getKV, setKV } from "@/storage/db";
-import { debounce, emptyString, STORAGE_KEY } from "@/library";
+import { AUTO_SYNC_KEY, debounce, DEBOUNCE_MS, emptyString, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, LEGACY_SYNC_FILENAME, NOTE_PREFIX } from "@/library";
 import type { UUID } from "crypto";
 
-const LEGACY_SYNC_FILENAME = "quick-pad-notes.json";
-const LAST_SYNCED_TO_LOCAL_KEY = "last-synced-to-local";
-const LAST_SYNCED_TO_CLOUD_KEY = "last-synced-to-cloud";
-const AUTO_SYNC_KEY = "auto-sync";
-const DEBOUNCE_MS = 3000;
 const [isSyncing, setIsSyncing] = createSignal(false);
 const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
 const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
@@ -79,7 +74,7 @@ export function mergeNotesByModifiedAt(local: ReadonlyArray<Note>, remote: Reado
 export function useNotesSync() {
 	const { listFiles, findFile, readJSON, readJSONById, writeJSONById, writeJSON, deleteFile } = useGoogleDrive();
 	const { isSignedIn } = useGoogleAuth();
-	const getFileName = (id: UUID) => `${STORAGE_KEY}${id}.json`;
+	const getFileName = (id: UUID) => `${NOTE_PREFIX}${id}.json`;
 
 	async function migrateFromLegacy(): Promise<Note[]> {
 		try {
@@ -102,7 +97,7 @@ export function useNotesSync() {
 	}
 
 	async function readRemoteNotes(): Promise<Note[]> {
-		const files = await listFiles(STORAGE_KEY);
+		const files = await listFiles(NOTE_PREFIX);
 		const notes: Note[] = [];
 		await Promise.all(
 			files.map(async file => {

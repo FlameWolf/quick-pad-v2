@@ -1,12 +1,52 @@
+export const emptyString = "";
+export const DB_NAME = "quick-pad";
+export const DB_VERSION = 1;
+export const NOTES_STORE = "notes";
+export const KV_STORE = "kv";
+export const MIGRATION_FLAG = "__migrated-to-idb";
+export const LEGACY_NOTES_KEY = "quick-pad-notes";
+export const NOTE_PREFIX = "qp-note:";
+export const KV_MAPPINGS: ReadonlyArray<readonly [string, string, "string" | "number" | "boolean" | "json"]> = [
+	["quick-pad-sort-by", "sort-by", "string"],
+	["quick-pad-sort-direction", "sort-direction", "string"],
+	["quick-pad-last-synced-to-local", "last-synced-to-local", "string"],
+	["quick-pad-last-synced-to-cloud", "last-synced-to-cloud", "string"],
+	["quick-pad-auto-sync", "auto-sync", "boolean"],
+	["quick-pad-pending-purges", "pending-purges", "json"],
+	["google_session_hint", "google-session-hint", "string"],
+	["google_access_token", "google-access-token", "string"],
+	["google_token_expires_at", "google-token-expires-at", "number"],
+	["google_user_info", "google-user-info", "json"]
+];
+export const TRASH_RETENTION_DAYS = 30;
+export const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+export const MAX_HISTORY = 100;
+export const SORT_BY_KEY = "sort-by";
+export const SORT_DIRECTION_KEY = "sort-direction";
+export const SORT_FIELDS = ["createdAt", "modifiedAt", "title", "sentenceCount", "wordCount", "characterCount"] as const;
+export const SORT_DIRECTIONS = ["asc", "desc"] as const;
+export const CLIENT_ID = import.meta.env.VITE_GOOG_OAUTH_CLIENT_ID ?? emptyString;
+export const SCOPES = "https://www.googleapis.com/auth/drive.appdata openid email profile";
+export const SESSION_KEY = "google-session-hint";
+export const TOKEN_KEY = "google-access-token";
+export const EXPIRY_KEY = "google-token-expires-at";
+export const USER_KEY = "google-user-info";
+export const TOKEN_REFRESH_BUFFER_MS = 60_000;
+export const GSI_WAIT_MS = 6000;
+export const DRIVE_API = "https://www.googleapis.com/drive/v3/files";
+export const UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files";
+export const LEGACY_SYNC_FILENAME = "quick-pad-notes.json";
+export const LAST_SYNCED_TO_LOCAL_KEY = "last-synced-to-local";
+export const LAST_SYNCED_TO_CLOUD_KEY = "last-synced-to-cloud";
+export const AUTO_SYNC_KEY = "auto-sync";
+export const DEBOUNCE_MS = 3000;
+
 const sentenceSegmenter = new Intl.Segmenter("en", { granularity: "sentence" });
 const wordSegmenter = new Intl.Segmenter("en", { granularity: "word" });
 const characterSegmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 const wordMatchRegExp = /[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}]+/u;
+const summaryLength = 100;
 
-export const emptyString = "";
-export const summaryLength = 100;
-export const LEGACY_STORAGE_KEY = "quick-pad-notes";
-export const STORAGE_KEY = "qp-note:";
 export const getSummary = (text: string): string => {
 	return text.length > summaryLength ? text.substring(0, summaryLength) + "\u2026" : text;
 };

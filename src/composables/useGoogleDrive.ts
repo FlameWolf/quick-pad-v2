@@ -1,13 +1,11 @@
 import { useGoogleAuth } from "./useGoogleAuth";
+import { DRIVE_API, UPLOAD_API } from "@/library";
 
 interface DriveFile {
 	id: string;
 	name: string;
 	modifiedTime: string;
 }
-
-const DRIVE_API = "https://www.googleapis.com/drive/v3/files";
-const UPLOAD_API = "https://www.googleapis.com/upload/drive/v3/files";
 
 async function fetchOrThrow(url: string, init?: RequestInit): Promise<Response> {
 	const res = await fetch(url, init);

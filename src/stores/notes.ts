@@ -3,7 +3,7 @@ import { createMemo, createEffect, on, mapArray, createSignal } from "solid-js";
 import { archive, fromJSON, purge, restore, toJSON, trash, unarchive, update, type Note } from "@/models/Note";
 import { deleteNote, deleteNotes, getAllNotes, putNote, putNotes } from "@/storage/db";
 import { noteEffectiveTime } from "@/composables/useNotesSync";
-import { contains, emptyString } from "@/library";
+import { contains, emptyString, TRASH_RETENTION_MS } from "@/library";
 import type { UUID } from "crypto";
 
 interface NotesState {
@@ -13,8 +13,6 @@ interface NotesState {
 
 let flushScheduled = false;
 const pendingNotes = new Set<Note>();
-const TRASH_RETENTION_DAYS = 30;
-const TRASH_RETENTION_MS = TRASH_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 const persistNote = async (note: Note) => {
 	await putNote(toJSON(note));
 };

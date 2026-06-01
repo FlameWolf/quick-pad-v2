@@ -1,14 +1,11 @@
 import { createEffect, createSignal, on } from "solid-js";
 import { getKV, setKV } from "@/storage/db";
+import { SORT_BY_KEY, SORT_FIELDS, SORT_DIRECTION_KEY, SORT_DIRECTIONS } from "@/library";
 import type { Note } from "@/models/Note";
 
-export type SortField = "createdAt" | "modifiedAt" | "title" | "sentenceCount" | "wordCount" | "characterCount";
-export type SortDirection = "asc" | "desc";
+export type SortField = (typeof SORT_FIELDS)[number];
+export type SortDirection = (typeof SORT_DIRECTIONS)[number];
 
-const SORT_BY_KEY = "sort-by";
-const SORT_DIRECTION_KEY = "sort-direction";
-const SORT_FIELDS: ReadonlyArray<SortField> = ["createdAt", "modifiedAt", "title", "characterCount"];
-const SORT_DIRECTIONS: ReadonlyArray<SortDirection> = ["asc", "desc"];
 const [sortBy, setSortBy] = createSignal<SortField>("modifiedAt");
 const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
 

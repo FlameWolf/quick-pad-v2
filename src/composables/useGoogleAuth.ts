@@ -1,6 +1,6 @@
 import { createSignal, createMemo, createEffect, on } from "solid-js";
 import { deleteKV, getKV, setKV } from "@/storage/db";
-import { emptyString } from "@/library";
+import { CLIENT_ID, emptyString, EXPIRY_KEY, GSI_WAIT_MS, SCOPES, SESSION_KEY, TOKEN_KEY, TOKEN_REFRESH_BUFFER_MS, USER_KEY } from "@/library";
 
 type UserInfo = {
 	email: string;
@@ -13,14 +13,6 @@ let cachedUser: UserInfo | null = null;
 let tokenClient: any | null = null;
 let gsiReadyPromise: Promise<boolean> | null = null;
 let popupInFlight: Promise<string> | null = null;
-const CLIENT_ID = import.meta.env.VITE_GOOG_OAUTH_CLIENT_ID ?? emptyString;
-const SCOPES = "https://www.googleapis.com/auth/drive.appdata openid email profile";
-const SESSION_KEY = "google-session-hint";
-const TOKEN_KEY = "google-access-token";
-const EXPIRY_KEY = "google-token-expires-at";
-const USER_KEY = "google-user-info";
-const TOKEN_REFRESH_BUFFER_MS = 60_000;
-const GSI_WAIT_MS = 6000;
 const [accessToken, setAccessToken] = createSignal<string | null>(null);
 const [tokenExpiresAt, setTokenExpiresAt] = createSignal(0);
 const [user, setUser] = createSignal<UserInfo | null>(null);

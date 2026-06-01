@@ -1,10 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
+import { DB_NAME, DB_VERSION, NOTES_STORE, KV_STORE } from "@/library";
 import type { NoteJSON } from "@/models/Note";
-
-const DB_NAME = "quick-pad";
-const DB_VERSION = 1;
-const NOTES_STORE = "notes";
-const KV_STORE = "kv";
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
 

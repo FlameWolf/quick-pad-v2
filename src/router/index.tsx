@@ -24,7 +24,10 @@ export function ScrollRestore() {
 			toPath => {
 				const scrollTop = (listViewRoutes.includes(toPath) && scrollPositions.get(toPath)) || 0;
 				setTimeout(() => {
-					globalThis.scrollTo(0, scrollTop);
+					window.scrollTo({
+						top: scrollTop,
+						behavior: "instant"
+					});
 				});
 				setIsNavigating(false);
 			}

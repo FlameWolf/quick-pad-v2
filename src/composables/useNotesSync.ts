@@ -96,8 +96,8 @@ export function useNotesSync() {
 		}
 	}
 
-	async function readRemoteNotes(): Promise<Note[]> {
-		const files = await listFiles(NOTE_PREFIX, lastSyncedToLocalAt());
+	async function readRemoteNotes(force = false): Promise<Note[]> {
+		const files = await listFiles(NOTE_PREFIX, force ? null : lastSyncedToLocalAt());
 		const notes: Note[] = [];
 		await Promise.all(
 			files.map(async file => {
@@ -147,76 +147,68 @@ export function useNotesSync() {
 		return "uploaded";
 	}
 
-	async function saveToCloud(purged: ReadonlyArray<UUID> = []): Promise<boolean> {
-		if (isSyncing()) {
-			return false;
+	async function runPull(force = false) {
+		const syncStartedAt = new Date();
+		const remoteNotes = await readRemoteNotes(force);
+		const changes = mergeNotesByModifiedAt(store.notes(), remoteNotes);
+		if (changes.length > 0) {
+			store.replaceMultiple(changes);
 		}
-		setIsSyncing(true);
-		setSyncError(null);
-		try {
-			const syncStartedAt = new Date();
-			await purgeRemoteFiles(purged);
-			const dirtyNotes = store.notes().filter(note => noteEffectiveTime(note) > (lastSyncedToCloudAt()?.getTime() ?? 0));
-			const uploadResults = await Promise.all(dirtyNotes.map(uploadNote));
-			const conflictCount = uploadResults.filter(result => result === "conflict").length;
-			if (lastSyncedToLocalAt()) {
-				await deleteFromLegacy();
-			}
-			setLastSyncedToCloudAt(syncStartedAt);
-			setLastSyncMessage({
-				text: `Notes saved to Drive${conflictCount > 0 ? ` with ${conflictCount} conflict${conflictCount > 1 ? "s" : emptyString} resolved` : emptyString}`,
-				type: "success",
-				timeStamp: Date.now()
-			});
-			return true;
-		} catch (e: any) {
-			setSyncError(e?.message ?? "Failed to save");
-			setLastSyncMessage({
-				text: `Sync failed: ${syncError()}`,
-				type: "error",
-				timeStamp: Date.now()
-			});
-			return false;
-		} finally {
-			setIsSyncing(false);
-		}
+		await purgeRemoteFiles(await store.purgeExpiredTrash());
+		setLastSyncedToLocalAt(syncStartedAt);
+		return {
+			remoteCount: remoteNotes.length,
+			downloaded: changes.length
+		};
 	}
 
-	async function loadFromCloud(): Promise<void> {
+	async function runPush(purged: ReadonlyArray<UUID> = [], force = false) {
+		const syncStartedAt = new Date();
+		await purgeRemoteFiles(purged);
+		const candidates = force ? store.notes() : store.notes().filter(n => noteEffectiveTime(n) > (lastSyncedToCloudAt()?.getTime() ?? 0));
+		const results = await Promise.all(candidates.map(uploadNote));
+		if (lastSyncedToLocalAt()) {
+			await deleteFromLegacy();
+		}
+		setLastSyncedToCloudAt(syncStartedAt);
+		return {
+			conflicts: results.filter(r => r === "conflict").length
+		};
+	}
+
+	async function doPullAndPush({ force = false as boolean, purged = [] as ReadonlyArray<UUID> } = {}) {
 		if (isSyncing()) {
 			return;
 		}
 		setIsSyncing(true);
 		setSyncError(null);
 		try {
-			const syncStartedAt = new Date();
-			const remoteNotes = await readRemoteNotes();
-			if (remoteNotes.length === 0 && store.notes.length === 0) {
-				setLastSyncMessage({
-					text: "No notes found on Drive",
-					type: "success",
-					timeStamp: Date.now()
-				});
-				return;
-			}
-			const changes = mergeNotesByModifiedAt(store.notes(), remoteNotes);
-			if (changes.length > 0) {
-				store.replaceMultiple(changes);
-			}
-			await purgeRemoteFiles(await store.purgeExpiredTrash());
-			setLastSyncedToLocalAt(syncStartedAt);
+			const pullResult = await runPull(force);
+			const pushResult = await runPush(purged, force);
+			const empty = pullResult.remoteCount === 0 && store.notes().length === 0;
+			const changes = pushResult.conflicts + pullResult.downloaded;
 			setLastSyncMessage({
-				text: remoteNotes.length === 0 ? "No notes found on Drive" : "Notes loaded from Drive",
+				text: empty ? "Nothing to sync" : `Notes synced${changes > 0 ? ` with ${changes} changes${changes > 1 ? "s" : emptyString} fetched from remote` : emptyString}`,
 				type: "success",
 				timeStamp: Date.now()
 			});
 		} catch (e: any) {
-			setSyncError(e?.message ?? "Failed to load");
-			setLastSyncMessage({
-				text: `Sync failed: ${syncError()}`,
-				type: "error",
-				timeStamp: Date.now()
-			});
+			setSyncError(e?.message ?? "Sync failed");
+			setLastSyncMessage({ text: `Sync failed: ${syncError()}`, type: "error", timeStamp: Date.now() });
+		} finally {
+			setIsSyncing(false);
+		}
+	}
+
+	async function saveToCloud(purged: ReadonlyArray<UUID> = []): Promise<boolean> {
+		if (isSyncing()) {
+			return false;
+		}
+		try {
+			await runPush(purged, false);
+			return true;
+		} catch (e: any) {
+			return false;
 		} finally {
 			setIsSyncing(false);
 		}
@@ -262,8 +254,7 @@ export function useNotesSync() {
 		syncError,
 		autoSyncEnabled,
 		lastSyncMessage,
-		saveToCloud,
-		loadFromCloud,
+		doPullAndPush,
 		requestSync,
 		setAutoSync,
 		dismissMessage

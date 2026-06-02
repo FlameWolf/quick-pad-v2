@@ -192,8 +192,8 @@ export function useNotesSync() {
 				type: "success",
 				timeStamp: Date.now()
 			});
-		} catch (e: any) {
-			setSyncError(e?.message ?? "Sync failed");
+		} catch (err: any) {
+			setSyncError(err?.message ?? "Sync failed");
 			setLastSyncMessage({ text: `Sync failed: ${syncError()}`, type: "error", timeStamp: Date.now() });
 		} finally {
 			setIsSyncing(false);
@@ -205,9 +205,10 @@ export function useNotesSync() {
 			return false;
 		}
 		try {
+			setIsSyncing(true);
 			await runPush(purged, false);
 			return true;
-		} catch (e: any) {
+		} catch {
 			return false;
 		} finally {
 			setIsSyncing(false);

@@ -65,7 +65,7 @@ export function useNoteSort() {
 
 	function getSortedNotes(notes: ReadonlyArray<Note>): Note[] {
 		const multiplier = sortDirection() === "asc" ? 1 : -1;
-		return (notes as Note[]).sort((a, b) => compareNotes(a, b, sortBy()) * multiplier);
+		return Array.from(notes).sort((a, b) => compareNotes(a, b, sortBy()) * multiplier);
 	}
 
 	return {

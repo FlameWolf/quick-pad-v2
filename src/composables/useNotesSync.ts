@@ -56,7 +56,7 @@ export async function hydrateSyncMetadata(): Promise<void> {
 }
 
 export function noteEffectiveTime(note: Note): number {
-	return Math.max(note.createdAt.getTime(), note.modifiedAt?.getTime() ?? 0, note.archivedAt?.getTime() ?? 0, note.deletedAt?.getTime() ?? 0, note.purgedAt?.getTime() ?? 0, note.stateChangedAt?.getTime() ?? 0);
+	return Math.max(note.createdAt.getTime(), note.modifiedAt?.getTime() ?? 0, note.archivedAt?.getTime() ?? 0, note.deletedAt?.getTime() ?? 0, note.stateChangedAt?.getTime() ?? 0);
 }
 
 export function mergeNotesByModifiedAt(local: ReadonlyArray<Note>, remote: ReadonlyArray<Note>): Note[] {
@@ -137,7 +137,7 @@ export function useNotesSync() {
 					return "uploaded";
 				}
 				if (remoteEffectiveTime > localEffectiveTime) {
-					store.replaceNote(remoteNote);
+					await store.replaceNote(remoteNote);
 					return "conflict";
 				}
 			}
@@ -152,7 +152,7 @@ export function useNotesSync() {
 		const remoteNotes = await readRemoteNotes(force);
 		const changes = mergeNotesByModifiedAt(store.notes(), remoteNotes);
 		if (changes.length > 0) {
-			store.replaceMultiple(changes);
+			await store.replaceMultiple(changes);
 		}
 		await purgeRemoteFiles(await store.purgeExpiredTrash());
 		setLastSyncedToLocalAt(syncStartedAt);

@@ -1,4 +1,4 @@
-import { emptyString, getCharacterCount, getSentenceCount, getSummary, getWordCount } from "@/library";
+import { getCharacterCount, getSentenceCount, getSummary, getWordCount } from "@/library";
 import type { UUID } from "crypto";
 
 export interface NoteJSON {
@@ -9,7 +9,6 @@ export interface NoteJSON {
 	modifiedAt?: string;
 	archivedAt?: string;
 	deletedAt?: string;
-	purgedAt?: string;
 	stateChangedAt?: string;
 	summary?: string;
 	sentenceCount?: number;
@@ -25,7 +24,6 @@ export interface Note {
 	modifiedAt?: Date;
 	archivedAt?: Date;
 	deletedAt?: Date;
-	purgedAt?: Date;
 	stateChangedAt?: Date;
 	summary?: string;
 	sentenceCount?: number;
@@ -51,7 +49,6 @@ export function create(title: string, content: string): Note {
 		modifiedAt: undefined,
 		archivedAt: undefined,
 		deletedAt: undefined,
-		purgedAt: undefined,
 		stateChangedAt: undefined
 	};
 	computeDerived(note);
@@ -87,15 +84,6 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
-export function purge(note: Note): void {
-	const now = new Date();
-	note.purgedAt = now;
-	note.stateChangedAt = now;
-	note.title = emptyString;
-	note.content = emptyString;
-	computeDerived(note);
-}
-
 export function toJSON(note: Note): NoteJSON {
 	return {
 		id: note.id,
@@ -105,7 +93,6 @@ export function toJSON(note: Note): NoteJSON {
 		modifiedAt: note.modifiedAt?.toISOString(),
 		archivedAt: note.archivedAt?.toISOString(),
 		deletedAt: note.deletedAt?.toISOString(),
-		purgedAt: note.purgedAt?.toISOString(),
 		stateChangedAt: note.stateChangedAt?.toISOString(),
 		summary: note.summary,
 		sentenceCount: note.sentenceCount,
@@ -123,7 +110,6 @@ export function fromJSON(data: NoteJSON): Note {
 		modifiedAt: data.modifiedAt ? new Date(data.modifiedAt) : undefined,
 		archivedAt: data.archivedAt ? new Date(data.archivedAt) : undefined,
 		deletedAt: data.deletedAt ? new Date(data.deletedAt) : undefined,
-		purgedAt: data.purgedAt ? new Date(data.purgedAt) : undefined,
 		stateChangedAt: data.stateChangedAt ? new Date(data.stateChangedAt) : undefined
 	};
 	if (data.summary && data.sentenceCount && data.wordCount && data.characterCount) {

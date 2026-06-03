@@ -7,6 +7,11 @@ import { getKV, setKV } from "@/storage/db";
 import { AUTO_SYNC_KEY, debounce, DEBOUNCE_MS, emptyString, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, LEGACY_SYNC_FILENAME, NOTE_PREFIX } from "@/library";
 import type { UUID } from "crypto";
 
+enum NoteUploadResult {
+	Uploaded = "uploaded",
+	Conflict = "conflict"
+}
+
 const [isSyncing, setIsSyncing] = createSignal(false);
 const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
 const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
@@ -123,7 +128,7 @@ export function useNotesSync() {
 		}
 	}
 
-	async function uploadNote(note: Note): Promise<"uploaded" | "conflict"> {
+	async function uploadNote(note: Note): Promise<NoteUploadResult> {
 		const fileName = getFileName(note.id);
 		const remoteFile = await findFile(fileName);
 		if (remoteFile) {
@@ -134,17 +139,17 @@ export function useNotesSync() {
 				const localEffectiveTime = noteEffectiveTime(note);
 				if (localEffectiveTime > remoteEffectiveTime) {
 					await writeJSONById(remoteFile.id, toJSON(note));
-					return "uploaded";
+					return NoteUploadResult.Uploaded;
 				}
 				if (remoteEffectiveTime > localEffectiveTime) {
 					await store.replaceNote(remoteNote);
-					return "conflict";
+					return NoteUploadResult.Conflict;
 				}
 			}
 		} else {
 			await writeJSON(fileName, toJSON(note));
 		}
-		return "uploaded";
+		return NoteUploadResult.Uploaded;
 	}
 
 	async function runPull(force = false) {
@@ -188,7 +193,7 @@ export function useNotesSync() {
 			const empty = pullResult.remoteCount === 0 && store.notes().length === 0;
 			const changes = pushResult.conflicts + pullResult.downloaded;
 			setLastSyncMessage({
-				text: empty ? "Nothing to sync" : `Notes synced${changes > 0 ? ` with ${changes} changes${changes > 1 ? "s" : emptyString} fetched from remote` : emptyString}`,
+				text: empty ? "Nothing to sync" : `Notes synced${changes > 0 ? ` with ${changes} change${changes > 1 ? "s" : emptyString} fetched from remote` : emptyString}`,
 				type: "success",
 				timeStamp: Date.now()
 			});
@@ -217,7 +222,21 @@ export function useNotesSync() {
 
 	const debouncedFlush = debounce(() => {
 		if (isSignedIn() && autoSyncEnabled()) {
-			saveToCloud();
+			saveToCloud()
+				.then(() => {
+					setLastSyncMessage({
+						text: "Auto-synced changes to cloud",
+						type: "success",
+						timeStamp: Date.now()
+					});
+				})
+				.catch(() => {
+					setLastSyncMessage({
+						text: "Auto-sync failed",
+						type: "error",
+						timeStamp: Date.now()
+					});
+				});
 		}
 	}, DEBOUNCE_MS);
 

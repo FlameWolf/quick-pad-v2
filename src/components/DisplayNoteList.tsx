@@ -313,15 +313,7 @@ export default function DisplayNoteList(props: Props) {
 									<A href={`/notes/${note.id}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected(note.id) }} onClick={e => onTileClick(e, note.id)}>
 										<div class="card-body d-flex flex-column">
 											<Show when={isSelectionMode()}>
-												<input
-													type="checkbox"
-													class="form-check-input selection-checkbox"
-													checked={isSelected(note.id)}
-													onClick={e => {
-														e.stopPropagation();
-														e.preventDefault();
-														toggleSelection(note.id);
-													}}/>
+												<input type="checkbox" class="form-check-input selection-checkbox rounded-circle" checked={isSelected(note.id)}/>
 											</Show>
 											<div class="d-flex gap-1 mb-2">
 												<div class="text-truncate">{note.title}</div>

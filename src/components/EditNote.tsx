@@ -1,6 +1,6 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
-import { getNote, addNote, updateNote, archiveNote, unarchiveNote, trashNote, restoreFromTrash, permanentlyDelete } from "@/stores/notes";
+import * as store from "@/stores/notes";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
@@ -11,6 +11,7 @@ import Toast from "@/components/Toast";
 import type { UUID } from "crypto";
 
 export default function EditNote() {
+	let bypassGuard = false;
 	const navigate = useNavigate();
 	const location = useLocation();
 	const params = useParams<{ id?: UUID }>();
@@ -18,7 +19,7 @@ export default function EditNote() {
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
-	const existingNote = createMemo(() => (params.id && !isCreateMode() ? getNote(params.id) : undefined));
+	const existingNote = createMemo(() => (params.id && !isCreateMode() ? store.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
 	const [copyResult, setCopyResult] = createSignal<{
 		status: "success" | "error";
@@ -29,13 +30,15 @@ export default function EditNote() {
 	});
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());
 	const [editTitle, setEditTitle] = createSignal(existingNote()?.title ?? emptyString);
-	const [editContent, setEditContent] = createSignal(existingNote()?.content ?? emptyString);
+	const [editContent, setEditContent] = createSignal(emptyString);
+	const [loadedContent, setLoadedContent] = createSignal(emptyString);
+	const [isContentLoaded, setIsContentLoaded] = createSignal(false);
 	let editTextArea!: HTMLTextAreaElement;
 	const undoRedo = useUndoRedo<string>(editContent());
-	const displayContent = createMemo(() => (isEditing() ? editContent() : (existingNote()?.content ?? emptyString)));
-	const sentenceCount = createMemo(() => getSentenceCount(displayContent()));
-	const wordCount = createMemo(() => getWordCount(displayContent()));
-	const characterCount = createMemo(() => getCharacterCount(displayContent()));
+	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)));
+	const wordCount = createMemo(() => (isEditing() ? getWordCount(editContent()) : (existingNote()?.wordCount ?? 0)));
+	const characterCount = createMemo(() => (isEditing() ? getCharacterCount(editContent()) : (existingNote()?.characterCount ?? 0)));
+	const hasContent = createMemo(() => !!sentenceCount() || !!wordCount() || !!characterCount());
 	const isArchived = createMemo(() => !!existingNote()?.archivedAt && !existingNote()?.deletedAt);
 	const isTrashed = createMemo(() => !!existingNote()?.deletedAt);
 	const backRoute = createMemo(() => {
@@ -58,7 +61,7 @@ export default function EditNote() {
 		if (!note) {
 			return false;
 		}
-		return editTitle() !== note.title || editContent() !== note.content;
+		return editTitle() !== note.title || editContent() !== loadedContent();
 	});
 
 	function adjustTextAreaHeight() {
@@ -67,7 +70,10 @@ export default function EditNote() {
 		}
 		if (isEditing() && editTextArea) {
 			const editor = editTextArea;
-			const editorParent = editor.parentElement!;
+			const editorParent = editor?.parentElement;
+			if (!editorParent) {
+				return;
+			}
 			const editorClone = editor.cloneNode() as HTMLTextAreaElement;
 			editorClone.classList.add("d-hidden");
 			editorClone.style.setProperty("height", "auto");
@@ -99,7 +105,7 @@ export default function EditNote() {
 	function copyToClipboard() {
 		setIsCopying(true);
 		navigator.clipboard
-			.writeText(existingNote()?.content as string)
+			.writeText(loadedContent())
 			.then(() => {
 				setCopyResult({
 					status: "success",
@@ -117,7 +123,7 @@ export default function EditNote() {
 	function startEditing() {
 		const note = existingNote();
 		setEditTitle(note?.title ?? emptyString);
-		setEditContent(note?.content ?? emptyString);
+		setEditContent(loadedContent());
 		undoRedo.push(editContent());
 		setIsEditing(true);
 		setTimeout(adjustTextAreaHeight);
@@ -147,7 +153,7 @@ export default function EditNote() {
 			const note = existingNote();
 			setIsEditing(false);
 			setEditTitle(note?.title ?? emptyString);
-			setEditContent(note?.content ?? emptyString);
+			setEditContent(loadedContent());
 		}
 	}
 
@@ -156,7 +162,7 @@ export default function EditNote() {
 		const content = editContent();
 		if (isCreateMode()) {
 			const note = create(title, content);
-			await addNote(note);
+			await store.addNote(note);
 			setIsEditing(false);
 			requestSync();
 			navigate(`/notes/${note.id}`);
@@ -164,7 +170,8 @@ export default function EditNote() {
 		}
 		const note = existingNote();
 		if (note) {
-			updateNote(note.id, title, content);
+			store.updateNote(note.id, title, content);
+			setLoadedContent(content);
 			requestSync();
 		}
 		setIsEditing(false);
@@ -186,7 +193,7 @@ export default function EditNote() {
 		if (!ok) {
 			return;
 		}
-		trashNote(note.id);
+		store.trashNote(note.id);
 		requestSync();
 		navigate(returnTo);
 	}
@@ -196,7 +203,7 @@ export default function EditNote() {
 		if (!note) {
 			return;
 		}
-		archiveNote(note.id);
+		store.archiveNote(note.id);
 		requestSync();
 		navigate("/notes");
 	}
@@ -206,7 +213,7 @@ export default function EditNote() {
 		if (!note) {
 			return;
 		}
-		unarchiveNote(note.id);
+		store.unarchiveNote(note.id);
 		requestSync();
 		navigate("/notes/archive");
 	}
@@ -216,7 +223,7 @@ export default function EditNote() {
 		if (!note) {
 			return;
 		}
-		restoreFromTrash(note.id);
+		store.restoreFromTrash(note.id);
 		requestSync();
 		navigate("/notes/trash");
 	}
@@ -237,7 +244,7 @@ export default function EditNote() {
 			return;
 		}
 		const noteId = note.id;
-		await permanentlyDelete(noteId);
+		await store.permanentlyDelete(noteId);
 		requestSync([noteId]);
 		navigate("/notes/trash");
 	}
@@ -272,7 +279,6 @@ export default function EditNote() {
 		window.removeEventListener("beforeunload", onBeforeUnload);
 	});
 
-	let bypassGuard = false;
 	useBeforeLeave(e => {
 		if (bypassGuard || !hasUnsavedChanges()) {
 			return;
@@ -286,6 +292,24 @@ export default function EditNote() {
 			}
 		})();
 	});
+
+	createEffect(
+		on(
+			() => params.id,
+			async id => {
+				setIsContentLoaded(isCreateMode());
+				setLoadedContent(emptyString);
+				setEditContent(emptyString);
+				setIsEditing(isCreateMode());
+				if (id && !isCreateMode()) {
+					setLoadedContent((await store.getNoteContent(id)) ?? emptyString);
+				} else {
+					setLoadedContent(emptyString);
+				}
+				setIsContentLoaded(true);
+			}
+		)
+	);
 
 	createEffect(on(editContent, adjustTextAreaHeight, { defer: true }));
 
@@ -363,13 +387,21 @@ export default function EditNote() {
 					<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
 						<div class="text-muted small mb-3">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
 					</Show>
-					<div class="note-content">{existingNote()!.content}</div>
+					<Show
+						when={!isContentLoaded()}
+						fallback={
+							<div class="note-content">{loadedContent()}</div>
+						}>
+						<div class="d-flex justify-content-center py-3">
+							<div class="spinner-border" role="status" aria-label="Loading note"></div>
+						</div>
+					</Show>
 				</Show>
 				<Show when={isEditing()}>
 					<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg mb-3" placeholder="Title"/>
 					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
 				</Show>
-				<Show when={displayContent()}>
+				<Show when={hasContent()}>
 					<div class="d-flex flex-wrap gap-2 mt-3">
 						<Show when={sentenceCount()}>
 							<span class="badge text-bg-secondary">{sentenceCount()} sentences</span>

@@ -128,6 +128,13 @@ export function useNotesSync() {
 		}
 	}
 
+	async function buildUploadPayload(note: Note): Promise<NoteJSON> {
+		const content = await store.getNoteContent(note.id);
+		return Object.assign(toJSON(note), {
+			content: content ?? emptyString
+		});
+	}
+
 	async function uploadNote(note: Note): Promise<NoteUploadResult> {
 		const fileName = getFileName(note.id);
 		const remoteFile = await findFile(fileName);
@@ -138,7 +145,7 @@ export function useNotesSync() {
 				const remoteEffectiveTime = noteEffectiveTime(remoteNote);
 				const localEffectiveTime = noteEffectiveTime(note);
 				if (localEffectiveTime > remoteEffectiveTime) {
-					await writeJSONById(remoteFile.id, toJSON(note));
+					await writeJSONById(remoteFile.id, await buildUploadPayload(note));
 					return NoteUploadResult.Uploaded;
 				}
 				if (remoteEffectiveTime > localEffectiveTime) {
@@ -147,7 +154,7 @@ export function useNotesSync() {
 				}
 			}
 		} else {
-			await writeJSON(fileName, toJSON(note));
+			await writeJSON(fileName, await buildUploadPayload(note));
 		}
 		return NoteUploadResult.Uploaded;
 	}

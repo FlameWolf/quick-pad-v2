@@ -1,10 +1,9 @@
-import { getCharacterCount, getSentenceCount, getSummary, getWordCount } from "@/library";
+import { emptyString, getCharacterCount, getSentenceCount, getSummary, getWordCount } from "@/library";
 import type { UUID } from "crypto";
 
-export interface NoteJSON {
+export interface NoteMetaJSON {
 	id: string;
 	title: string;
-	content: string;
 	createdAt: string;
 	modifiedAt?: string;
 	archivedAt?: string;
@@ -16,10 +15,14 @@ export interface NoteJSON {
 	characterCount?: number;
 }
 
+export interface NoteJSON extends NoteMetaJSON {
+	content?: string;
+}
+
 export interface Note {
 	id: UUID;
 	title: string;
-	content: string;
+	content?: string;
 	createdAt: Date;
 	modifiedAt?: Date;
 	archivedAt?: Date;
@@ -32,11 +35,12 @@ export interface Note {
 }
 
 function computeDerived(note: Note) {
+	const content = note.content ?? emptyString;
 	Object.assign(note, {
-		summary: getSummary(note.content),
-		sentenceCount: getSentenceCount(note.content),
-		wordCount: getWordCount(note.content),
-		characterCount: getCharacterCount(note.content)
+		summary: getSummary(content),
+		sentenceCount: getSentenceCount(content),
+		wordCount: getWordCount(content),
+		characterCount: getCharacterCount(content)
 	});
 }
 
@@ -51,7 +55,9 @@ export function create(title: string, content: string): Note {
 		deletedAt: undefined,
 		stateChangedAt: undefined
 	};
-	computeDerived(note);
+	if (content !== undefined) {
+		computeDerived(note);
+	}
 	return note;
 }
 
@@ -84,11 +90,10 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
-export function toJSON(note: Note): NoteJSON {
+export function toMetaJSON(note: Note): NoteMetaJSON {
 	return {
 		id: note.id,
 		title: note.title,
-		content: note.content,
 		createdAt: note.createdAt.toISOString(),
 		modifiedAt: note.modifiedAt?.toISOString(),
 		archivedAt: note.archivedAt?.toISOString(),
@@ -99,6 +104,12 @@ export function toJSON(note: Note): NoteJSON {
 		wordCount: note.wordCount,
 		characterCount: note.characterCount
 	};
+}
+
+export function toJSON(note: Note): NoteJSON {
+	return Object.assign(toMetaJSON(note), {
+		content: note.content
+	});
 }
 
 export function fromJSON(data: NoteJSON): Note {
@@ -112,7 +123,7 @@ export function fromJSON(data: NoteJSON): Note {
 		deletedAt: data.deletedAt ? new Date(data.deletedAt) : undefined,
 		stateChangedAt: data.stateChangedAt ? new Date(data.stateChangedAt) : undefined
 	};
-	if (data.summary && data.sentenceCount && data.wordCount && data.characterCount) {
+	if (data.summary !== undefined && data.sentenceCount !== undefined && data.wordCount !== undefined && data.characterCount !== undefined) {
 		note.summary = data.summary;
 		note.sentenceCount = data.sentenceCount;
 		note.wordCount = data.wordCount;

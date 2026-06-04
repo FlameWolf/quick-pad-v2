@@ -1,6 +1,6 @@
 import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from "solid-js";
 import { A } from "@solidjs/router";
-import { activeNotes, archivedNotes, trashedNotes, searchText, archiveMultiple, unarchiveMultiple, trashMultiple, restoreFromTrashMultiple, permanentlyDeleteMultiple, isLoading } from "@/stores/notes";
+import * as store from "@/stores/notes";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
@@ -25,15 +25,15 @@ export default function DisplayNoteList(props: Props) {
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
-	const isSearchMode = createMemo(() => !!searchText());
+	const isSearchMode = createMemo(() => !!store.searchText());
 	const sourceNotes = createMemo<Note[]>(() => {
 		switch (view()) {
 			case "archived":
-				return archivedNotes();
+				return store.archivedNotes();
 			case "trash":
-				return trashedNotes();
+				return store.trashedNotes();
 			default:
-				return activeNotes();
+				return store.activeNotes();
 		}
 	});
 	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
@@ -51,7 +51,7 @@ export default function DisplayNoteList(props: Props) {
 	});
 	const emptyMessage = createMemo(() => {
 		if (isSearchMode()) {
-			return `No results found for "${searchText()}"`;
+			return `No results found for "${store.searchText()}"`;
 		}
 		switch (view()) {
 			case "archived":
@@ -120,6 +120,13 @@ export default function DisplayNoteList(props: Props) {
 			.map(n => n.id);
 	}
 
+	async function handleImport() {
+		const importedCount = await importFiles();
+		if (importedCount > 0) {
+			requestSync();
+		}
+	}
+
 	async function handleSelectionAction(key: string) {
 		const ids = getSelectedIds();
 		if (ids.length === 0) {
@@ -136,11 +143,11 @@ export default function DisplayNoteList(props: Props) {
 				break;
 			}
 			case "archive": {
-				archiveMultiple(ids);
+				store.archiveMultiple(ids);
 				break;
 			}
 			case "unarchive": {
-				unarchiveMultiple(ids);
+				store.unarchiveMultiple(ids);
 				break;
 			}
 			case "trash": {
@@ -154,11 +161,11 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				trashMultiple(ids);
+				store.trashMultiple(ids);
 				break;
 			}
 			case "restore": {
-				restoreFromTrashMultiple(ids);
+				store.restoreFromTrashMultiple(ids);
 				break;
 			}
 			case "permanent": {
@@ -172,7 +179,7 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				await permanentlyDeleteMultiple(ids);
+				await store.permanentlyDeleteMultiple(ids);
 				purgeNotes = true;
 				break;
 			}
@@ -184,7 +191,7 @@ export default function DisplayNoteList(props: Props) {
 	}
 
 	async function handleEmptyTrash() {
-		const trashed = trashedNotes();
+		const trashed = store.trashedNotes();
 		const count = trashed.length;
 		if (count === 0) {
 			return;
@@ -200,7 +207,7 @@ export default function DisplayNoteList(props: Props) {
 			return;
 		}
 		const trashedNoteIds = trashed.map(n => n.id);
-		await permanentlyDeleteMultiple(trashedNoteIds);
+		await store.permanentlyDeleteMultiple(trashedNoteIds);
 		requestSync(trashedNoteIds);
 	}
 
@@ -222,10 +229,10 @@ export default function DisplayNoteList(props: Props) {
 				</div>
 			</Show>
 			<Switch>
-				<Match when={isLoading()}>
+				<Match when={store.isLoading() || store.isSearching()}>
 					<div class="d-flex flex-column justify-content-center align-items-center">
 						<div class="spinner-border" aria-hidden="true"></div>
-						<div class="mt-3" role="status">Loading notes...</div>
+						<div class="mt-3" role="status">{ store.isSearching() ? "Searching..." : "Loading notes..." }</div>
 					</div>
 				</Match>
 				<Match when={!hasNotes()}>
@@ -241,7 +248,7 @@ export default function DisplayNoteList(props: Props) {
 							<div class="d-flex flex-column gap-2 align-items-center">
 								<div class="d-flex gap-2 justify-content-center flex-wrap">
 									<A href="/notes/new" class="btn btn-primary">Create a note</A>
-									<button class="btn btn-outline-secondary" onClick={importFiles}>Import from files</button>
+									<button class="btn btn-outline-secondary" onClick={handleImport}>Import from files</button>
 								</div>
 								<div class="d-flex gap-3 justify-content-center flex-wrap">
 									<A href="/notes/archive" class="btn btn-link btn-sm text-decoration-none">
@@ -280,7 +287,7 @@ export default function DisplayNoteList(props: Props) {
 										</div>
 										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>Select</button>
 										<Show when={view() === "active"}>
-											<button class="btn btn-outline-secondary btn-sm" onClick={importFiles}>Import</button>
+											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport}>Import</button>
 											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>Export All</button>
 											<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
 												<i class="bi bi-archive me-1" aria-hidden="true"></i>Archived

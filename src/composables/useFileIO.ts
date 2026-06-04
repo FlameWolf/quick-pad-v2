@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { activeNotes, addNote } from "@/stores/notes";
+import { activeNotes, addNote, getNoteContent } from "@/stores/notes";
 import { create, type Note } from "@/models/Note";
 import { emptyString, isTextFile } from "@/library";
 import JSZip from "jszip";
@@ -65,8 +65,9 @@ export function useFileIO() {
 		setImportErrors([]);
 	}
 
-	function exportNote(note: Note) {
-		const blob = new Blob([note.content], { type: "text/plain;charset=utf-8" });
+	async function exportNote(note: Note) {
+		const content = (await getNoteContent(note.id)) ?? emptyString;
+		const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
 		triggerDownload(blob, `${sanitizeFilename(note.title)}.txt`);
 	}
 
@@ -84,7 +85,8 @@ export function useFileIO() {
 				uniqueName = `${name} (${counter++})`;
 			}
 			usedNames.add(uniqueName);
-			zip.file(`${uniqueName}.txt`, note.content);
+			const content = (await getNoteContent(note.id)) ?? emptyString;
+			zip.file(`${uniqueName}.txt`, content);
 		}
 		const blob = await zip.generateAsync({ type: "blob" });
 		triggerDownload(blob, "quick-pad-notes.zip");

@@ -1,7 +1,8 @@
 export const emptyString = "";
 export const DB_NAME = "quick-pad";
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 export const NOTES_STORE = "notes";
+export const CONTENTS_STORE = "contents";
 export const KV_STORE = "kv";
 export const MIGRATION_FLAG = "__migrated-to-idb";
 export const LEGACY_NOTES_KEY = "quick-pad-notes";

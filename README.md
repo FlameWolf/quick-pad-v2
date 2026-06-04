@@ -1,6 +1,6 @@
 # QuickPad
 
-A simple, fast, offline-first note-taking web app built with SolidJS and TypeScript.
+A simple, fast, offline-first note-taking web app built with Solid and TypeScript.
 
 QuickPad keeps your notes in your browser, works without an Internet connection, and can optionally sync to your own Google Drive when you sign in.
 
@@ -11,6 +11,9 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Create, view, search, edit, archive, and delete plain-text notes from a tile-based dashboard.
 - Each tile shows the title, last-updated date, and a short summary preview.
 - Live sentence, word, and character counts (Unicode-aware via `Intl.Segmenter`) while reading or editing.
+- Counts and summaries are computed once and cached per note, then recalculated live while editing.
+- Note bodies are **lazy-loaded**: only metadata is read on startup, and the full content is fetched on demand when a note is opened.
+- Search matches both note titles and note bodies (content is scanned on demand).
 - Per-note undo / redo history while editing (debounced, up to 100 steps).
 - "Discard unsaved changes" guard when navigating away or reloading mid-edit.
 - Confirm dialog (with Enter / Escape keyboard shortcuts) protects destructive actions.
@@ -21,6 +24,7 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Sort field and direction are remembered between sessions.
 - Multi-select mode: tap **Select**, pick notes (or **Select All**), then bulk-export, archive, trash, restore, or delete.
 - Selected count and per-view actions are shown in a sticky selection action bar.
+- Scroll position is preserved per list view, with quick scroll-to-top / scroll-to-bottom buttons.
 
 ### Archive and Trash
 
@@ -42,27 +46,31 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 - Installable as a Progressive Web App (standalone display, custom theme colour, app icon).
 - Service worker caches the app shell so it loads and works offline after the first visit (registered only in production builds).
-- All notes are stored in `localStorage` — no account required to use the app.
+- All notes are stored locally in **IndexedDB** — no account required to use the app.
 
 ### Theme
 
 - Automatically follows your OS light/dark preference via `prefers-color-scheme`, switching the Bootstrap theme on the fly.
+- A sun/moon toggle in the navbar lets you override the OS preference manually.
 
 ### Optional Google Drive sync
 
 - Sign in with Google to back up notes to your Drive's app-data folder (the app cannot see any other files in your Drive).
-- **Save to Drive** / **Load from Drive** on demand, plus an **Auto-sync** toggle that debounces writes a few seconds after each change.
-- Both directions perform a **last-modified merge**, so notes from local and remote are combined without losing edits.
-- Status indicator shows syncing, last-synced time, or sync errors; a toast confirms success / failure.
+- Each note is stored as its own file (`qp-note:<id>.json`) in the Drive app-data folder; a legacy single-file backup is migrated automatically and then removed.
+- **Sync** performs a full pull-and-push on demand, and **Force Sync** re-syncs every note regardless of timestamps. An **Auto-sync** toggle debounces a push a few seconds after each change.
+- Merging is timestamp-based: each note's effective time is the latest of its created, modified, archived, deleted, and state-changed times, so local and remote are combined without losing edits. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
+- Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync).
+- A sync indicator shows syncing, last-synced time, or sync errors; a toast confirms success / failure. The sync menu also exposes the signed-in account and sign-out.
 - Sessions are restored on reload using a cached access token (with expiry); sign out revokes the token and clears the cached user.
 - If no Google client ID is configured, the sync UI stays hidden and the app runs in local-only mode.
 
 ## Tech stack
 
-- [SolidJS](https://docs.solidjs.com/) (`<script setup>`, Composition API)
+- [Solid](https://docs.solidjs.com/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Solid Router](https://docs.solidjs.com/solid-router/)
-- [Bootstrap 5](https://getbootstrap.com/) + [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [Bootstrap](https://getbootstrap.com/) + [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [idb](https://github.com/jakearchibald/idb) for IndexedDB storage
 - [JSZip](https://stuk.github.io/jszip/) for archive export
 - [Vite](https://vitejs.dev/) build tooling
 
@@ -70,7 +78,7 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 ### Prerequisites
 
-- Node.js `^20.19.0` or `>=22.12.0`
+- Node.js `>=22.12.0`
 - npm
 
 ### Install
@@ -111,7 +119,7 @@ Google Drive sync is optional. To enable it, create a Google OAuth 2.0 Client ID
 VITE_GOOG_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 ```
 
-The app requests the `drive.appdata`, `openid`, `email`, and `profile` scopes. Notes are stored as `quick-pad-notes.json` in the Drive app-data folder, which is private to QuickPad.
+The app requests the `drive.appdata`, `openid`, `email`, and `profile` scopes. Each note is stored as a separate `qp-note:<id>.json` file in the Drive app-data folder, which is private to QuickPad.
 
 If the client ID is left blank, the sync controls are hidden and the app works entirely offline.
 
@@ -129,16 +137,30 @@ If the client ID is left blank, the sync controls are hidden and the app works e
 
 ## Data storage
 
-| Key                        | Purpose                                                 |
-| -------------------------- | ------------------------------------------------------- |
-| `quick-pad-notes`          | All notes (JSON array, including archived and trashed)  |
-| `quick-pad-sort-by`        | Sort field preference                                   |
-| `quick-pad-sort-direction` | Sort direction preference                               |
-| `quick-pad-last-synced`    | Timestamp of last successful Drive sync                 |
-| `quick-pad-auto-sync`      | Auto-sync on/off (defaults to on)                       |
-| `google_session_hint`      | Marker that a Google session was previously established |
-| `google_access_token`      | Cached Google OAuth access token                        |
-| `google_token_expires_at`  | Expiry timestamp for the cached access token            |
-| `google_user_info`         | Cached Google user name and email                       |
+Notes and preferences are stored in an IndexedDB database named `quick-pad` (data from older `localStorage`-based versions is migrated automatically on first launch and then cleared).
+
+The database has three object stores:
+
+| Object store | Purpose                                                        |
+| ------------ | -------------------------------------------------------------- |
+| `notes`      | Note metadata (id, title, summary, counts, dates, state flags) |
+| `contents`   | Note bodies, keyed by note id and loaded lazily                |
+| `kv`         | Preferences and sync / auth state (keys below)                 |
+
+Keys held in the `kv` store:
+
+| Key                       | Purpose                                                 |
+| ------------------------- | ------------------------------------------------------- |
+| `sort-by`                 | Sort field preference                                   |
+| `sort-direction`          | Sort direction preference                               |
+| `last-synced-to-local`    | Timestamp of last successful pull from Drive            |
+| `last-synced-to-cloud`    | Timestamp of last successful push to Drive              |
+| `auto-sync`               | Auto-sync on/off (defaults to on)                       |
+| `pending-purges`          | Note ids queued for deletion from Drive                 |
+| `google-session-hint`     | Marker that a Google session was previously established |
+| `google-access-token`     | Cached Google OAuth access token                        |
+| `google-token-expires-at` | Expiry timestamp for the cached access token            |
+| `google-user-info`        | Cached Google user name and email                       |
+| `__migrated-to-idb`       | Flag marking the one-time migration from `localStorage` |
 
 Clearing site data will remove all notes that have not been synced to Drive.

@@ -307,6 +307,7 @@ export default function EditNote() {
 					setLoadedContent(emptyString);
 				}
 				setIsContentLoaded(true);
+				undoRedo.reset(loadedContent());
 			}
 		)
 	);

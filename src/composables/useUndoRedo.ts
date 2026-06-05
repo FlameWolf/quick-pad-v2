@@ -4,6 +4,7 @@ import { MAX_HISTORY } from "@/library";
 export interface UndoRedo<T> {
 	current: Accessor<T>;
 	push: (value: T) => void;
+	reset: (value: T) => void;
 	undo: () => void;
 	redo: () => void;
 	canUndo: Accessor<boolean>;
@@ -30,6 +31,12 @@ export function useUndoRedo<T>(initial: T): UndoRedo<T> {
 		setFuture([]);
 	}
 
+	function reset(value: T) {
+		setCurrent(() => value);
+		setPast([]);
+		setFuture([]);
+	}
+
 	function undo() {
 		const p = past();
 		if (p.length === 0) {
@@ -52,5 +59,5 @@ export function useUndoRedo<T>(initial: T): UndoRedo<T> {
 		setCurrent(() => next);
 	}
 
-	return { current, push, undo, redo, canUndo, canRedo };
+	return { current, push, reset, undo, redo, canUndo, canRedo };
 }

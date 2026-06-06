@@ -15,6 +15,12 @@ body {
 	filter: invert(0.5);
 }
 
+.bi {
+	vertical-align: -0.125rem;
+	max-width: 0.875rem;
+	max-height: 0.875rem;
+}
+
 .sync-dropdown {
 	position: absolute;
 	top: calc(100% + 0.25rem);

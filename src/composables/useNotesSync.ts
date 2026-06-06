@@ -212,16 +212,13 @@ export function useNotesSync() {
 		}
 	}
 
-	async function saveToCloud(purged: ReadonlyArray<UUID> = []): Promise<boolean> {
+	async function saveToCloud(purged: ReadonlyArray<UUID> = []) {
 		if (isSyncing()) {
-			return false;
+			return;
 		}
 		try {
 			setIsSyncing(true);
 			await runPush(purged, false);
-			return true;
-		} catch {
-			return false;
 		} finally {
 			setIsSyncing(false);
 		}

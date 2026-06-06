@@ -201,7 +201,7 @@ export default function App(props: AppProps) {
 												when={!isSyncing()}
 												fallback={
 													<span>
-														<i class="spinner-border spinner-border-sm" role="status"></i>
+														<div class="spinner-border spinner-border-sm" role="status"></div>
 													</span>
 												}>
 												<Show

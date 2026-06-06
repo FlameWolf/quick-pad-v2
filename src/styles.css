@@ -1,5 +1,4 @@
 @import "bootstrap/dist/css/bootstrap.min.css";
-@import "bootstrap-icons/font/bootstrap-icons.min.css";
 
 body {
 	min-height: 100vh;
@@ -13,6 +12,12 @@ body {
 .logo {
 	height: 1.5rem;
 	filter: invert(0.5);
+}
+
+.bi {
+	vertical-align: -0.125rem;
+	max-width: 0.875rem;
+	max-height: 0.875rem;
 }
 
 .sync-dropdown {

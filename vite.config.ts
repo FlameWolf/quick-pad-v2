@@ -4,6 +4,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { defineConfig, type PluginOption } from "vite";
 import solid from "vite-plugin-solid";
+import purgeCSSPlugin from "@fullhuman/postcss-purgecss";
 
 function precacheManifestPlugin(): PluginOption {
 	const CACHE_VERSION_PLACEHOLDER = '"__CACHE_VERSION__"';
@@ -36,11 +37,26 @@ function precacheManifestPlugin(): PluginOption {
 	};
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
 	plugins: [solid(), precacheManifestPlugin()],
 	resolve: {
 		alias: {
 			"@": fileURLToPath(new URL("./src", import.meta.url))
 		}
+	},
+	css: {
+		postcss: {
+			plugins:
+				command === "build"
+					? [
+							purgeCSSPlugin({
+								content: ["./index.html", "./src/**/*.{ts,tsx}"],
+								safelist: {
+									standard: [/^btn-(outline-)?(primary|secondary|success|danger|warning|info|light|dark)$/]
+								}
+							})
+						]
+					: []
+		}
 	}
-});
+}));

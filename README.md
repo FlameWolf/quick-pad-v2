@@ -8,78 +8,78 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 ### Notes
 
--   Create, view, search, edit, archive, and delete plain-text notes from a tile-based dashboard.
--   Each tile shows the title, last-updated date, and a short summary preview.
--   Live sentence, word, and character counts (Unicode-aware via `Intl.Segmenter`) while reading or editing.
--   Counts and summaries are computed once and cached per note, then recalculated live while editing.
--   Note bodies are **lazy-loaded**: only metadata is read on startup, and the full content is fetched on demand when a note is opened.
--   Search matches both note titles and note bodies (content is scanned on demand).
--   Per-note undo / redo history while editing (debounced, up to 100 steps).
--   "Discard unsaved changes" guard when navigating away or reloading mid-edit.
--   Confirm dialog (with Enter / Escape keyboard shortcuts) protects destructive actions.
+- Create, view, search, edit, archive, and delete plain-text notes from a tile-based dashboard.
+- Each tile shows the title, last-updated date, and a short summary preview.
+- Live sentence, word, and character counts (Unicode-aware via `Intl.Segmenter`) while reading or editing.
+- Counts and summaries are computed once and cached per note, then recalculated live while editing.
+- Note bodies are **lazy-loaded**: only metadata is read on startup, and the full content is fetched on demand when a note is opened.
+- Search matches both note titles and note bodies (content is scanned on demand).
+- Per-note undo / redo history while editing (debounced, up to 100 steps).
+- "Discard unsaved changes" guard when navigating away or reloading mid-edit.
+- Confirm dialog (with Enter / Escape keyboard shortcuts) protects destructive actions.
 
 ### Organisation
 
--   Sort notes by **Updated**, **Created**, **Title**, or **Sentence/Word/Character Count**, ascending or descending.
--   Sort field and direction are remembered between sessions.
--   Multi-select mode: tap **Select**, pick notes (or **Select All**), then bulk-export, archive, trash, restore, or delete.
--   Selected count and per-view actions are shown in a sticky selection action bar.
--   Scroll position is preserved per list view, with quick scroll-to-top / scroll-to-bottom buttons.
+- Sort notes by **Updated**, **Created**, **Title**, or **Sentence/Word/Character Count**, ascending or descending.
+- Sort field and direction are remembered between sessions.
+- Multi-select mode: tap **Select**, pick notes (or **Select All**), then bulk-export, archive, trash, restore, or delete.
+- Selected count and per-view actions are shown in a sticky selection action bar.
+- Scroll position is preserved per list view, with quick scroll-to-top / scroll-to-bottom buttons.
 
 ### Archive and Trash
 
--   Archive notes you want to keep but not see on the main dashboard; unarchive them at any time.
--   Deleting a note moves it to **Trash** rather than removing it immediately, so you can change your mind.
--   Trashed notes are kept for **30 days** and then automatically purged on app start.
--   Dedicated `/notes/archive` and `/notes/trash` views support the same select / bulk-action workflow.
--   **Empty Trash** permanently removes all trashed notes in one step.
--   Trashed notes can be restored, exported, or permanently deleted from the trash view.
+- Archive notes you want to keep but not see on the main dashboard; unarchive them at any time.
+- Deleting a note moves it to **Trash** rather than removing it immediately, so you can change your mind.
+- Trashed notes are kept for **30 days** and then automatically purged on app start.
+- Dedicated `/notes/archive` and `/notes/trash` views support the same select / bulk-action workflow.
+- **Empty Trash** permanently removes all trashed notes in one step.
+- Trashed notes can be restored, exported, or permanently deleted from the trash view.
 
 ### Import / Export
 
--   Import any plain-text file as a new note. Files are content-sniffed (magic numbers, NUL bytes, control-character ratio, UTF-8 validation) before import; unsupported files are reported in a toast.
--   Multiple files can be imported in one go.
--   Export a single note as a `.txt` file.
--   Export selected notes or **Export All** as a `quick-pad-notes.zip` archive (powered by JSZip), with title collisions automatically de-duplicated and unsafe filename characters sanitised.
+- Import any plain-text file as a new note. Files are content-sniffed (magic numbers, NUL bytes, control-character ratio, UTF-8 validation) before import; unsupported files are reported in a toast.
+- Multiple files can be imported in one go.
+- Export a single note as a `.txt` file.
+- Export selected notes or **Export All** as a `quick-pad-notes.zip` archive (powered by JSZip), with title collisions automatically de-duplicated and unsafe filename characters sanitised.
 
 ### Offline / PWA
 
--   Installable as a Progressive Web App (standalone display, custom theme colour, app icon).
--   Service worker caches the app shell so it loads and works offline after the first visit (registered only in production builds).
--   All notes are stored locally in **IndexedDB** — no account required to use the app.
+- Installable as a Progressive Web App (standalone display, custom theme colour, app icon).
+- Service worker caches the app shell so it loads and works offline after the first visit (registered only in production builds).
+- All notes are stored locally in **IndexedDB** — no account required to use the app.
 
 ### Theme
 
--   Automatically follows your OS light/dark preference via `prefers-color-scheme`, switching the Bootstrap theme on the fly.
--   A sun/moon toggle in the navbar lets you override the OS preference manually.
+- Automatically follows your OS light/dark preference via `prefers-color-scheme`, switching the Bootstrap theme on the fly.
+- A sun/moon toggle in the navbar lets you override the OS preference manually.
 
 ### Optional Google Drive sync
 
--   Sign in with Google to back up notes to your Drive's app-data folder (the app cannot see any other files in your Drive).
--   Each note is stored as its own file (`qp-note:<id>.json`) in the Drive app-data folder; a legacy single-file backup is migrated automatically and then removed.
--   **Sync** performs a full pull-and-push on demand, and **Force Sync** re-syncs every note regardless of timestamps. An **Auto-sync** toggle debounces a push a few seconds after each change.
--   Merging is timestamp-based: each note's effective time is the latest of its created, modified, archived, deleted, and state-changed times, so local and remote are combined without losing edits. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
--   Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync).
--   A sync indicator shows syncing, last-synced time, or sync errors; a toast confirms success / failure. The sync menu also exposes the signed-in account and sign-out.
--   Sessions are restored on reload using a cached access token (with expiry); sign out revokes the token and clears the cached user.
--   If no Google client ID is configured, the sync UI stays hidden and the app runs in local-only mode.
+- Sign in with Google to back up notes to your Drive's app-data folder (the app cannot see any other files in your Drive).
+- Each note is stored as its own file (`qp-note:<id>.json`) in the Drive app-data folder; a legacy single-file backup is migrated automatically and then removed.
+- **Sync** performs a full pull-and-push on demand, and **Force Sync** re-syncs every note regardless of timestamps. An **Auto-sync** toggle debounces a push a few seconds after each change.
+- Merging is timestamp-based: each note's effective time is the latest of its created, modified, archived, deleted, and state-changed times, so local and remote are combined without losing edits. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
+- Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync).
+- A sync indicator shows syncing, last-synced time, or sync errors; a toast confirms success / failure. The sync menu also exposes the signed-in account and sign-out.
+- Sessions are restored on reload using a cached access token (with expiry); sign out revokes the token and clears the cached user.
+- If no Google client ID is configured, the sync UI stays hidden and the app runs in local-only mode.
 
 ## Tech stack
 
--   [Solid](https://docs.solidjs.com/)
--   [TypeScript](https://www.typescriptlang.org/)
--   [Solid Router](https://docs.solidjs.com/solid-router/)
--   [Bootstrap](https://getbootstrap.com/) + [Bootstrap Icons](https://icons.getbootstrap.com/)
--   [idb](https://github.com/jakearchibald/idb) for IndexedDB storage
--   [JSZip](https://stuk.github.io/jszip/) for archive export
--   [Vite](https://vitejs.dev/) build tooling
+- [Solid](https://docs.solidjs.com/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Solid Router](https://docs.solidjs.com/solid-router/)
+- [Bootstrap](https://getbootstrap.com/) + [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [idb](https://github.com/jakearchibald/idb) for IndexedDB storage
+- [JSZip](https://stuk.github.io/jszip/) for archive export
+- [Vite](https://vitejs.dev/) build tooling
 
 ## Getting started
 
 ### Prerequisites
 
--   Node.js `>=22.12.0`
--   npm
+- Node.js `>=22.12.0`
+- npm
 
 ### Install
 

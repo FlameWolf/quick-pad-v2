@@ -198,7 +198,6 @@ textarea.form-control {
 
 .toast-container {
 	max-width: 80vw;
-	max-height: 25vh;
 	position: fixed;
 	bottom: 1.5rem;
 	right: 1.5rem;
@@ -244,6 +243,8 @@ textarea.form-control {
 
 .toast-text {
 	flex: 1;
+	max-height: 20vh;
+	overflow-y: scroll;
 }
 
 .nav-overlay {

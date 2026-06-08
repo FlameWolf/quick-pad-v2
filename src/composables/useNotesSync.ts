@@ -229,7 +229,7 @@ export function useNotesSync() {
 			saveToCloud()
 				.then(() => {
 					setLastSyncMessage({
-						text: "Synced",
+						text: "Synced to cloud",
 						type: "success",
 						timeStamp: Date.now()
 					});

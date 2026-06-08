@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512px" height="512px">
-  <rect x="136" y="136" width="240" height="240" style="fill: rgb(0, 119, 0);" rx="32" ry="32"/>
+  <path d="M 168 136 C 150.327 136 136 150.327 136 168 L 136 344 C 136 361.673 150.327 376 168 376 L 316 376 L 316 316 L 376 316 L 316 376 L 316 316 L 376 316 L 376 168 C 376 150.327 361.673 136 344 136 L 168 136 Z" style="stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; fill: rgb(255, 255, 0);"/>
   <g>
-    <rect x="176" y="188" width="160" height="16" style="fill: rgb(255, 255, 255);" rx="8" ry="8"/>
-    <rect x="176" y="248" width="160" height="16" style="fill: rgb(255, 255, 255);" rx="8" ry="8"/>
-    <rect x="176" y="308" width="160" height="16" style="fill: rgb(255, 255, 255);" rx="8" ry="8"/>
+    <path style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round;" d="M 188 197 L 324 196"/>
+    <path style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round;" d="M 188 257 L 324 256"/>
+    <path style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round;" d="M 188 317 L 316 316"/>
   </g>
 </svg>

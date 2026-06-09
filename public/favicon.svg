@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512px" height="512px">
-  <path d="M 168 136 C 150.327 136 136 150.327 136 168 L 136 344 C 136 361.673 150.327 376 168 376 L 316 376 L 316 316 L 376 316 L 316 376 L 316 316 L 376 316 L 376 168 C 376 150.327 361.673 136 344 136 L 168 136 Z" style="stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round; fill: rgb(255, 255, 0);"/>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Note">
+  <rect width="512" height="512" fill="#4F6BED"/>
   <g>
-    <path style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round;" d="M 188 197 L 324 196"/>
-    <path style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round;" d="M 188 257 L 324 256"/>
-    <path style="fill: none; stroke: rgb(0, 0, 0); stroke-width: 16px; stroke-linecap: round; stroke-linejoin: round;" d="M 188 317 L 316 316"/>
+    <path d="M171 131 L303 131 L361 189 L361 361 Q361 381 341 381 L171 381 Q151 381 151 361 L151 151 Q151 131 171 131 Z" fill="#FFFFFF"/>
+    <path d="M303 131 L361 189 L303 189 Z" fill="#DCE3F7"/>
+  </g>
+  <g>
+    <line x1="188" y1="184" x2="282" y2="184" stroke="#A2B0E0" stroke-width="16" stroke-linecap="round"/>
+    <line x1="188" y1="232" x2="324" y2="232" stroke="#A2B0E0" stroke-width="16" stroke-linecap="round"/>
+    <line x1="188" y1="280" x2="324" y2="280" stroke="#A2B0E0" stroke-width="16" stroke-linecap="round"/>
+    <line x1="188" y1="328" x2="324" y2="328" stroke="#A2B0E0" stroke-width="16" stroke-linecap="round"/>
   </g>
 </svg>

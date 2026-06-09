@@ -101,11 +101,11 @@ export function useNotesSync() {
 		}
 	}
 
-	async function readRemoteNotes(force = false): Promise<Note[]> {
-		const files = await listFiles(NOTE_PREFIX, force ? null : lastSyncedToLocalAt());
+	async function readRemoteNotes(force = false, token?: string): Promise<{ token: string | undefined; notes: Note[] }> {
+		const { pageToken, fileList } = await listFiles(NOTE_PREFIX, force ? null : lastSyncedToLocalAt());
 		const notes: Note[] = [];
 		await Promise.all(
-			files.map(async file => {
+			fileList.map(async file => {
 				try {
 					const data = await readJSONById<NoteJSON>(file.id);
 					if (data) {
@@ -116,7 +116,7 @@ export function useNotesSync() {
 				}
 			})
 		);
-		return notes.concat(await migrateFromLegacy());
+		return { token: pageToken, notes };
 	}
 
 	async function purgeRemoteFiles(fileIdsToPurge: ReadonlyArray<UUID>) {
@@ -160,18 +160,33 @@ export function useNotesSync() {
 	}
 
 	async function runPull(force = false) {
+		let pageToken: string | undefined;
+		let remoteNotes: Note[];
+		let remoteCount: number = 0;
+		let downloaded: number = 0;
 		const syncStartedAt = new Date();
-		const remoteNotes = await readRemoteNotes(force);
-		const changes = mergeNotesByModifiedAt(store.notes(), remoteNotes);
-		if (changes.length > 0) {
-			await store.replaceMultiple(changes);
-		}
+		do {
+			({ token: pageToken, notes: remoteNotes } = await readRemoteNotes(force, pageToken));
+			const readCount = remoteNotes.length;
+			if (readCount === 0) {
+				continue;
+			}
+			remoteCount += readCount;
+			const changes = mergeNotesByModifiedAt(store.notes(), remoteNotes);
+			const changeCount = changes.length;
+			if (changeCount > 0) {
+				await store.replaceMultiple(changes);
+				downloaded += changeCount;
+			}
+			setLastSyncMessage({
+				text: `Fetching remote notes (${remoteCount} loaded)`,
+				type: "success",
+				timeStamp: Date.now()
+			});
+		} while (pageToken);
 		await purgeRemoteFiles(await store.purgeExpiredTrash());
 		setLastSyncedToLocalAt(syncStartedAt);
-		return {
-			remoteCount: remoteNotes.length,
-			downloaded: changes.length
-		};
+		return { remoteCount, downloaded };
 	}
 
 	async function runPush(purged: ReadonlyArray<UUID> = [], force = false) {

@@ -34,7 +34,7 @@ export function useGoogleDrive() {
 		};
 	}
 
-	async function listFiles(namePrefix?: string, modifiedTime?: Date | null): Promise<DriveFile[]> {
+	async function listFiles(namePrefix?: string, modifiedTime?: Date | null, pageToken?: string): Promise<{ pageToken: string | undefined; fileList: DriveFile[] }> {
 		const queryParts = ["'appDataFolder' in parents", "trashed=false"];
 		if (namePrefix) {
 			queryParts.push(`name contains '${namePrefix}'`);
@@ -43,27 +43,26 @@ export function useGoogleDrive() {
 			queryParts.push(`modifiedTime >= '${modifiedTime.toISOString()}'`);
 		}
 		const files: DriveFile[] = [];
-		let pageToken: string | undefined;
-		do {
-			const params = new URLSearchParams({
-				spaces: "appDataFolder",
-				q: queryParts.join(" and "),
-				fields: "files(id,name),nextPageToken",
-				pageSize: "1000"
-			});
-			if (pageToken) {
-				params.set("pageToken", pageToken);
-			}
-			const res = await fetchOrThrow(`${DRIVE_API}?${params}`, {
-				headers: await headers()
-			});
-			const data = await res.json();
-			if (Array.isArray(data.files)) {
-				files.push(...data.files);
-			}
-			pageToken = data.nextPageToken;
-		} while (pageToken);
-		return namePrefix ? files.filter(f => f.name.startsWith(namePrefix)) : files;
+		const params = new URLSearchParams({
+			spaces: "appDataFolder",
+			q: queryParts.join(" and "),
+			fields: "files(id,name),nextPageToken",
+			pageSize: "25"
+		});
+		if (pageToken) {
+			params.set("pageToken", pageToken);
+		}
+		const res = await fetchOrThrow(`${DRIVE_API}?${params}`, {
+			headers: await headers()
+		});
+		const data = await res.json();
+		if (Array.isArray(data.files)) {
+			files.push(...data.files);
+		}
+		return {
+			pageToken: data.nextPageToken,
+			fileList: namePrefix ? files.filter(f => f.name.startsWith(namePrefix)) : files
+		};
 	}
 
 	async function findFile(name: string): Promise<DriveFile | null> {

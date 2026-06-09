@@ -4,7 +4,7 @@ import { useGoogleAuth } from "./useGoogleAuth";
 import * as store from "@/stores/notes";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
 import { getKV, setKV } from "@/storage/db";
-import { AUTO_SYNC_KEY, debounce, DEBOUNCE_MS, emptyString, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, LEGACY_SYNC_FILENAME, NOTE_PREFIX } from "@/library";
+import { AUTO_SYNC_KEY, debounce, DEBOUNCE_MS, emptyString, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, NOTE_PREFIX } from "@/library";
 import type { UUID } from "crypto";
 
 enum NoteUploadResult {
@@ -80,26 +80,6 @@ export function useNotesSync() {
 	const { listFiles, findFile, readJSON, readJSONById, writeJSONById, writeJSON, deleteFile } = useGoogleDrive();
 	const { isSignedIn } = useGoogleAuth();
 	const getFileName = (id: UUID) => `${NOTE_PREFIX}${id}.json`;
-
-	async function migrateFromLegacy(): Promise<Note[]> {
-		try {
-			const data = await readJSON<NoteJSON[]>(LEGACY_SYNC_FILENAME);
-			if (data && Array.isArray(data)) {
-				return data.map(fromJSON);
-			}
-		} catch {
-			void 0;
-		}
-		return [];
-	}
-
-	async function deleteFromLegacy() {
-		try {
-			await deleteFile(LEGACY_SYNC_FILENAME);
-		} catch {
-			void 0;
-		}
-	}
 
 	async function readRemoteNotes(force = false, token?: string): Promise<{ token: string | undefined; notes: Note[] }> {
 		const { pageToken, fileList } = await listFiles(NOTE_PREFIX, force ? null : lastSyncedToLocalAt());
@@ -194,9 +174,6 @@ export function useNotesSync() {
 		await purgeRemoteFiles(purged);
 		const candidates = force ? store.notes() : store.notes().filter(n => noteEffectiveTime(n) > (lastSyncedToCloudAt()?.getTime() ?? 0));
 		const results = await Promise.all(candidates.map(uploadNote));
-		if (lastSyncedToLocalAt()) {
-			await deleteFromLegacy();
-		}
 		setLastSyncedToCloudAt(syncStartedAt);
 		return {
 			conflicts: results.filter(r => r === "conflict").length

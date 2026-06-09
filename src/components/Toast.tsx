@@ -27,7 +27,7 @@ export default function Toast(props: Props) {
 		on(
 			() => props.timeStamp,
 			val => {
-				if (val) {
+				if (val && props.type === "success") {
 					resetDismissTimeout();
 				}
 			},

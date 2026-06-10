@@ -1,6 +1,3 @@
-declare namespace globalThis {
-	declare const google: any;
-}
 interface TypeMap {
 	bigint: bigint;
 	boolean: boolean;

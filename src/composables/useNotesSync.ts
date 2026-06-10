@@ -82,7 +82,7 @@ export function useNotesSync() {
 	const getFileName = (id: UUID) => `${NOTE_PREFIX}${id}.json`;
 
 	async function readRemoteNotes(force = false, token?: string): Promise<{ token: string | undefined; notes: Note[] }> {
-		const { pageToken, fileList } = await listFiles(NOTE_PREFIX, force ? null : lastSyncedToLocalAt());
+		const { pageToken, fileList } = await listFiles(NOTE_PREFIX, force ? null : lastSyncedToLocalAt(), token);
 		const notes: Note[] = [];
 		await Promise.all(
 			fileList.map(async file => {

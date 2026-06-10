@@ -61,7 +61,7 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Merging is timestamp-based: each note's effective time is the latest of its created, modified, archived, deleted, and state-changed times, so local and remote are combined without losing edits. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
 - Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync).
 - A sync indicator shows syncing, last-synced time, or sync errors; a toast confirms success / failure. The sync menu also exposes the signed-in account and sign-out.
-- Sessions are restored on reload using a cached access token (with expiry); sign out revokes the token and clears the cached user.
+- Authentication uses the OAuth 2.0 authorization-code flow with a serverless backend: the refresh token is kept server-side in an encrypted, httpOnly session cookie, and access tokens are refreshed silently in the background, so the user only signs in once. Sign out revokes the grant and clears the session.
 - If no Google client ID is configured, the sync UI stays hidden and the app runs in local-only mode.
 
 ## Tech stack
@@ -113,15 +113,45 @@ npm run format
 
 ## Configuration
 
-Google Drive sync is optional. To enable it, create a Google OAuth 2.0 Client ID (Web application) and put it in a `.env` file at the project root:
+Google Drive sync is optional and uses the OAuth 2.0 **authorization-code flow** with a small serverless backend (the functions in `api/auth/`). The user signs in once; the refresh token is held server-side in an encrypted, httpOnly cookie, and access tokens are refreshed silently — there is no recurring sign-in popup. If the client ID is left blank, the sync controls are hidden and the app works entirely offline.
 
-```env
-VITE_GOOG_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
-```
+### 1. Create the OAuth client
+
+In the [Google Cloud Console](https://console.cloud.google.com/apis/credentials), create an **OAuth 2.0 Client ID** of type **Web application**, then add:
+
+- **Authorized JavaScript origins**: your app origin, e.g. `https://your-app.vercel.app` (and `http://localhost:3000` for local development).
+- **Authorized redirect URIs**: the callback endpoint — `https://your-app.vercel.app/api/auth/callback` (and `http://localhost:3000/api/auth/callback` for local development). This must match exactly, including the scheme and path.
 
 The app requests the `drive.appdata`, `openid`, `email`, and `profile` scopes. Each note is stored as a separate `qp-note:<id>.json` file in the Drive app-data folder, which is private to QuickPad.
 
-If the client ID is left blank, the sync controls are hidden and the app works entirely offline.
+### 2. Set environment variables
+
+Copy `.env.example` to `.env` and fill in the values (see that file for details):
+
+```env
+# Frontend (exposed to the browser)
+VITE_GOOG_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+
+# Backend (server-only — never prefix with VITE_)
+GOOGLE_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+GOOGLE_OAUTH_CLIENT_SECRET="your-client-secret"
+SESSION_SECRET="a-long-random-string"   # node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+On **Vercel**, set the same variables under **Project Settings → Environment Variables** (the `.env` file is git-ignored and only used locally).
+
+### 3. Local development
+
+The `/api/auth/*` functions run on Vercel's serverless runtime, so the OAuth flow only works when the functions are served alongside the app. Use the [Vercel CLI](https://vercel.com/docs/cli):
+
+```sh
+# Console 1
+vercel dev
+# Console 2
+npm run dev
+```
+
+Plain `npm run dev` serves the frontend only; sync will be unavailable because the `/api/auth/*` endpoints are not running.
 
 ## Routes
 

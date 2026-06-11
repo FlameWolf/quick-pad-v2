@@ -4,9 +4,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "vite",
+		"dev": "node ./scripts/run-all dev",
 		"build": "npm run type-check && npm run build-only",
-		"preview": "vite preview",
+		"preview": "node ./scripts/run-all preview",
 		"build-only": "vite build",
 		"type-check": "tsc --build",
 		"format": "prettier --write --experimental-cli src/"

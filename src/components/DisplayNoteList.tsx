@@ -357,7 +357,7 @@ export default function DisplayNoteList(props: Props) {
 											</div>
 											<p class="card-text text-muted small overflow-hidden">{note.summary}</p>
 										</div>
-										<div class="d-flex gap-1 bg-body small w-100 position-absolute bottom-0 px-2 py-2 border-top">
+										<div class="d-flex gap-1 small w-100 position-absolute bottom-0 px-2 py-2 border-top">
 											<Show when={note.sentenceCount}>
 												<div class="badge text-bg-secondary">{note.sentenceCount} sentences</div>
 											</Show>

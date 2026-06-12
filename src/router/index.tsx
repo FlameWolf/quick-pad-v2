@@ -1,5 +1,5 @@
 import { Route, Navigate, useBeforeLeave, useLocation } from "@solidjs/router";
-import { createEffect, createSignal, on, Show } from "solid-js";
+import { createEffect, createSignal, lazy, on, Show } from "solid-js";
 import DisplayNoteList from "@/components/DisplayNoteList";
 import EditNote from "@/components/EditNote";
 
@@ -52,6 +52,8 @@ export function Routes() {
 			<Route path="/notes/trash" component={() => <DisplayNoteList view="trash"/>}/>
 			<Route path="/notes/new" component={EditNote}/>
 			<Route path="/notes/:id" component={EditNote}/>
+			<Route path="/privacy" component={lazy(() => import("@/components/PrivacyPolicy"))}/>
+			<Route path="/terms" component={lazy(() => import("@/components/TermsOfService"))}/>
 		</>
 	);
 }

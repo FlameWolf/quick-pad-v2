@@ -11,12 +11,15 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Create, view, search, edit, archive, and delete plain-text notes from a tile-based dashboard.
 - Each tile shows the title, last-updated date, and a short summary preview.
 - Live sentence, word, and character counts (Unicode-aware via `Intl.Segmenter`) while reading or editing.
-- Counts and summaries are computed once and cached per note, then recalculated live while editing.
+- Counts and summaries are computed once and cached per note; the counts are recalculated live while editing, and the summary is refreshed when the note is saved.
 - Note bodies are **lazy-loaded**: only metadata is read on startup, and the full content is fetched on demand when a note is opened.
 - Search matches both note titles and note bodies (content is scanned on demand).
 - Per-note undo / redo history while editing (debounced, up to 100 steps).
 - "Discard unsaved changes" guard when navigating away or reloading mid-edit.
 - Confirm dialog (with Enter / Escape keyboard shortcuts) protects destructive actions.
+- Tapping on a note tile opens it in read-only mode. A one-tap **Copy to clipboard** button allows easy copy-pasting of note contents anywhere. Tap the **Edit** button to switch to _Edit_ mode.
+- The editing area auto-grows to fit your text (using `field-sizing` where supported, with a JavaScript fallback).
+- Create a new note from a dedicated **+** tile on the dashboard.
 
 ### Organisation
 
@@ -56,7 +59,7 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 ### Optional Google Drive sync
 
 - Sign in with Google to back up notes to your Drive's app-data folder (the app cannot see any other files in your Drive).
-- Each note is stored as its own file (`qp-note:<id>.json`) in the Drive app-data folder; a legacy single-file backup is migrated automatically and then removed.
+- Each note is stored as its own file (`qp-note:<id>.json`) in the Drive app-data folder.
 - **Sync** performs a full pull-and-push on demand, and **Force Sync** re-syncs every note regardless of timestamps. An **Auto-sync** toggle debounces a push a few seconds after each change.
 - Merging is timestamp-based: each note's effective time is the latest of its created, modified, archived, deleted, and state-changed times, so local and remote are combined without losing edits. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
 - Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync).
@@ -69,17 +72,20 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - [Solid](https://docs.solidjs.com/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Solid Router](https://docs.solidjs.com/solid-router/)
-- [Bootstrap](https://getbootstrap.com/) + [Bootstrap Icons](https://icons.getbootstrap.com/)
+- [Bootstrap](https://getbootstrap.com/)
 - [idb](https://github.com/jakearchibald/idb) for IndexedDB storage
 - [JSZip](https://stuk.github.io/jszip/) for archive export
 - [Vite](https://vitejs.dev/) build tooling
+- [PurgeCSS](https://purgecss.com/) (via `@fullhuman/postcss-purgecss`) to strip unused Bootstrap CSS from production builds
+- [Vercel](https://vercel.com/docs/cli/) for serverless functions
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js `>=22.12.0`
+- Node.js `^20.19.0 || >=22.12.0`
 - npm
+- Vercel CLI (`npm i -g vercel`; see [Vercel CLI setup](#3-vercel-cli-setup)).
 
 ### Install
 
@@ -93,17 +99,29 @@ npm install
 npm run dev
 ```
 
+> This starts the Vercel dev server (the `api/auth/*` functions) and the Vite UI together. It requires the Vercel CLI — see [Configuration → Vercel CLI setup](#3-vercel-cli-setup).
+
 ### Type-check and build for production
 
 ```sh
 npm run build
 ```
 
+### Type-check only
+
+```sh
+npm run type-check
+```
+
 ### Preview the production build
+
+First build the app (`npm run build`), then:
 
 ```sh
 npm run preview
 ```
+
+This starts the Vercel CLI (`vercel dev`, serving the `api/auth/*` functions) alongside `vite preview` (serving the built UI from `dist/`), so the OAuth flow works against the production build. It does not rebuild automatically — run `npm run build` first.
 
 ### Format source files
 
@@ -126,7 +144,7 @@ The app requests the `drive.appdata`, `openid`, `email`, and `profile` scopes. E
 
 ### 2. Set environment variables
 
-Copy `.env.example` to `.env` and fill in the values (see that file for details):
+Copy `environment.config` to `.env` and fill in the values:
 
 ```env
 # Frontend (exposed to the browser)
@@ -138,20 +156,66 @@ GOOGLE_OAUTH_CLIENT_SECRET="your-client-secret"
 SESSION_SECRET="a-long-random-string"   # node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
+> The serverless backend prefers `GOOGLE_OAUTH_CLIENT_ID` but falls back to `VITE_GOOG_OAUTH_CLIENT_ID` if it is unset, so a single client ID value works for both the browser and the server.
+
 On **Vercel**, set the same variables under **Project Settings → Environment Variables** (the `.env` file is git-ignored and only used locally).
 
-### 3. Local development
+### 3. Vercel CLI setup
 
-The `/api/auth/*` functions run on Vercel's serverless runtime, so the OAuth flow only works when the functions are served alongside the app. Use the [Vercel CLI](https://vercel.com/docs/cli):
+`npm run dev` and `npm run preview` start `vercel dev` to serve the `api/auth/*` serverless functions, so the Vercel CLI must be installed and the project linked before the local OAuth flow works.
+
+1. **Install the CLI** (globally, or use `npx vercel` for any command below):
+
+    ```sh
+    npm i -g vercel
+    ```
+
+2. **Log in** to your Vercel account:
+
+    ```sh
+    vercel login
+    ```
+
+3. **Link the project.** A fresh clone has no `.vercel/` folder (it is git-ignored), so you must link the directory to a Vercel project. This creates `.vercel/project.json` with the project and org IDs:
+
+    ```sh
+    vercel link
+    ```
+
+    Follow the prompts to select (or create) the project. `vercel dev` — and therefore `npm run dev` — will not run until the directory is linked.
+
+4. **Pull environment variables (optional).** Instead of maintaining `.env` by hand ([step 2](#2-set-environment-variables)), you can manage the variables in the Vercel dashboard and pull them locally after linking:
+
+    ```sh
+    vercel env pull .env            # download Project Settings → Environment Variables (Development) into .env
+    vercel env add SESSION_SECRET   # interactively add a variable to the linked project
+    ```
+
+### 4. Local development
+
+The `api/auth/*` functions run on Vercel's serverless runtime, so the OAuth flow only works when the functions are served alongside the app. Use the [Vercel CLI](https://vercel.com/docs/cli):
 
 ```sh
-# Console 1
-vercel dev
-# Console 2
 npm run dev
 ```
 
-Plain `npm run dev` serves the frontend only; sync will be unavailable because the `/api/auth/*` endpoints are not running.
+The console will display two `http://localhost` URLs: one for the API served by `vercel dev` (usually `http://localhost:3000`) and one for the UI served by Vite. Visit the UI URL to use the app — it will be `http://localhost:5173` for `npm run dev`, or `http://localhost:4173` for `npm run preview`. The UI proxies `/api/*` requests to the Vercel dev server on port 3000.
+
+## Deployment
+
+QuickPad deploys to [Vercel](https://vercel.com/) as a single project — the Vite-built static UI plus the `api/auth/*` serverless functions.
+
+1. Install, authenticate, and link the CLI as described in [Vercel CLI setup](#3-vercel-cli-setup).
+2. Set the backend variables (`VITE_GOOG_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `SESSION_SECRET`) under **Project Settings → Environment Variables** in the Vercel dashboard. The local `.env` is git-ignored and is **not** uploaded.
+3. Add your production origin and `https://<your-app>.vercel.app/api/auth/callback` to the OAuth client's authorized JavaScript origins and redirect URIs (see [step 1](#1-create-the-oauth-client)).
+4. Deploy:
+
+    ```sh
+    vercel            # create a preview deployment
+    vercel --prod     # deploy to production (alias of `vercel deploy --prod`)
+    ```
+
+Routing is handled by `vercel.json`: every non-`/api/` path is rewritten to `/index.html` so the Solid Router SPA owns client-side routing.
 
 ## Routes
 
@@ -186,11 +250,12 @@ Keys held in the `kv` store:
 | `last-synced-to-local`    | Timestamp of last successful pull from Drive            |
 | `last-synced-to-cloud`    | Timestamp of last successful push to Drive              |
 | `auto-sync`               | Auto-sync on/off (defaults to on)                       |
-| `pending-purges`          | Note ids queued for deletion from Drive                 |
 | `google-session-hint`     | Marker that a Google session was previously established |
 | `google-access-token`     | Cached Google OAuth access token                        |
 | `google-token-expires-at` | Expiry timestamp for the cached access token            |
 | `google-user-info`        | Cached Google user name and email                       |
 | `__migrated-to-idb`       | Flag marking the one-time migration from `localStorage` |
+
+Pending deletions awaiting propagation to Drive are tracked in memory during a session, not persisted in `kv`.
 
 Clearing site data will remove all notes that have not been synced to Drive.

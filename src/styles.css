@@ -196,6 +196,14 @@ textarea.form-control {
 	filter: drop-shadow(0 0 0.5rem var(--bs-body-color));
 }
 
+.legal-content {
+	max-width: 48rem;
+}
+
+.legal-content :is(h3) {
+	font-weight: 600;
+}
+
 .toast-container {
 	max-width: 80vw;
 	position: fixed;

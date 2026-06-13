@@ -197,6 +197,7 @@ textarea.form-control {
 }
 
 .legal-content {
+	overflow-wrap: break-word;
 	max-width: 48rem;
 }
 

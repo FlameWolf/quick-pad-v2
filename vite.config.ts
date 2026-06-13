@@ -73,5 +73,22 @@ export default defineConfig(({ command }) => ({
 		preview: {
 			proxy: apiProxy
 		}
-	})
+	}),
+	build: {
+		rollupOptions: {
+			output: {
+				manualChunks(id) {
+					if (!id.includes("node_modules")) {
+						return;
+					}
+					if (id.includes("/jszip/")) {
+						return "vendor-jszip";
+					}
+					if (id.includes("/solid-js/") || id.includes("/@solidjs/router")) {
+						return "vendor-solid";
+					}
+				}
+			}
+		}
+	}
 }));

@@ -133,5 +133,5 @@ const sections: LegalSection[] = [
 ];
 
 export default function TermsOfService() {
-	return <LegalPage title="Privacy Policy" effectiveDate="12 June 2026" intro={intro} sections={sections}/>;
+	return <LegalPage title="Terms of Service" effectiveDate="12 June 2026" intro={intro} sections={sections}/>;
 }

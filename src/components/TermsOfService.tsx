@@ -1,6 +1,6 @@
 import LegalPage from "@/components/LegalPage";
 
-const intro = ['These Terms of Service ("Terms") govern your use of QuickPad, a simple, fast, offline-first plain-text note-taking web app. Please read them carefully. They explain what QuickPad does, what you can expect from it, and what you are responsible for when you use it.', 'QuickPad is free to use. You do not need an account to take notes, and signing in is entirely optional. By using QuickPad, you agree to these Terms. These Terms address how QuickPad handles data at a high level; for full details of what data is collected and processed, see the "Privacy and data handling" section below and our Privacy Policy.'].join("\n\n");
+const intro = [`These Terms of Service ("Terms") govern your use of QuickPad, a simple, fast, offline-first plain-text note-taking web app. Please read them carefully. They explain what QuickPad does, what you can expect from it, and what you are responsible for when you use it.`, `QuickPad is free to use. You do not need an account to take notes, and signing in is entirely optional. By using QuickPad, you agree to these Terms. These Terms address how QuickPad handles data at a high level; for full details of what data is collected and processed, see the "Privacy and data handling" section below and our Privacy Policy.`].join("\n\n");
 const sections: LegalSection[] = [
 	{
 		heading: "1. Acceptance of these Terms and eligibility",
@@ -24,7 +24,7 @@ const sections: LegalSection[] = [
 		blocks: [
 			{ type: "paragraph", text: "You do not need to create an account, register, or log in to create and store notes locally. QuickPad works entirely on your device without any sign-in, and if Google sign-in is unavailable or you have not enabled it, QuickPad runs entirely on your device. If you never sign in, your notes are not transmitted off your device by QuickPad." },
 			{ type: "paragraph", text: "If you want to back up and synchronize your notes across devices, you may optionally sign in with Google. Signing in requests access to a private application-data folder in your own Google Drive and to your basic Google profile (your email address and name). It is used only to provide optional Google Drive sync and to keep you signed in; it is never used for tracking or advertising." },
-			{ type: "paragraph", text: 'When you sign in, more than your notes is involved. QuickPad\'s serverless backend receives an authentication token (a Google refresh token) and your Google account email and display name. These are decoded from the identity token Google returns and are stored in an encrypted, server-side session cookie so that you can stay signed in; short-lived access tokens are then obtained on your behalf. Your email, name, access token, and token expiry are also cached locally in your browser. The details of what is collected, where it is stored, and how long it is kept are described in the "Privacy and data handling" section below and in our Privacy Policy.' },
+			{ type: "paragraph", text: `When you sign in, more than your notes is involved. QuickPad's serverless backend receives an authentication token (a Google refresh token) and your Google account email and display name. These are decoded from the identity token Google returns and are stored in an encrypted, server-side session cookie so that you can stay signed in; short-lived access tokens are then obtained on your behalf. Your email, name, access token, and token expiry are also cached locally in your browser. The details of what is collected, where it is stored, and how long it is kept are described in the "Privacy and data handling" section below and in our Privacy Policy.` },
 			{ type: "paragraph", text: "When you sign in, QuickPad stores your notes only in a hidden application-data folder in your own Google Drive that is private to QuickPad. The app cannot see or access any of your other Google Drive files." }
 		]
 	},
@@ -89,8 +89,8 @@ const sections: LegalSection[] = [
 		]
 	},
 	{
-		heading: '9. Disclaimer of warranties ("AS IS")',
-		blocks: [{ type: "paragraph", text: 'QuickPad is provided "AS IS" and "AS AVAILABLE," without warranties of any kind, whether express or implied. To the fullest extent permitted by law, we disclaim all warranties, including any implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the service will be uninterrupted, secure, error-free, or that any data will be preserved or recoverable.' }]
+		heading: `9. Disclaimer of warranties ("AS IS")`,
+		blocks: [{ type: "paragraph", text: `QuickPad is provided "AS IS" and "AS AVAILABLE," without warranties of any kind, whether express or implied. To the fullest extent permitted by law, we disclaim all warranties, including any implied warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the service will be uninterrupted, secure, error-free, or that any data will be preserved or recoverable.` }]
 	},
 	{
 		heading: "10. Limitation of liability",

@@ -153,7 +153,7 @@ VITE_GOOG_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 # Backend (server-only — never prefix with VITE_)
 GOOGLE_OAUTH_CLIENT_ID="your-client-id.apps.googleusercontent.com"
 GOOGLE_OAUTH_CLIENT_SECRET="your-client-secret"
-SESSION_SECRET="a-long-random-string"   # node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+SESSION_SECRET="a-long-random-string"   # node -e "console.log(require("crypto").randomBytes(32).toString("base64"))"
 ```
 
 > The serverless backend prefers `GOOGLE_OAUTH_CLIENT_ID` but falls back to `VITE_GOOG_OAUTH_CLIENT_ID` if it is unset, so a single client ID value works for both the browser and the server.

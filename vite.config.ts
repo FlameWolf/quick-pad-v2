@@ -14,8 +14,8 @@ const apiProxy = {
 };
 
 function precacheManifestPlugin(): PluginOption {
-	const CACHE_VERSION_PLACEHOLDER = '"__CACHE_VERSION__"';
-	const PRECACHE_MANIFEST_PLACEHOLDER = '["__PRECACHE_MANIFEST__"]';
+	const CACHE_VERSION_PLACEHOLDER = `"__CACHE_VERSION__"`;
+	const PRECACHE_MANIFEST_PLACEHOLDER = `["__PRECACHE_MANIFEST__"]`;
 	const SHELL_FILES = ["/", "/index.html", "/favicon.svg", "/logo.svg", "/manifest.webmanifest"];
 
 	let bundleAssetPaths: string[] = [];

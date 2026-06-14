@@ -78,13 +78,8 @@ export default defineConfig(({ command }) => ({
 		rollupOptions: {
 			output: {
 				manualChunks(id) {
-					if (!id.includes("node_modules")) {
-						return;
-					}
-					if (id.includes("/jszip/")) {
-						return "vendor-jszip";
-					}
-					if (id.includes("/solid-js/") || id.includes("/@solidjs/router")) {
+					const vendorModules = ["node_modules/@solidjs/router/", "node_modules/solid-js/"];
+					if (vendorModules.some(module => id.includes(module))) {
 						return "vendor-solid";
 					}
 				}

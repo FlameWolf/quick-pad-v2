@@ -2,13 +2,13 @@ import { createSignal } from "solid-js";
 import { activeNotes, addNote, getNoteContent } from "@/stores/notes";
 import { create, type Note } from "@/models/Note";
 import { emptyString, isTextFile } from "@/library";
-import JSZip from "jszip";
 
 interface ImportError {
 	fileName: string;
 	message: string;
 }
 
+const JSZip = (await import("jszip")).default;
 const [importErrors, setImportErrors] = createSignal<ImportError[]>([]);
 
 function triggerDownload(blob: Blob, filename: string) {

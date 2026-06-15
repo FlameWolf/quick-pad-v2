@@ -22,10 +22,10 @@ export default function SearchBar(props: Props) {
 
 	return (
 		<div class="me-auto position-relative">
-		<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={props.disabled} onInput={debouncedSearch}/>
-		<Show when={isSearchMode()}>
-			<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={clearSearch}></button>
-		</Show>
-	</div>
+			<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={props.disabled} onInput={debouncedSearch}/>
+			<Show when={isSearchMode()}>
+				<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={clearSearch}></button>
+			</Show>
+		</div>
 	);
 }

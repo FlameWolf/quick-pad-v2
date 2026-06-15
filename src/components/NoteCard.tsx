@@ -27,7 +27,7 @@ export default function NoteCard(props: Props) {
 		<A href={`/notes/${note().id}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected() }} onClick={e => props.clickAction(e, note().id)}>
 			<div class="card-body d-flex flex-column">
 				<Show when={props.selectionMode}>
-					<input type="checkbox" class="form-check-input selection-checkbox rounded-circle" checked={isSelected()} />
+					<input type="checkbox" class="form-check-input selection-checkbox rounded-circle" checked={isSelected()}/>
 				</Show>
 				<div class="d-flex gap-1 mb-2">
 					<div class="text-truncate">{note().title}</div>

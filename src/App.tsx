@@ -32,9 +32,7 @@ export default function App(props: AppProps) {
 					</div>
 				</div>
 			</nav>
-			<main class="flex-grow-1 container px-2 pb-4">
-				{props.children}
-			</main>
+			<main class="flex-grow-1 container px-2 pb-4">{props.children}</main>
 			<footer class="bg-body-tertiary border-top mt-4">
 				<div class="d-flex flex-wrap justify-content-center align-items-center gap-3 small text-muted px-2 py-3">
 					<span>QuickPad</span>

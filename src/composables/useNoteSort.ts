@@ -10,11 +10,11 @@ const [sortBy, setSortBy] = createSignal<SortField>("modifiedAt");
 const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
 
 export async function hydrateSortPrefs(): Promise<void> {
-	const storedBy = await getKV<string>(SORT_BY_KEY);
+	const storedBy = await getKV(SORT_BY_KEY);
 	if (SORT_FIELDS.includes(storedBy as SortField)) {
 		setSortBy(storedBy as SortField);
 	}
-	const storedDir = await getKV<string>(SORT_DIRECTION_KEY);
+	const storedDir = await getKV(SORT_DIRECTION_KEY);
 	if (SORT_DIRECTIONS.includes(storedDir as SortDirection)) {
 		setSortDirection(storedDir as SortDirection);
 	}

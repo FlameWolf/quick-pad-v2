@@ -79,6 +79,31 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - [PurgeCSS](https://purgecss.com/) (via `@fullhuman/postcss-purgecss`) to strip unused Bootstrap CSS from production builds
 - [Vercel](https://vercel.com/docs/cli/) for serverless functions
 
+## Architecture
+
+The `src/` tree is organised by responsibility:
+
+| Folder         | Responsibility                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------ |
+| `constants/`   | Configuration values grouped by domain (`storage`, `sort`, `auth`, `sync`, `notes`, `common`)    |
+| `utils/`       | Pure, framework-agnostic helpers (`text-analysis`, `file-detection`, `timing`, `logger`)         |
+| `storage/`     | Persistence: `db` (low-level `idb`), `NotesRepository` (domain API), `kv-schema` (typed KV keys) |
+| `models/`      | `NoteModel` — the note domain object and its (de)serialisation                                   |
+| `composables/` | Reusable Composition-API units and app-global state singletons                                   |
+| `stores/`      | Solid stores                                                                                     |
+| `components/`  | Solid components                                                                                 |
+
+### Storage layering
+
+Components and stores never touch `idb` directly. `storage/db.ts` is the only module that opens the database and runs raw transactions; `storage/NotesRepository.ts` builds the note-domain API on top of it (and owns the metadata/content split and lazy-content "working-set contract"). Key/value access is type-checked by key through `storage/kv-schema.ts`, so `getKV`/`setKV` are safe without per-call casts (the one-time localStorage migration uses the explicit `setKVRaw` escape hatch for legacy data).
+
+### State management
+
+Shared, app-wide state lives in **module-level reactive singletons**. There is genuinely one of each (one theme, one selection, one sort preference, one sync session), so these are exposed as composables backed by module-scoped `Accessor`s rather than per-call instances — calling e.g. `useNoteSelection()` from two components shares the same state by design:
+
+- `useTheme`, `useConfirmDialog`, `useNoteSelection`, `useNoteSort`, `useNotesSync`, and `useGoogleAuth` are app-global singletons. Persistence watchers are registered once at module scope; `hydrate*()` functions only load initial values.
+- The richer note collection additionally uses a **Solid store** (`stores/notes.ts`) for its larger action surface while keeping the same module-singleton state model.
+
 ## Getting started
 
 ### Prerequisites

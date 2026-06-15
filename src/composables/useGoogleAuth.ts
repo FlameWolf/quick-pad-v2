@@ -54,9 +54,9 @@ createEffect(
 );
 
 export async function hydrateAuthState(): Promise<void> {
-	cachedToken = (await getKV<string>(TOKEN_KEY)) ?? null;
-	cachedExpiry = (await getKV<number>(EXPIRY_KEY)) ?? 0;
-	const stored = await getKV<{ email: unknown; name: unknown }>(USER_KEY);
+	cachedToken = (await getKV(TOKEN_KEY)) ?? null;
+	cachedExpiry = (await getKV(EXPIRY_KEY)) ?? 0;
+	const stored = await getKV(USER_KEY);
 	if (stored && typeof stored.email === "string" && typeof stored.name === "string") {
 		cachedUser = { email: stored.email, name: stored.name };
 	} else {

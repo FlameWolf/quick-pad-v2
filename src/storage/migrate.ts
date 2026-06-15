@@ -1,4 +1,4 @@
-import { getKV, putNote, setKV } from "./db";
+import { getKV, putNote, setKV, setKVRaw } from "./db";
 import { KV_MAPPINGS, MIGRATION_FLAG, LEGACY_NOTES_KEY, NOTE_PREFIX } from "@/constants/storage";
 import { logWarn } from "@/utils/logger";
 import type { NoteJSON } from "@/models/Note";
@@ -21,7 +21,7 @@ function coerce(raw: string, type: Coercion): FromName<Coercion> {
 }
 
 export async function runMigration(): Promise<void> {
-	if (await getKV<boolean>(MIGRATION_FLAG)) {
+	if (await getKV(MIGRATION_FLAG)) {
 		return;
 	}
 	const noteKeysToRemove: string[] = [];
@@ -66,7 +66,7 @@ export async function runMigration(): Promise<void> {
 			continue;
 		}
 		try {
-			await setKV(idbKey, coerce(raw, type));
+			await setKVRaw(idbKey, coerce(raw, type));
 		} catch (err) {
 			logWarn(`Failed to migrate localStorage key "${lsKey}" (type "${type}")`, err);
 		}

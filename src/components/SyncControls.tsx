@@ -1,0 +1,228 @@
+import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
+import { useConfirmDialog } from "@/composables/useConfirmDialog";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
+import { useNotesSync } from "@/composables/useNotesSync";
+import { isLoading, purgeExpiredTrash } from "@/stores/notes";
+
+export default function SyncControls() {
+	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
+	const { isSignedIn, isReady, isConfigured, user, tryRestoreSession, signIn, signOut } = useGoogleAuth();
+	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, doPullAndPush, requestSync, setAutoSync } = useNotesSync();
+	const { confirm } = useConfirmDialog();
+	const [showSyncMenu, setShowSyncMenu] = createSignal(false);
+	const [authTimedOut, setAuthTimedOut] = createSignal(false);
+
+	function toggleSyncMenu() {
+		setShowSyncMenu(prev => !prev);
+	}
+
+	function closeSyncMenu() {
+		setShowSyncMenu(false);
+	}
+
+	async function handleSync(force = false) {
+		closeSyncMenu();
+		if (!force) {
+			await doPullAndPush();
+			return;
+		}
+		const ok = await confirm({
+			title: "Force Sync",
+			message: "This will pull and push all notes from cloud and local. It might take more time and use more data than a normal sync. Are you sure you want to continue?",
+			confirmText: "Yes",
+			cancelText: "Cancel",
+			variant: "warning"
+		});
+		if (ok) {
+			await doPullAndPush({ force: true });
+		}
+	}
+
+	async function handleSignOut() {
+		closeSyncMenu();
+		await signOut();
+	}
+
+	async function handleToggleAutoSync() {
+		await setAutoSync(!autoSyncEnabled());
+	}
+
+	const lastSyncedLabel = createMemo(() => {
+		const ts = lastSyncedAt();
+		if (!ts) {
+			return null;
+		}
+		const diff = Date.now() - ts.getTime();
+		const seconds = Math.floor(diff / 1000);
+		if (seconds < 60) {
+			return "just now";
+		}
+		const minutes = Math.floor(seconds / 60);
+		if (minutes < 60) {
+			return `${minutes}m ago`;
+		}
+		const hours = Math.floor(minutes / 60);
+		if (hours < 24) {
+			return `${hours}h ago`;
+		}
+		return ts.toLocaleDateString();
+	});
+
+	createEffect(
+		on([isSignedIn, autoSyncEnabled], ([signedIn, autoEnabled]) => {
+			if (signedIn && autoEnabled) {
+				setTimeout(async () => {
+					await doPullAndPush();
+				});
+			}
+		})
+	);
+
+	createEffect(
+		on(
+			isLoading,
+			async loading => {
+				if (loading) {
+					return;
+				}
+				const purgedIds = await purgeExpiredTrash();
+				if (purgedIds.length > 0) {
+					requestSync(purgedIds);
+				}
+			},
+			{ defer: true }
+		)
+	);
+
+	onMount(() => {
+		if (isConfigured()) {
+			readyTimeout = setTimeout(() => {
+				if (!isReady()) {
+					setAuthTimedOut(true);
+				}
+			}, 6000);
+		}
+		tryRestoreSession();
+	});
+
+	onCleanup(() => {
+		if (readyTimeout) {
+			clearTimeout(readyTimeout);
+		}
+	});
+
+	return (
+		<Show when={isConfigured()}>
+			<Show
+				when={isReady()}
+				fallback={
+					<Show
+						when={authTimedOut()}
+						fallback={
+							<button class="btn btn-outline-secondary btn-sm" disabled aria-label="Initialising Google Sign-In">
+								<span class="spinner-border spinner-border-sm" role="status"></span>
+							</button>
+						}>
+						<button class="btn btn-outline-secondary btn-sm" disabled title="Google Sign-In library could not be loaded">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-slash" viewBox="0 0 16 16">
+								<path fill-rule="evenodd" d="M3.112 5.112a3 3 0 0 0-.17.613C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13H11l-1-1H3.781C2.231 12 1 10.785 1 9.318c0-1.365 1.064-2.513 2.46-2.666l.446-.05v-.447q0-.113.018-.231zm2.55-1.45-.725-.725A5.5 5.5 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773a3.2 3.2 0 0 1-1.516 2.711l-.733-.733C14.498 11.378 15 10.626 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3c-.875 0-1.678.26-2.339.661z"/>
+								<path d="m13.646 14.354-12-12 .708-.708 12 12z"/>
+							</svg>
+							<span class="d-none d-sm-inline ms-1">Sign-in unavailable</span>
+						</button>
+					</Show>
+				}>
+				<Show
+					when={isSignedIn()}
+					fallback={
+						<button class="btn btn-outline-primary btn-sm" onClick={signIn} aria-label="Sign in with Google">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
+								<path d="M15.545 6.558a9.4 9.4 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.7 7.7 0 0 1 5.352 2.082l-2.284 2.284A4.35 4.35 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.8 4.8 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.7 3.7 0 0 0 1.599-2.431H8v-3.08z"/>
+							</svg>
+						</button>
+					}>
+					<div class="position-relative">
+						<button class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+							<Show
+								when={!isSyncing()}
+								fallback={
+									<span>
+										<div class="spinner-border spinner-border-sm" role="status"></div>
+									</span>
+								}>
+								<Show
+									when={syncError()}
+									fallback={
+										<Show
+											when={lastSyncedAt()}
+											fallback={
+												<span>
+													<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud" viewBox="0 0 16 16">
+														<path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383m.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"/>
+													</svg>
+												</span>
+											}>
+											<span class="text-success">
+												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2" viewBox="0 0 16 16">
+													<path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
+												</svg>
+											</span>
+										</Show>
+									}>
+									<span class="text-warning">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+											<path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+											<path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+										</svg>
+									</span>
+								</Show>
+							</Show>
+							<span class="d-none d-md-inline">
+								<span>&#xA0;</span>
+								<span>{user()?.name ?? "Sync"}</span>
+							</span>
+						</button>
+						<Show when={showSyncMenu()}>
+							<div class="dropdown-menu show sync-dropdown">
+								<div class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</div>
+								<div class="dropdown-divider"></div>
+								<label class="dropdown-item sync-dropdown-item d-flex align-items-center gap-2 mb-0">
+									<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input m-0" onChange={handleToggleAutoSync}/>
+									<span>Auto-sync</span>
+								</label>
+								<div class="dropdown-divider"></div>
+								<button class="dropdown-item sync-dropdown-item" onClick={() => handleSync(false)} disabled={isSyncing()}>
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat me-2" viewBox="0 0 16 16">
+										<path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41m-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9"/>
+										<path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/>
+									</svg>
+									<span>Sync</span>
+								</button>
+								<button class="dropdown-item sync-dropdown-item" onClick={() => handleSync(true)} disabled={isSyncing()}>
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lightning-charge me-2" viewBox="0 0 16 16">
+										<path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09zM4.157 8.5H7a.5.5 0 0 1 .478.647L6.11 13.59l5.732-6.09H9a.5.5 0 0 1-.478-.647L9.89 2.41z"/>
+									</svg>
+									<span>Force Sync</span>
+								</button>
+								<Show when={lastSyncedLabel()}>
+									<div class="dropdown-header text-muted small px-3 py-1">Last synced: {lastSyncedLabel()}</div>
+								</Show>
+								<div class="dropdown-divider"></div>
+								<button class="dropdown-item sync-dropdown-item text-danger" onClick={handleSignOut}>
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right me-2" viewBox="0 0 16 16">
+										<path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+										<path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+									</svg>
+									<span>Sign out</span>
+								</button>
+							</div>
+						</Show>
+					</div>
+					<Show when={showSyncMenu()}>
+						<div class="sync-backdrop" onClick={closeSyncMenu}></div>
+					</Show>
+				</Show>
+			</Show>
+		</Show>
+	);
+}

@@ -47,11 +47,16 @@ function shutdown() {
 		} else {
 			try {
 				process.kill(-child.pid, "SIGTERM");
-			} catch {
-				void 0;
+			} catch (err) {
+				console.error(`Failed to kill child process with ID: ${child.pid}`, err);
 			}
 		}
 	}
+	const forceExit = setTimeout(() => {
+		console.error("[run-all] Children did not exit in time; forcing shutdown.");
+		process.exit(1);
+	}, 5000);
+	forceExit.unref();
 }
 
 process.on("SIGINT", shutdown);

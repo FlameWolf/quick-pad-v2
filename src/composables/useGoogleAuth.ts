@@ -2,6 +2,7 @@ import { createSignal, createMemo, createEffect, on } from "solid-js";
 import { deleteKV, getKV, setKV } from "@/storage/db";
 import { TOKEN_KEY, EXPIRY_KEY, USER_KEY, CLIENT_ID, SESSION_KEY, TOKEN_REFRESH_BUFFER_MS, AUTH_TOKEN_URL, AUTH_START_URL, AUTH_SIGNOUT_URL } from "@/constants/auth";
 import { LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY } from "@/constants/sync";
+import { logWarn } from "@/utils/logger";
 
 type UserInfo = {
 	email: string;
@@ -181,13 +182,15 @@ function signIn(): Promise<void> {
 				setIsSignedIn(true);
 				try {
 					await refreshFromServer();
-				} catch {}
+				} catch (err) {
+					logWarn("Failed to refresh access token after sign-in", err);
+				}
 			}
 			finish();
 		}
 		window.addEventListener("message", onMessage);
 		if (!popup) {
-			console.log("Sign-in popup was blocked by the browser.");
+			logWarn("Sign-in popup was blocked by the browser.");
 			finish();
 			return;
 		}
@@ -202,7 +205,9 @@ function signIn(): Promise<void> {
 async function signOut() {
 	try {
 		await fetch(AUTH_SIGNOUT_URL, { method: "POST", credentials: "include" });
-	} catch {}
+	} catch (err) {
+		logWarn("Failed to notify the server of sign-out", err);
+	}
 	await clearSession();
 }
 

@@ -6,7 +6,9 @@ import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { useFileIO } from "@/composables/useFileIO";
 import { create } from "@/models/Note";
-import { getSentenceCount, getWordCount, getCharacterCount, emptyString, debounce } from "@/library";
+import { emptyString } from "@/constants/common";
+import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
+import { debounce } from "@/utils/timing";
 import Toast from "@/components/Toast";
 import type { UUID } from "crypto";
 

@@ -1,4 +1,5 @@
-import { emptyString, getCharacterCount, getSentenceCount, getSummary, getWordCount } from "@/library";
+import { emptyString } from "@/constants/common";
+import { getSummary, getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
 import type { UUID } from "crypto";
 
 export interface NoteMetaJSON {

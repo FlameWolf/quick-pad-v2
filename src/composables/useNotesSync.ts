@@ -4,7 +4,10 @@ import { useGoogleAuth } from "./useGoogleAuth";
 import * as store from "@/stores/notes";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
 import { getKV, setKV } from "@/storage/db";
-import { AUTO_SYNC_KEY, debounce, DEBOUNCE_MS, emptyString, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, NOTE_PREFIX } from "@/library";
+import { emptyString } from "@/constants/common";
+import { NOTE_PREFIX } from "@/constants/storage";
+import { LAST_SYNCED_TO_LOCAL_KEY, LAST_SYNCED_TO_CLOUD_KEY, AUTO_SYNC_KEY, DEBOUNCE_MS } from "@/constants/sync";
+import { debounce } from "@/utils/timing";
 import type { UUID } from "crypto";
 
 enum NoteUploadResult {

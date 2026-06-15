@@ -2,7 +2,9 @@ import { createStore, produce } from "solid-js/store";
 import { createEffect, createMemo, createSignal, on } from "solid-js";
 import { archive, fromJSON, restore, toJSON, toMetaJSON, trash, unarchive, update, type Note } from "@/models/Note";
 import * as db from "@/storage/db";
-import { contains, emptyString, TRASH_RETENTION_MS } from "@/library";
+import { emptyString } from "@/constants/common";
+import { TRASH_RETENTION_MS } from "@/constants/notes";
+import { contains } from "@/utils/text-analysis";
 import type { UUID } from "crypto";
 
 interface NotesState {

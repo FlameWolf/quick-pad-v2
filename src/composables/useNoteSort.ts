@@ -1,6 +1,6 @@
 import { createEffect, createSignal, on } from "solid-js";
 import { getKV, setKV } from "@/storage/db";
-import { SORT_BY_KEY, SORT_FIELDS, SORT_DIRECTION_KEY, SORT_DIRECTIONS } from "@/library";
+import { SORT_FIELDS, SORT_DIRECTIONS, SORT_BY_KEY, SORT_DIRECTION_KEY } from "@/constants/sort";
 import type { Note } from "@/models/Note";
 
 export type SortField = (typeof SORT_FIELDS)[number];

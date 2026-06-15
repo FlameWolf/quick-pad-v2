@@ -1,5 +1,5 @@
 import { useGoogleAuth } from "./useGoogleAuth";
-import { DRIVE_API, UPLOAD_API } from "@/library";
+import { DRIVE_API, UPLOAD_API } from "@/constants/sync";
 
 interface DriveFile {
 	id: string;

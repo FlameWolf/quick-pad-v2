@@ -6,7 +6,7 @@ import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
-import { emptyString } from "@/library";
+import { emptyString } from "@/constants/common";
 import SelectionActionBar, { type SelectionAction } from "./SelectionActionBar";
 import Toast from "./Toast";
 import type { Note } from "@/models/Note";

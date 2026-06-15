@@ -6,7 +6,8 @@ import { useNotesSync } from "@/composables/useNotesSync";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { searchText, setSearchText, purgeExpiredTrash, isLoading } from "@/stores/notes";
 import { listViewRoutes, ScrollRestore } from "@/router";
-import { debounce, emptyString } from "@/library";
+import { emptyString } from "@/constants/common";
+import { debounce } from "@/utils/timing";
 import Toast from "@/components/Toast";
 import ConfirmDialog from "@/components/ConfirmDialog";
 

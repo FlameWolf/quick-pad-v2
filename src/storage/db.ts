@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
-import { DB_NAME, DB_VERSION, NOTES_STORE, CONTENTS_STORE, KV_STORE } from "@/library";
+import { DB_NAME, DB_VERSION, NOTES_STORE, CONTENTS_STORE, KV_STORE } from "@/constants/storage";
 import type { NoteJSON, NoteMetaJSON } from "@/models/Note";
 
 let dbPromise: Promise<IDBPDatabase> | null = null;

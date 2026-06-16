@@ -232,7 +232,9 @@ export default function DisplayNoteList(props: Props) {
 						<div class="mt-3" role="status">{store.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
-				<EmptyState message={emptyMessage()} showActions={view() === "active" && !isSearchMode()} importAction={handleImport}/>
+				<Match when={view() === "active"}>
+					<EmptyState message={emptyMessage()} showActions={!isSearchMode()} importAction={handleImport}/>
+				</Match>
 				<Match when={hasNotes()}>
 					<div>
 						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">

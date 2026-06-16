@@ -3,8 +3,12 @@ import { useGoogleDrive } from "./useGoogleDrive";
 import { useGoogleAuth } from "./useGoogleAuth";
 import * as store from "@/stores/notes";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
-import { getKV, setKV } from "@/storage/db";
-import { AUTO_SYNC_KEY, debounce, DEBOUNCE_MS, emptyString, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, NOTE_PREFIX } from "@/library";
+import { deleteKV, getKV, setKV } from "@/storage/db";
+import { emptyString } from "@/constants/common";
+import { NOTE_PREFIX } from "@/constants/storage";
+import { LAST_SYNCED_TO_LOCAL_KEY, LAST_SYNCED_TO_CLOUD_KEY, AUTO_SYNC_KEY, DEBOUNCE_MS } from "@/constants/sync";
+import { debounce } from "@/utils/timing";
+import { logWarn } from "@/utils/logger";
 import type { UUID } from "crypto";
 
 enum NoteUploadResult {
@@ -25,9 +29,9 @@ const [syncError, setSyncError] = createSignal<string | null>(null);
 const pendingPurges = new Set<UUID>();
 
 export async function hydrateSyncMetadata(): Promise<void> {
-	const storedLocal = await getKV<string>(LAST_SYNCED_TO_LOCAL_KEY);
-	const storedCloud = await getKV<string>(LAST_SYNCED_TO_CLOUD_KEY);
-	const storedAutoSync = await getKV<boolean>(AUTO_SYNC_KEY);
+	const storedLocal = await getKV(LAST_SYNCED_TO_LOCAL_KEY);
+	const storedCloud = await getKV(LAST_SYNCED_TO_CLOUD_KEY);
+	const storedAutoSync = await getKV(AUTO_SYNC_KEY);
 	setLastSyncedToLocalAt(storedLocal ? new Date(storedLocal) : null);
 	setLastSyncedToCloudAt(storedCloud ? new Date(storedCloud) : null);
 	setAutoSyncEnabled(storedAutoSync === undefined ? true : storedAutoSync);
@@ -44,7 +48,11 @@ export async function hydrateSyncMetadata(): Promise<void> {
 		on(
 			lastSyncedToLocalAt,
 			async date => {
-				await setKV(LAST_SYNCED_TO_LOCAL_KEY, date);
+				if (date) {
+					await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
+				} else {
+					await deleteKV(LAST_SYNCED_TO_LOCAL_KEY);
+				}
 			},
 			{ defer: true }
 		)
@@ -53,7 +61,11 @@ export async function hydrateSyncMetadata(): Promise<void> {
 		on(
 			lastSyncedToCloudAt,
 			async date => {
-				await setKV(LAST_SYNCED_TO_CLOUD_KEY, date);
+				if (date) {
+					await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
+				} else {
+					await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
+				}
 			},
 			{ defer: true }
 		)
@@ -77,7 +89,7 @@ export function mergeNotesByModifiedAt(local: ReadonlyArray<Note>, remote: Reado
 }
 
 export function useNotesSync() {
-	const { listFiles, findFile, readJSON, readJSONById, writeJSONById, writeJSON, deleteFile } = useGoogleDrive();
+	const { listFiles, findFile, readJSONById, writeJSONById, writeJSON, deleteFile } = useGoogleDrive();
 	const { isSignedIn } = useGoogleAuth();
 	const getFileName = (id: UUID) => `${NOTE_PREFIX}${id}.json`;
 
@@ -92,7 +104,7 @@ export function useNotesSync() {
 						notes.push(fromJSON(data));
 					}
 				} catch (err) {
-					console.warn(`Failed to read note file ${file.name}:`, err);
+					logWarn(`Failed to read note file ${file.name}:`, err);
 				}
 			})
 		);

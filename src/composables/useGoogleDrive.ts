@@ -1,5 +1,5 @@
 import { useGoogleAuth } from "./useGoogleAuth";
-import { DRIVE_API, UPLOAD_API } from "@/library";
+import { DRIVE_API, UPLOAD_API } from "@/constants/sync";
 
 interface DriveFile {
 	id: string;
@@ -16,8 +16,8 @@ async function fetchOrThrow(url: string, init?: RequestInit): Promise<Response> 
 			if (body) {
 				detail = body;
 			}
-		} catch {
-			void 0;
+		} catch (err) {
+			throw err;
 		}
 		throw new Error(`Drive API ${res.status}: ${detail}`);
 	}

@@ -1,5 +1,5 @@
 import { createSignal, createMemo, type Accessor } from "solid-js";
-import { MAX_HISTORY } from "@/library";
+import { MAX_HISTORY } from "@/constants/notes";
 
 export interface UndoRedo<T> {
 	current: Accessor<T>;

@@ -1,5 +1,5 @@
 import { openDB, type IDBPDatabase } from "idb";
-import { DB_NAME, DB_VERSION, NOTES_STORE, CONTENTS_STORE, KV_STORE } from "@/library";
+import { DB_NAME, DB_VERSION, NOTES_STORE, CONTENTS_STORE, KV_STORE } from "@/constants/storage";
 import type { NoteJSON, NoteMetaJSON } from "@/models/Note";
 
 let dbPromise: Promise<IDBPDatabase> | null = null;
@@ -130,17 +130,22 @@ export async function deleteNotes(ids: string[]): Promise<void> {
 	await Promise.all(ops);
 }
 
-export async function getKV<T>(key: string): Promise<T | undefined> {
+export async function getKV<K extends KVKey>(key: K): Promise<KVSchema[K] | undefined> {
 	const db = await getDB();
-	return (await db.get(KV_STORE, key)) as T | undefined;
+	return (await db.get(KV_STORE, key)) as KVSchema[K] | undefined;
 }
 
-export async function setKV<T>(key: string, value: T): Promise<void> {
+export async function setKV<K extends KVKey>(key: K, value: KVSchema[K]): Promise<void> {
 	const db = await getDB();
-	await db.put(KV_STORE, value as unknown, key);
+	await db.put(KV_STORE, value, key);
 }
 
-export async function deleteKV(key: string): Promise<void> {
+export async function deleteKV(key: KVKey): Promise<void> {
 	const db = await getDB();
 	await db.delete(KV_STORE, key);
+}
+
+export async function setKVRaw(key: string, value: unknown): Promise<void> {
+	const db = await getDB();
+	await db.put(KV_STORE, value, key);
 }

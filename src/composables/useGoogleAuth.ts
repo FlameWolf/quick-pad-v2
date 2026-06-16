@@ -1,6 +1,8 @@
 import { createSignal, createMemo, createEffect, on } from "solid-js";
 import { deleteKV, getKV, setKV } from "@/storage/db";
-import { AUTH_SIGNOUT_URL, AUTH_START_URL, AUTH_TOKEN_URL, CLIENT_ID, EXPIRY_KEY, LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY, SESSION_KEY, TOKEN_KEY, TOKEN_REFRESH_BUFFER_MS, USER_KEY } from "@/library";
+import { TOKEN_KEY, EXPIRY_KEY, USER_KEY, CLIENT_ID, SESSION_KEY, TOKEN_REFRESH_BUFFER_MS, AUTH_TOKEN_URL, AUTH_START_URL, AUTH_SIGNOUT_URL } from "@/constants/auth";
+import { LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY } from "@/constants/sync";
+import { logWarn } from "@/utils/logger";
 
 type UserInfo = {
 	email: string;
@@ -52,9 +54,9 @@ createEffect(
 );
 
 export async function hydrateAuthState(): Promise<void> {
-	cachedToken = (await getKV<string>(TOKEN_KEY)) ?? null;
-	cachedExpiry = (await getKV<number>(EXPIRY_KEY)) ?? 0;
-	const stored = await getKV<{ email: unknown; name: unknown }>(USER_KEY);
+	cachedToken = (await getKV(TOKEN_KEY)) ?? null;
+	cachedExpiry = (await getKV(EXPIRY_KEY)) ?? 0;
+	const stored = await getKV(USER_KEY);
 	if (stored && typeof stored.email === "string" && typeof stored.name === "string") {
 		cachedUser = { email: stored.email, name: stored.name };
 	} else {
@@ -180,13 +182,15 @@ function signIn(): Promise<void> {
 				setIsSignedIn(true);
 				try {
 					await refreshFromServer();
-				} catch {}
+				} catch (err) {
+					logWarn("Failed to refresh access token after sign-in", err);
+				}
 			}
 			finish();
 		}
 		window.addEventListener("message", onMessage);
 		if (!popup) {
-			console.log("Sign-in popup was blocked by the browser.");
+			logWarn("Sign-in popup was blocked by the browser.");
 			finish();
 			return;
 		}
@@ -201,7 +205,9 @@ function signIn(): Promise<void> {
 async function signOut() {
 	try {
 		await fetch(AUTH_SIGNOUT_URL, { method: "POST", credentials: "include" });
-	} catch {}
+	} catch (err) {
+		logWarn("Failed to notify the server of sign-out", err);
+	}
 	await clearSession();
 }
 

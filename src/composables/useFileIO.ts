@@ -1,7 +1,8 @@
 import { createSignal } from "solid-js";
 import { activeNotes, addNote, getNoteContent } from "@/stores/notes";
 import { create, type Note } from "@/models/Note";
-import { emptyString, isTextFile } from "@/library";
+import { emptyString } from "@/constants/common";
+import { isTextFile } from "@/utils/file-detection";
 
 interface ImportError {
 	fileName: string;

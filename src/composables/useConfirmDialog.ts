@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store";
-import { emptyString } from "@/library";
+import { emptyString } from "@/constants/common";
 
 export type ConfirmVariant = "danger" | "primary" | "warning";
 

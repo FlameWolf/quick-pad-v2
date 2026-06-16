@@ -1,8 +1,11 @@
 import { createStore, produce } from "solid-js/store";
 import { createEffect, createMemo, createSignal, on } from "solid-js";
-import { archive, fromJSON, restore, toJSON, toMetaJSON, trash, unarchive, update, type Note } from "@/models/Note";
-import * as db from "@/storage/db";
-import { contains, emptyString, TRASH_RETENTION_MS } from "@/library";
+import { archive, restore, trash, unarchive, update, type Note } from "@/models/Note";
+import { notesRepository } from "@/storage/NotesRepository";
+import { emptyString } from "@/constants/common";
+import { TRASH_RETENTION_MS } from "@/constants/notes";
+import { contains } from "@/utils/text-analysis";
+import { logError } from "@/utils/logger";
 import type { UUID } from "crypto";
 
 interface NotesState {
@@ -10,44 +13,22 @@ interface NotesState {
 	searchText: string;
 }
 
-const persistNoteFull = async (note: Note) => {
-	await db.putNote(toJSON(note));
-	note.content = undefined;
-};
-const persistNotesFull = async (notes: Note[]) => {
-	await db.putNotes(notes.map(toJSON));
-	notes.forEach(note => (note.content = undefined));
-};
-const persistNoteMeta = async (note: Note) => {
-	await db.putNoteMeta(toMetaJSON(note));
-};
-const persistNotesMeta = async (notes: Note[]) => {
-	await db.putNotesMeta(notes.map(toMetaJSON));
-};
-const removeNote = async (id: UUID) => {
-	await db.deleteNote(id);
-};
-const removeNotes = async (ids: UUID[]) => {
-	await db.deleteNotes(ids);
-};
 const [store, setStore] = createStore<NotesState>({
 	notes: [],
 	searchText: emptyString
 });
 export const [isLoading, setIsLoading] = createSignal(true);
 export const [isSearching, setIsSearching] = createSignal(false);
-export const [matchedIds, setMatchedIds] = createSignal<Set<UUID> | null>(null);
+export const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
 export const notes = () => store.notes;
 export const searchText = () => store.searchText;
 export const setSearchText = (value: string) => setStore("searchText", value);
 const searchResults = createMemo(() => {
-	if (!store.searchText.trim()) {
+	const trimmed = store.searchText.trim();
+	if (!trimmed) {
 		return store.notes;
 	}
-	if (matchedIds() === null) {
-		return [];
-	}
-	return store.notes.filter(note => matchedIds()!.has(note.id));
+	return store.notes.filter(note => contains(note.title, trimmed) || contentMatchedIds()?.has(note.id));
 });
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
 export const archivedNotes = createMemo(() => searchResults().filter(note => note.archivedAt && !note.deletedAt));
@@ -58,18 +39,15 @@ createEffect(
 		() => store.searchText,
 		async text => {
 			const trimmed = text.trim();
+			setContentMatchedIds(null);
 			if (!trimmed) {
-				setMatchedIds(null);
 				setIsSearching(false);
 				return;
 			}
 			setIsSearching(true);
-			setMatchedIds(null);
-			const ids = new Set<UUID>(store.notes.filter(note => contains(note.title, trimmed)).map(note => note.id));
-			const contentMatches = await db.searchContents(content => contains(content, trimmed));
-			contentMatches.forEach(id => ids.add(id as UUID));
+			const matches = await notesRepository.search(content => contains(content, trimmed));
 			if (searchText().trim() === trimmed) {
-				setMatchedIds(ids);
+				setContentMatchedIds(matches as Set<UUID>);
 				setIsSearching(false);
 			}
 		}
@@ -78,10 +56,10 @@ createEffect(
 
 export async function hydrateNotes(): Promise<void> {
 	try {
-		const raw = await db.getAllNotes();
-		setStore("notes", raw.map(fromJSON));
-	} catch {
+		setStore("notes", await notesRepository.loadAll());
+	} catch (err) {
 		setStore("notes", []);
+		logError("Failed to load notes from storage", err);
 	} finally {
 		setIsLoading(false);
 	}
@@ -92,11 +70,11 @@ export function getNote(id: UUID): Note | undefined {
 }
 
 export function getNoteContent(id: UUID): Promise<string | undefined> {
-	return db.getNoteContent(id);
+	return notesRepository.loadContent(id);
 }
 
 export async function addNote(note: Note) {
-	await persistNoteFull(note);
+	await notesRepository.saveFull(note);
 	setStore("notes", items => items.concat([note]));
 }
 
@@ -105,7 +83,7 @@ export function updateNote(id: UUID, title: string, content: string) {
 		"notes",
 		note => note.id === id,
 		produce(async note => {
-			await persistNoteFull(note);
+			await notesRepository.saveFull(note);
 			update(note, title, content);
 		})
 	);
@@ -117,7 +95,7 @@ export function archiveNote(id: UUID) {
 		note => note.id === id,
 		produce(async note => {
 			archive(note);
-			await persistNoteMeta(note);
+			await notesRepository.saveMeta(note);
 		})
 	);
 }
@@ -129,7 +107,7 @@ export function archiveMultiple(ids: ReadonlyArray<UUID>) {
 		produce(async notes => {
 			const toArchive = notes.filter(note => idSet.has(note.id));
 			toArchive.forEach(archive);
-			await persistNotesMeta(toArchive);
+			await notesRepository.saveManyMeta(toArchive);
 		})
 	);
 }
@@ -140,7 +118,7 @@ export function unarchiveNote(id: UUID) {
 		note => note.id === id,
 		produce(async note => {
 			unarchive(note);
-			await persistNoteMeta(note);
+			await notesRepository.saveMeta(note);
 		})
 	);
 }
@@ -152,7 +130,7 @@ export function unarchiveMultiple(ids: ReadonlyArray<UUID>) {
 		produce(async notes => {
 			const toUnarchive = notes.filter(note => idSet.has(note.id));
 			toUnarchive.forEach(unarchive);
-			await persistNotesMeta(toUnarchive);
+			await notesRepository.saveManyMeta(toUnarchive);
 		})
 	);
 }
@@ -163,7 +141,7 @@ export function trashNote(id: UUID) {
 		note => note.id === id,
 		produce(async note => {
 			trash(note);
-			await persistNoteMeta(note);
+			await notesRepository.saveMeta(note);
 		})
 	);
 }
@@ -175,7 +153,7 @@ export function trashMultiple(ids: ReadonlyArray<UUID>) {
 		produce(async notes => {
 			const toTrash = notes.filter(note => idSet.has(note.id));
 			toTrash.forEach(trash);
-			await persistNotesMeta(toTrash);
+			await notesRepository.saveManyMeta(toTrash);
 		})
 	);
 }
@@ -186,7 +164,7 @@ export function restoreFromTrash(id: UUID) {
 		note => note.id === id,
 		produce(async note => {
 			restore(note);
-			await persistNoteMeta(note);
+			await notesRepository.saveMeta(note);
 		})
 	);
 }
@@ -198,7 +176,7 @@ export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 		produce(async notes => {
 			const toRestore = notes.filter(note => idSet.has(note.id));
 			toRestore.forEach(restore);
-			await persistNotesMeta(toRestore);
+			await notesRepository.saveManyMeta(toRestore);
 		})
 	);
 }
@@ -209,13 +187,13 @@ export async function permanentlyDelete(id: UUID) {
 		return;
 	}
 	setStore("notes", items => items.toSpliced(index, 1));
-	await removeNote(id);
+	await notesRepository.remove(id);
 }
 
 export async function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
 	const idSet = new Set<UUID>(ids);
 	setStore("notes", items => items.filter(note => !idSet.has(note.id)));
-	await removeNotes(ids as UUID[]);
+	await notesRepository.removeMany(ids as UUID[]);
 }
 
 export async function purgeExpiredTrash() {
@@ -232,7 +210,7 @@ export async function purgeExpiredTrash() {
 	if (expiredIds.length > 0) {
 		const expiredSet = new Set<UUID>(expiredIds);
 		setStore("notes", ns => ns.filter(note => !expiredSet.has(note.id)));
-		await removeNotes(expiredIds);
+		await notesRepository.removeMany(expiredIds);
 	}
 	return expiredIds;
 }
@@ -247,11 +225,11 @@ function addOrUpdate(note: Note) {
 }
 
 export async function replaceNote(updatedNote: Note) {
-	await persistNoteFull(updatedNote);
+	await notesRepository.saveFull(updatedNote);
 	addOrUpdate(updatedNote);
 }
 
 export async function replaceMultiple(updatedNotes: Note[]) {
-	await persistNotesFull(updatedNotes);
+	await notesRepository.saveManyFull(updatedNotes);
 	updatedNotes.forEach(addOrUpdate);
 }

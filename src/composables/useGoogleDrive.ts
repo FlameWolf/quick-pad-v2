@@ -11,13 +11,9 @@ async function fetchOrThrow(url: string, init?: RequestInit): Promise<Response> 
 	const res = await fetch(url, init);
 	if (!res.ok) {
 		let detail = res.statusText;
-		try {
-			const body = await res.text();
-			if (body) {
-				detail = body;
-			}
-		} catch (err) {
-			throw err;
+		const body = await res.text();
+		if (body) {
+			detail = body;
 		}
 		throw new Error(`Drive API ${res.status}: ${detail}`);
 	}

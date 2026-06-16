@@ -5,7 +5,6 @@ import { notesRepository } from "@/storage/NotesRepository";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
 import { contains } from "@/utils/text-analysis";
-import { logError } from "@/utils/logger";
 import type { UUID } from "crypto";
 
 interface NotesState {
@@ -59,7 +58,7 @@ export async function hydrateNotes(): Promise<void> {
 		setStore("notes", await notesRepository.loadAll());
 	} catch (err) {
 		setStore("notes", []);
-		logError("Failed to load notes from storage", err);
+		console.error("Failed to load notes from storage", err);
 	} finally {
 		setIsLoading(false);
 	}

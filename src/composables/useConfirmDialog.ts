@@ -2,7 +2,6 @@ import { createStore } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 
 export type ConfirmVariant = "danger" | "primary" | "warning";
-
 export interface ConfirmOptions {
 	title: string;
 	message: string;
@@ -10,7 +9,6 @@ export interface ConfirmOptions {
 	cancelText?: string;
 	variant?: ConfirmVariant;
 }
-
 export interface ConfirmState {
 	visible: boolean;
 	title: string;

@@ -8,7 +8,6 @@ import { emptyString } from "@/constants/common";
 import { NOTE_PREFIX } from "@/constants/storage";
 import { LAST_SYNCED_TO_LOCAL_KEY, LAST_SYNCED_TO_CLOUD_KEY, AUTO_SYNC_KEY, DEBOUNCE_MS } from "@/constants/sync";
 import { debounce } from "@/utils/timing";
-import { logWarn } from "@/utils/logger";
 import type { UUID } from "crypto";
 
 enum NoteUploadResult {
@@ -104,7 +103,7 @@ export function useNotesSync() {
 						notes.push(fromJSON(data));
 					}
 				} catch (err) {
-					logWarn(`Failed to read note file ${file.name}:`, err);
+					console.warn(`Failed to read note file ${file.name}:`, err);
 				}
 			})
 		);

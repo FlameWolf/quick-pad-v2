@@ -59,7 +59,7 @@ export default defineConfig(({ command }) => ({
 							purgeCSSPlugin({
 								content: ["./index.html", "./src/**/*.{ts,tsx}"],
 								safelist: {
-									standard: [/^btn-(outline-)?(primary|secondary|success|danger|warning|info|light|dark)$/]
+									standard: ["d-hidden", /^btn-(outline-)?(primary|secondary|success|danger|warning|info|light|dark)$/]
 								}
 							})
 						]

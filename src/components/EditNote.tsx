@@ -11,10 +11,8 @@ import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-
 import { debounce } from "@/utils/timing";
 import Toast from "@/components/Toast";
 import type { UUID } from "crypto";
-import { useAutoResize } from "@/composables/useAutoResize";
 
 export default function EditNote() {
-	let editTextArea!: HTMLTextAreaElement;
 	let bypassGuard = false;
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -37,7 +35,7 @@ export default function EditNote() {
 	const [editContent, setEditContent] = createSignal(emptyString);
 	const [loadedContent, setLoadedContent] = createSignal(emptyString);
 	const [isContentLoaded, setIsContentLoaded] = createSignal(false);
-	const { adjustHeight } = useAutoResize(editTextArea, editContent, isEditing);
+	let editTextArea!: HTMLTextAreaElement;
 	const undoRedo = useUndoRedo<string>(editContent());
 	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)));
 	const wordCount = createMemo(() => (isEditing() ? getWordCount(editContent()) : (existingNote()?.wordCount ?? 0)));
@@ -67,6 +65,26 @@ export default function EditNote() {
 		}
 		return editTitle() !== note.title || editContent() !== loadedContent();
 	});
+
+	function adjustTextAreaHeight() {
+		if (CSS.supports("field-sizing", "content")) {
+			return;
+		}
+		if (isEditing() && editTextArea) {
+			const editor = editTextArea;
+			const editorParent = editor?.parentElement;
+			if (!editorParent) {
+				return;
+			}
+			const editorClone = editor.cloneNode() as HTMLTextAreaElement;
+			editorClone.classList.add("d-hidden");
+			editorClone.style.setProperty("height", "auto");
+			editorClone.value = editContent();
+			editorParent.appendChild(editorClone);
+			editor.style.setProperty("height", `calc(${editorClone.scrollHeight}px + 0.5rem)`);
+			editorParent.removeChild(editorClone);
+		}
+	}
 
 	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
 
@@ -110,7 +128,7 @@ export default function EditNote() {
 		setEditContent(loadedContent());
 		undoRedo.push(editContent());
 		setIsEditing(true);
-		setTimeout(adjustHeight);
+		setTimeout(adjustTextAreaHeight);
 	}
 
 	async function confirmDiscardChanges(): Promise<boolean> {
@@ -254,10 +272,12 @@ export default function EditNote() {
 
 	onMount(() => {
 		window.addEventListener("beforeunload", onBeforeUnload);
+		window.addEventListener("resize", adjustTextAreaHeight);
 	});
 
 	onCleanup(() => {
 		debouncedPushUndo.cancel();
+		window.removeEventListener("resize", adjustTextAreaHeight);
 		window.removeEventListener("beforeunload", onBeforeUnload);
 	});
 
@@ -293,6 +313,8 @@ export default function EditNote() {
 			}
 		)
 	);
+
+	createEffect(on(editContent, adjustTextAreaHeight, { defer: true }));
 
 	return (
 		<>

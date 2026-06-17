@@ -3,7 +3,7 @@ import { For } from "solid-js";
 interface Props {
 	selectedCount: number;
 	actions: SelectionAction[];
-	onAction: (key: string) => void;
+	onAction: (key: SelectionAction["key"]) => void;
 	onCancel: () => void;
 }
 

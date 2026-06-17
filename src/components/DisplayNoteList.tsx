@@ -250,8 +250,8 @@ export default function DisplayNoteList(props: Props) {
 						<div class="mt-3" role="status">{store.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
-				<Match when={view() === "active"}>
-					<EmptyState message={emptyMessage()} showActions={!isSearchMode()} importAction={handleImport}/>
+				<Match when={!hasNotes()}>
+					<EmptyState message={emptyMessage()} showActions={view() === "active" && !isSearchMode()} importAction={handleImport}/>
 				</Match>
 				<Match when={hasNotes()}>
 					<div>

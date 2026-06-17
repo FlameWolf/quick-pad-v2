@@ -134,6 +134,11 @@ body {
 	background-color: var(--bs-primary-bg-subtle);
 }
 
+.status-badge {
+	background-color: rgb(from var(--bs-body-bg) r g b / 0.75);
+	border-bottom-right-radius: 0.5rem;
+}
+
 .selection-checkbox {
 	position: absolute;
 	top: 0.5rem;

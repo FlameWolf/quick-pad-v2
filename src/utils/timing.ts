@@ -1,7 +1,3 @@
-export function getTime(value: Date | null | undefined): number {
-	return value?.getTime() ?? 0;
-}
-
 export function debounce<T extends (...args: any[]) => any>(fn: T, wait: number): ((...args: Parameters<T>) => void) & { cancel: () => void } {
 	let timeoutId: ReturnType<typeof setTimeout> | null = null;
 	return Object.assign(

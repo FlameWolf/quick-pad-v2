@@ -1,11 +1,5 @@
 import { For } from "solid-js";
 
-export interface SelectionAction {
-	key: string;
-	label: string;
-	variant: "primary" | "danger" | "outline-primary" | "outline-secondary" | "outline-danger";
-}
-
 interface Props {
 	selectedCount: number;
 	actions: SelectionAction[];

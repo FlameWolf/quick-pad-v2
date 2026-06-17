@@ -15,7 +15,7 @@ import Toast from "./Toast";
 import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 
-type View = "active" | "archived" | "trash";
+type View = "active" | "favourited" | "archived" | "trash";
 interface Props {
 	view?: View;
 }

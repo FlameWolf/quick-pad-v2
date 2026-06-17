@@ -30,6 +30,12 @@ type Json = TypeMap[keyof TypeMap] | Json[] | { [key: keyof any]: Json };
 
 type FromName<T extends keyof TypeMap> = TypeMap[T];
 
+interface SelectionAction {
+	key: "export" | "fave" | "unfave" | "archive" | "unarchive" | "trash" | "restore" | "permanent";
+	label: string;
+	variant: "primary" | "danger" | "outline-primary" | "outline-secondary" | "outline-danger";
+}
+
 type LegalBlock = { type: "paragraph"; text: string } | { type: "list"; items: string[] };
 
 interface LegalSection {

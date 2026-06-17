@@ -3,7 +3,7 @@ import { createEffect, createSignal, lazy, on, Show } from "solid-js";
 import DisplayNoteList from "@/components/DisplayNoteList";
 import EditNote from "@/components/EditNote";
 
-export const listViewRoutes = ["/notes", "/notes/archive", "/notes/trash"];
+export const listViewRoutes = ["/notes", "/notes/favourite", "/notes/archive", "/notes/trash"];
 const scrollPositions = new Map<string, number>();
 
 export function ScrollRestore() {
@@ -45,9 +45,11 @@ export function Routes() {
 	return (
 		<>
 			<Route path="/" component={() => <Navigate href="/notes"/>}/>
+			<Route path="/favourite" component={() => <Navigate href="/notes/favourite"/>}/>
 			<Route path="/archive" component={() => <Navigate href="/notes/archive"/>}/>
 			<Route path="/trash" component={() => <Navigate href="/notes/trash"/>}/>
 			<Route path="/notes" component={() => <DisplayNoteList view="active"/>}/>
+			<Route path="/notes/favourite" component={() => <DisplayNoteList view="favourited"/>}/>
 			<Route path="/notes/archive" component={() => <DisplayNoteList view="archived"/>}/>
 			<Route path="/notes/trash" component={() => <DisplayNoteList view="trash"/>}/>
 			<Route path="/notes/new" component={EditNote}/>

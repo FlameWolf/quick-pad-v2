@@ -1,6 +1,6 @@
 import { createStore, produce } from "solid-js/store";
 import { createEffect, createMemo, createSignal, on } from "solid-js";
-import { archive, restore, trash, unarchive, update, type Note } from "@/models/Note";
+import { archive, fave, pin, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
@@ -30,6 +30,7 @@ const searchResults = createMemo(() => {
 	return store.notes.filter(note => contains(note.title, trimmed) || contentMatchedIds()?.has(note.id));
 });
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
+export const favedNotes = createMemo(() => searchResults().filter(note => note.favedAt && !note.deletedAt));
 export const archivedNotes = createMemo(() => searchResults().filter(note => note.archivedAt && !note.deletedAt));
 export const trashedNotes = createMemo(() => searchResults().filter(note => note.deletedAt));
 
@@ -84,6 +85,74 @@ export function updateNote(id: UUID, title: string, content: string) {
 		produce(async note => {
 			await notesRepository.saveFull(note);
 			update(note, title, content);
+		})
+	);
+}
+
+export function faveNote(id: UUID) {
+	setStore(
+		"notes",
+		note => note.id === id,
+		produce(async note => {
+			fave(note);
+			await notesRepository.saveMeta(note);
+		})
+	);
+}
+
+export function faveMultiple(ids: ReadonlyArray<UUID>) {
+	const idSet = new Set<UUID>(ids);
+	setStore(
+		"notes",
+		produce(async notes => {
+			const toArchive = notes.filter(note => idSet.has(note.id));
+			toArchive.forEach(fave);
+			await notesRepository.saveManyMeta(toArchive);
+		})
+	);
+}
+
+export function unfaveNote(id: UUID) {
+	setStore(
+		"notes",
+		note => note.id === id,
+		produce(async note => {
+			unfave(note);
+			await notesRepository.saveMeta(note);
+		})
+	);
+}
+
+export function unfaveMultiple(ids: ReadonlyArray<UUID>) {
+	const idSet = new Set<UUID>(ids);
+	setStore(
+		"notes",
+		produce(async notes => {
+			const toArchive = notes.filter(note => idSet.has(note.id));
+			toArchive.forEach(unfave);
+			await notesRepository.saveManyMeta(toArchive);
+		})
+	);
+}
+
+export function pinNote(id: UUID) {
+	setStore(
+		"notes",
+		note => note.id === id,
+		produce(async note => {
+			pin(note);
+			await notesRepository.saveMeta(note);
+		})
+	);
+}
+
+export function unpinNote(id: UUID) {
+	setStore(
+		"notes",
+		note => note.id === id,
+		produce(async note => {
+			unpin(note);
+			await notesRepository.saveMeta(note);
 		})
 	);
 }

@@ -8,63 +8,72 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 ### Notes
 
-- Create, view, search, edit, archive, and delete plain-text notes from a tile-based dashboard.
-- Each tile shows the title, last-updated date, and a short summary preview.
-- Live sentence, word, and character counts (Unicode-aware via `Intl.Segmenter`) while reading or editing.
+- Create, view, search, edit, favourite, pin, archive, and delete plain-text notes from a tile-based dashboard.
+- Each tile shows the title, last-updated date, a short summary preview, the sentence / word / character counts, and pin / favourite status badges.
+- Sentence, word, and character counts are Unicode-aware (via `Intl.Segmenter`). Cached counts are shown while reading and recalculated live while editing.
 - Counts and summaries are computed once and cached per note; the counts are recalculated live while editing, and the summary is refreshed when the note is saved.
-- Note bodies are **lazy-loaded**: only metadata is read on startup, and the full content is fetched on demand when a note is opened.
-- Search matches both note titles and note bodies (content is scanned on demand).
+- Note bodies are **lazy-loaded**: only metadata is read on startup, and the full content is fetched on demand when a note is opened (with a loading spinner while it streams in).
+- Search matches both note titles and note bodies (content is scanned on demand) across the active, favourited, archived, and trash views.
 - Per-note undo / redo history while editing (debounced, up to 100 steps).
 - "Discard unsaved changes" guard when navigating away or reloading mid-edit.
 - Confirm dialog (with Enter / Escape keyboard shortcuts) protects destructive actions.
-- Tapping on a note tile opens it in read-only mode. A one-tap **Copy to clipboard** button allows easy copy-pasting of note contents anywhere. Tap the **Edit** button to switch to _Edit_ mode.
+- Tapping on a note tile opens it in read-only mode. A one-tap **Copy to clipboard** button allows easy copy-pasting of note contents anywhere (with a toast confirming success or failure). Tap the **Edit** button to switch to _Edit_ mode.
 - The editing area auto-grows to fit your text (using `field-sizing` where supported, with a JavaScript fallback).
 - Create a new note from a dedicated **+** tile on the dashboard.
+- When a list is empty, an empty-state panel is shown — on the dashboard it offers quick actions to create a note, import files, or jump to the Archive / Trash.
+
+### Favourites and pinning
+
+- **Favourite** any note (individually or in bulk) to collect it in a dedicated **Favourited** view (`/notes/favourite`) without moving it out of the main dashboard.
+- **Pin** a note to keep it at the top of whichever list it appears in, regardless of the chosen sort field or direction; the most-recently-pinned note sorts first.
+- Pinning is blocked for archived or trashed notes, and archiving or trashing a note automatically clears its pin.
 
 ### Organisation
 
-- Sort notes by **Updated**, **Created**, **Title**, or **Sentence/Word/Character Count**, ascending or descending.
+- Sort notes by **Updated**, **Created**, **Title**, or **Sentence/Word/Character Count**, ascending or descending. Pinned notes always sort to the top, ahead of the chosen ordering.
 - Sort field and direction are remembered between sessions.
-- Multi-select mode: tap **Select**, pick notes (or **Select All**), then bulk-export, archive, trash, restore, or delete.
+- Multi-select mode: tap **Select**, pick notes (or **Select All** / **Deselect All**), then run a bulk action.
+- The available bulk actions are view-specific — e.g. export, favourite, archive, and trash on the dashboard; export, unfavourite, and trash in Favourited; export, unarchive, and trash in Archive; restore and permanently delete in Trash.
 - Selected count and per-view actions are shown in a sticky selection action bar.
-- Scroll position is preserved per list view, with quick scroll-to-top / scroll-to-bottom buttons.
+- Scroll position is preserved per list view (active, favourited, archived, trash), with quick scroll-to-top / scroll-to-bottom buttons.
 
 ### Archive and Trash
 
 - Archive notes you want to keep but not see on the main dashboard; unarchive them at any time.
 - Deleting a note moves it to **Trash** rather than removing it immediately, so you can change your mind.
 - Trashed notes are kept for **30 days** and then automatically purged on app start.
-- Dedicated `/notes/archive` and `/notes/trash` views support the same select / bulk-action workflow.
+- Dedicated `/notes/favourite`, `/notes/archive`, and `/notes/trash` views support the same select / bulk-action workflow as the dashboard.
 - **Empty Trash** permanently removes all trashed notes in one step.
-- Trashed notes can be restored, exported, or permanently deleted from the trash view.
+- Trashed notes can be restored or permanently deleted; individual trashed notes can also be exported.
 
 ### Import / Export
 
-- Import any plain-text file as a new note. Files are content-sniffed (magic numbers, NUL bytes, control-character ratio, UTF-8 validation) before import; unsupported files are reported in a toast.
-- Multiple files can be imported in one go.
+- Import any plain-text file as a new note. Files are content-sniffed (magic numbers, NUL bytes, control-character ratio, UTF-8 validation) before import; the note title is derived from the filename (a trailing `.txt` is stripped). Empty files are accepted as empty notes, and unsupported or unreadable files are reported in a toast.
+- Multiple files can be imported in one go; files that fail the sniff are skipped without aborting the rest of the batch.
 - Export a single note as a `.txt` file.
-- Export selected notes or **Export All** as a `quick-pad-notes.zip` archive (powered by JSZip), with title collisions automatically de-duplicated and unsafe filename characters sanitised.
+- Export selected notes, or **Export All** (every active note), as a `quick-pad-notes.zip` archive (powered by JSZip), with title collisions automatically de-duplicated and unsafe filename characters sanitised.
 
 ### Offline / PWA
 
 - Installable as a Progressive Web App (standalone display, custom theme colour, app icon).
-- Service worker caches the app shell so it loads and works offline after the first visit (registered only in production builds).
+- A hand-written service worker caches the app shell so it loads and works offline after the first visit (registered only in production builds). A custom Vite build plugin stamps each build with a content-hashed cache version and a precache manifest, so a new deploy invalidates the old cache automatically.
+- The service worker answers navigations by serving the cached `index.html` shell and revalidating it in the background, and serves other same-origin GETs cache-first; `/api/*` and cross-origin requests are left to the network.
 - All notes are stored locally in **IndexedDB** — no account required to use the app.
 
 ### Theme
 
-- Automatically follows your OS light/dark preference via `prefers-color-scheme`, switching the Bootstrap theme on the fly.
-- A sun/moon toggle in the navbar lets you override the OS preference manually.
+- Automatically follows your OS light/dark preference via `prefers-color-scheme`, switching the Bootstrap theme (`data-bs-theme`) on the fly.
+- A sun/moon toggle in the navbar flips the theme instantly. The manual choice applies to the current session only — it is not persisted, so reloading or a system theme change re-applies your OS preference.
 
 ### Optional Google Drive sync
 
-- Sign in with Google to back up notes to your Drive's app-data folder (the app cannot see any other files in your Drive).
+- Sign in with Google to back up notes to your Drive's app-data folder (the app cannot see any other files in your Drive). Sign-in happens in a popup window, and the result is posted back to the app.
 - Each note is stored as its own file (`qp-note:<id>.json`) in the Drive app-data folder.
-- **Sync** performs a full pull-and-push on demand, and **Force Sync** re-syncs every note regardless of timestamps. An **Auto-sync** toggle debounces a push a few seconds after each change.
-- Merging is timestamp-based: each note's effective time is the latest of its created, modified, archived, deleted, and state-changed times, so local and remote are combined without losing edits. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
-- Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync).
-- A sync indicator shows syncing, last-synced time, or sync errors; a toast confirms success / failure. The sync menu also exposes the signed-in account and sign-out.
-- Authentication uses the OAuth 2.0 authorization-code flow with a serverless backend: the refresh token is kept server-side in an encrypted, httpOnly session cookie, and access tokens are refreshed silently in the background, so the user only signs in once. Sign out revokes the grant and clears the session.
+- **Sync** performs a full pull-and-push on demand, **Force Sync** re-syncs every note regardless of timestamps (after a confirmation prompt), and an **Auto-sync** toggle debounces a push a few seconds after each change.
+- Merging is timestamp-based: each note's effective time is the latest of its created, modified, favourited, pinned, archived, deleted, and state-changed times, so local and remote are combined without losing edits. When the remote copy of a note is newer, it wins and is pulled into the local store. Pull and push are tracked with separate last-synced timestamps for efficient incremental syncs.
+- Permanent deletions are queued and propagated to Drive (the corresponding files are removed on the next sync), and the 30-day trash purge propagates the same way.
+- A sync indicator reflects its state (syncing, signed-in-but-not-yet-synced, last-synced time, or a sync error); a toast confirms success / failure. The sync menu also exposes the signed-in account and sign-out.
+- Authentication uses the OAuth 2.0 authorization-code flow with a serverless backend: the refresh token is kept server-side in an AES-256-GCM-encrypted, httpOnly session cookie, and access tokens are refreshed silently in the background, so the user only signs in once. Sign out revokes the grant and clears the session.
 - If no Google client ID is configured, the sync UI stays hidden and the app runs in local-only mode.
 
 ## Tech stack
@@ -83,25 +92,28 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 The `src/` tree is organised by responsibility:
 
-| Folder         | Responsibility                                                                                   |
-| -------------- | ------------------------------------------------------------------------------------------------ |
-| `constants/`   | Configuration values grouped by domain (`storage`, `sort`, `auth`, `sync`, `notes`, `common`)    |
-| `utils/`       | Pure, framework-agnostic helpers (`text-analysis`, `file-detection`, `timing`, `logger`)         |
-| `storage/`     | Persistence: `db` (low-level `idb`), `NotesRepository` (domain API), `kv-schema` (typed KV keys) |
-| `models/`      | `NoteModel` — the note domain object and its (de)serialisation                                   |
-| `composables/` | Reusable Composition-API units and app-global state singletons                                   |
-| `stores/`      | Solid stores                                                                                     |
-| `components/`  | Solid components                                                                                 |
+| Folder         | Responsibility                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------- |
+| `constants/`   | Configuration values grouped by domain (`storage`, `sort`, `auth`, `sync`, `notes`, `actions`, `common`) |
+| `types/`       | Ambient / global TypeScript types (typed KV schema, selection actions, legal-page shapes)                |
+| `utils/`       | Pure, framework-agnostic helpers (`text-analysis`, `file-detection`, `dates`, `numbers`, `timing`)       |
+| `storage/`     | Persistence: `db` (low-level `idb`), `NotesRepository` (domain API), `migrate` (legacy data migration)   |
+| `models/`      | `NoteModel` — the note domain object and its (de)serialisation                                           |
+| `composables/` | Reusable Composition-API units and app-global state singletons                                           |
+| `stores/`      | Solid stores                                                                                             |
+| `components/`  | Solid components                                                                                         |
+| `content/`     | Static copy for the Privacy Policy and Terms of Service pages                                            |
+| `router/`      | Solid Router route definitions, plus per-view scroll preservation and navigation state                   |
 
 ### Storage layering
 
-Components and stores never touch `idb` directly. `storage/db.ts` is the only module that opens the database and runs raw transactions; `storage/NotesRepository.ts` builds the note-domain API on top of it (and owns the metadata/content split and lazy-content "working-set contract"). Key/value access is type-checked by key through `storage/kv-schema.ts`, so `getKV`/`setKV` are safe without per-call casts (the one-time localStorage migration uses the explicit `setKVRaw` escape hatch for legacy data).
+Components and stores never touch `idb` directly. `storage/db.ts` is the only module that opens the database and runs raw transactions; `storage/NotesRepository.ts` builds the note-domain API on top of it (and owns the metadata/content split and lazy-content "working-set contract"). Key/value access is type-checked by key through the global `KVSchema` declared in `types/index.d.ts`, so `getKV`/`setKV` are safe without per-call casts (the one-time `localStorage` migration in `storage/migrate.ts` uses the explicit `setKVRaw` escape hatch for legacy data).
 
 ### State management
 
-Shared, app-wide state lives in **module-level reactive singletons**. There is genuinely one of each (one theme, one selection, one sort preference, one sync session), so these are exposed as composables backed by module-scoped `Accessor`s rather than per-call instances — calling e.g. `useNoteSelection()` from two components shares the same state by design:
+Shared, app-wide state lives in **module-level reactive singletons**. There is genuinely one of each (one theme, one selection, one sort preference, one sync session), so these are exposed as composables backed by module-scoped `ref`s rather than per-call instances — calling e.g. `useNoteSelection()` from two components shares the same state by design:
 
-- `useTheme`, `useConfirmDialog`, `useNoteSelection`, `useNoteSort`, `useNotesSync`, and `useGoogleAuth` are app-global singletons. Persistence watchers are registered once at module scope; `hydrate*()` functions only load initial values.
+- `useTheme`, `useConfirmDialog`, `useNoteSelection`, `useNoteSort`, `useNotesSync`, `useGoogleAuth`, and `useFileIO` are app-global singletons. Persistence watchers are registered once at module scope; `hydrate*()` functions only load initial values.
 - The richer note collection additionally uses a **Solid store** (`stores/notes.ts`) for its larger action surface while keeping the same module-singleton state model.
 
 ## Getting started
@@ -124,7 +136,7 @@ npm install
 npm run dev
 ```
 
-> This starts the Vercel dev server (the `api/auth/*` functions) and the Vite UI together. It requires the Vercel CLI — see [Configuration → Vercel CLI setup](#3-vercel-cli-setup).
+> This runs `scripts/run-all.js`, which starts the Vercel dev server (the `api/auth/*` functions) and the Vite UI together and shuts both down if either one exits. It requires the Vercel CLI — see [Configuration → Vercel CLI setup](#3-vercel-cli-setup).
 
 ### Type-check and build for production
 
@@ -146,7 +158,7 @@ First build the app (`npm run build`), then:
 npm run preview
 ```
 
-This starts the Vercel CLI (`vercel dev`, serving the `api/auth/*` functions) alongside `vite preview` (serving the built UI from `dist/`), so the OAuth flow works against the production build. It does not rebuild automatically — run `npm run build` first.
+This also runs through `scripts/run-all.js`, starting the Vercel CLI (`vercel dev`, serving the `api/auth/*` functions) alongside `vite preview` (serving the built UI from `dist/`), so the OAuth flow works against the production build. It does not rebuild automatically — run `npm run build` first.
 
 ### Format source files
 
@@ -156,7 +168,7 @@ npm run format
 
 ## Configuration
 
-Google Drive sync is optional and uses the OAuth 2.0 **authorization-code flow** with a small serverless backend (the functions in `api/auth/`). The user signs in once; the refresh token is held server-side in an encrypted, httpOnly cookie, and access tokens are refreshed silently — there is no recurring sign-in popup. If the client ID is left blank, the sync controls are hidden and the app works entirely offline.
+Google Drive sync is optional and uses the OAuth 2.0 **authorization-code flow** with a small serverless backend (the functions in `api/auth/`: `start`, `callback`, `token`, and `signout`). The user signs in once via a popup; the refresh token is held server-side in an encrypted, httpOnly cookie, and access tokens are refreshed silently — there is no recurring sign-in popup. If the client ID is left blank, the sync controls are hidden and the app works entirely offline.
 
 ### 1. Create the OAuth client
 
@@ -181,7 +193,7 @@ GOOGLE_OAUTH_CLIENT_SECRET="your-client-secret"
 SESSION_SECRET="a-long-random-string"   # node -e "console.log(require("crypto").randomBytes(32).toString("base64"))"
 ```
 
-> The serverless backend prefers `GOOGLE_OAUTH_CLIENT_ID` but falls back to `VITE_GOOG_OAUTH_CLIENT_ID` if it is unset, so a single client ID value works for both the browser and the server.
+> The serverless backend prefers `GOOGLE_OAUTH_CLIENT_ID` but falls back to `VITE_GOOG_OAUTH_CLIENT_ID` if it is unset, so a single client ID value works for both the browser and the server. The backend reports itself as "not configured" — and sign-in and token refresh fail — unless the client ID, `GOOGLE_OAUTH_CLIENT_SECRET`, and `SESSION_SECRET` are all set.
 
 On **Vercel**, set the same variables under **Project Settings → Environment Variables** (the `.env` file is git-ignored and only used locally).
 
@@ -244,29 +256,32 @@ Routing is handled by `vercel.json`: every non-`/api/` path is rewritten to `/in
 
 ## Routes
 
-| Path             | View                                              |
-| ---------------- | ------------------------------------------------- |
-| `/notes`         | Active notes / dashboard                          |
-| `/notes/archive` | Archived notes                                    |
-| `/notes/trash`   | Trashed notes (auto-purged after 30 days)         |
-| `/notes/new`     | Create a new note                                 |
-| `/notes/:id`     | View / edit a note (active, archived, or trashed) |
+| Path               | View                                              |
+| ------------------ | ------------------------------------------------- |
+| `/notes`           | Active notes / dashboard                          |
+| `/notes/favourite` | Favourited notes                                  |
+| `/notes/archive`   | Archived notes                                    |
+| `/notes/trash`     | Trashed notes (auto-purged after 30 days)         |
+| `/notes/new`       | Create a new note                                 |
+| `/notes/:id`       | View / edit a note (active, archived, or trashed) |
+| `/privacy`         | Privacy Policy (lazy-loaded)                      |
+| `/terms`           | Terms of Service (lazy-loaded)                    |
 
-`/`, `/archive`, and `/trash` redirect to their `/notes/...` equivalents.
+`/`, `/favourite`, `/archive`, and `/trash` redirect to their `/notes/...` equivalents. The Privacy Policy and Terms of Service pages are linked from the app footer (alongside a link to the source repository).
 
 ## Data storage
 
-Notes and preferences are stored in an IndexedDB database named `quick-pad` (data from older `localStorage`-based versions is migrated automatically on first launch and then cleared).
+Notes and preferences are stored in an IndexedDB database named `quick-pad` (data from older `localStorage`-based versions is migrated automatically on first launch and then cleared). The schema is at version 2; the version-1 → 2 upgrade split note bodies out of the `notes` store into a separate `contents` store so metadata can load without the bodies.
 
 The database has three object stores:
 
-| Object store | Purpose                                                        |
-| ------------ | -------------------------------------------------------------- |
-| `notes`      | Note metadata (id, title, summary, counts, dates, state flags) |
-| `contents`   | Note bodies, keyed by note id and loaded lazily                |
-| `kv`         | Preferences and sync / auth state (keys below)                 |
+| Object store | Purpose                                                                              |
+| ------------ | ------------------------------------------------------------------------------------ |
+| `notes`      | Note metadata (id, title, summary, counts, dates, favourite/pin/archive/trash state) |
+| `contents`   | Note bodies, keyed by note id and loaded lazily                                      |
+| `kv`         | Preferences and sync / auth state (keys below)                                       |
 
-Keys held in the `kv` store:
+Typed keys in the `kv` store (declared by the `KVSchema`):
 
 | Key                       | Purpose                                                 |
 | ------------------------- | ------------------------------------------------------- |
@@ -281,6 +296,6 @@ Keys held in the `kv` store:
 | `google-user-info`        | Cached Google user name and email                       |
 | `__migrated-to-idb`       | Flag marking the one-time migration from `localStorage` |
 
-Pending deletions awaiting propagation to Drive are tracked in memory during a session, not persisted in `kv`.
+Pending deletions awaiting propagation to Drive are held in an in-memory set during a session and flushed to Drive on the next sync.
 
 Clearing site data will remove all notes that have not been synced to Drive.

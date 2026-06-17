@@ -13,6 +13,7 @@ import Toast from "@/components/Toast";
 import type { UUID } from "crypto";
 
 export default function EditNote() {
+	let editTextArea!: HTMLTextAreaElement;
 	let bypassGuard = false;
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -35,12 +36,13 @@ export default function EditNote() {
 	const [editContent, setEditContent] = createSignal(emptyString);
 	const [loadedContent, setLoadedContent] = createSignal(emptyString);
 	const [isContentLoaded, setIsContentLoaded] = createSignal(false);
-	let editTextArea!: HTMLTextAreaElement;
 	const undoRedo = useUndoRedo<string>(editContent());
 	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)));
 	const wordCount = createMemo(() => (isEditing() ? getWordCount(editContent()) : (existingNote()?.wordCount ?? 0)));
 	const characterCount = createMemo(() => (isEditing() ? getCharacterCount(editContent()) : (existingNote()?.characterCount ?? 0)));
 	const hasContent = createMemo(() => !!sentenceCount() || !!wordCount() || !!characterCount());
+	const isFaved = createMemo(() => !!existingNote()?.favedAt && !existingNote()?.deletedAt);
+	const isPinned = createMemo(() => !!existingNote()?.pinnedAt && !existingNote()?.deletedAt);
 	const isArchived = createMemo(() => !!existingNote()?.archivedAt && !existingNote()?.deletedAt);
 	const isTrashed = createMemo(() => !!existingNote()?.deletedAt);
 	const backRoute = createMemo(() => {
@@ -198,6 +200,42 @@ export default function EditNote() {
 		store.trashNote(note.id);
 		requestSync();
 		navigate(returnTo);
+	}
+
+	async function faveCurrent() {
+		const note = existingNote();
+		if (!note) {
+			return;
+		}
+		store.faveNote(note.id);
+		requestSync();
+	}
+
+	async function unfaveCurrent() {
+		const note = existingNote();
+		if (!note) {
+			return;
+		}
+		store.unfaveNote(note.id);
+		requestSync();
+	}
+
+	async function pinCurrent() {
+		const note = existingNote();
+		if (!note) {
+			return;
+		}
+		store.pinNote(note.id);
+		requestSync();
+	}
+
+	async function unpinCurrent() {
+		const note = existingNote();
+		if (!note) {
+			return;
+		}
+		store.unpinNote(note.id);
+		requestSync();
 	}
 
 	function archiveCurrent() {
@@ -360,6 +398,38 @@ export default function EditNote() {
 									<path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1z"/>
 								</svg>
 							</button>
+							<Show
+								when={isFaved()}
+								fallback={
+									<button class="btn btn-outline-secondary btn-sm" onClick={faveCurrent} title="Favourite" aria-label="Favourite">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
+											<path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894a.5.5 0 0 0-.461 0z"/>
+										</svg>
+									</button>
+								}>
+								<button class="btn btn-outline-secondary btn-sm" onClick={unfaveCurrent} title="Unfavourite" aria-label="Unfavourite">
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+										<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+									</svg>
+								</button>
+							</Show>
+							<Show when={!isArchived()}>
+								<Show
+									when={isPinned()}
+									fallback={
+										<button class="btn btn-outline-secondary btn-sm" onClick={pinCurrent} title="Pin" aria-label="Pin">
+											<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pin-angle" viewBox="0 0 16 16">
+												<path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146m.122 2.112v-.002zm0-.002v.002a.5.5 0 0 1-.122.51L6.293 6.878a.5.5 0 0 1-.511.12H5.78l-.014-.004a5 5 0 0 0-.288-.076 5 5 0 0 0-.765-.116c-.422-.028-.836.008-1.175.15l5.51 5.509c.141-.34.177-.753.149-1.175a5 5 0 0 0-.192-1.054l-.004-.013v-.001a.5.5 0 0 1 .12-.512l3.536-3.535a.5.5 0 0 1 .532-.115l.096.022c.087.017.208.034.344.034q.172.002.343-.04L9.927 2.028q-.042.172-.04.343a1.8 1.8 0 0 0 .062.46z"/>
+											</svg>
+										</button>
+									}>
+									<button class="btn btn-outline-secondary btn-sm" onClick={unpinCurrent} title="Unpin" aria-label="Unpin">
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pin-angle-fill" viewBox="0 0 16 16">
+											<path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a6 6 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707s.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a6 6 0 0 1 1.013.16l3.134-3.133a3 3 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146"/>
+										</svg>
+									</button>
+								</Show>
+							</Show>
 							<Show when={existingNote()}>
 								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
 									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">

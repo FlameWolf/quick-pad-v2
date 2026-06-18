@@ -1,7 +1,7 @@
 import { createMemo, Show, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import { useNotesSync } from "@/composables/useNotesSync";
-import { listViewRoutes, ScrollRestore } from "@/router";
+import { listViewRoutes, RouteTransition } from "@/router";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
 import ScrollButtons from "@/components/ScrollButtons";
@@ -51,7 +51,7 @@ export default function App(props: AppProps) {
 				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} visible={!!lastSyncMessage()} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={dismissMessage}/>
 			</Show>
 			<ConfirmDialog/>
-			<ScrollRestore/>
+			<RouteTransition/>
 		</>
 	);
 }

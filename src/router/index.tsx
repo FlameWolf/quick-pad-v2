@@ -6,7 +6,7 @@ import EditNote from "@/components/EditNote";
 export const listViewRoutes = ["/notes", "/notes/favourite", "/notes/archive", "/notes/trash"];
 const scrollPositions = new Map<string, number>();
 
-export function ScrollRestore() {
+export function RouteTransition() {
 	const location = useLocation();
 	const [isNavigating, setIsNavigating] = createSignal(false);
 
@@ -52,8 +52,8 @@ export function Routes() {
 			<Route path="/notes/favourite" component={() => <DisplayNoteList view="favourited"/>}/>
 			<Route path="/notes/archive" component={() => <DisplayNoteList view="archived"/>}/>
 			<Route path="/notes/trash" component={() => <DisplayNoteList view="trash"/>}/>
-			<Route path="/notes/new" component={EditNote}/>
-			<Route path="/notes/:id" component={EditNote}/>
+			<Route path="/notes/new" component={() => <EditNote/>}/>
+			<Route path="/notes/:id" component={() => <EditNote backRoute={location.pathname}/>}/>
 			<Route path="/privacy" component={lazy(() => import("@/components/PrivacyPolicy"))}/>
 			<Route path="/terms" component={lazy(() => import("@/components/TermsOfService"))}/>
 		</>

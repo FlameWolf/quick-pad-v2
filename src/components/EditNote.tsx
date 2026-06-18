@@ -12,7 +12,11 @@ import { debounce } from "@/utils/timing";
 import Toast from "@/components/Toast";
 import type { UUID } from "crypto";
 
-export default function EditNote() {
+interface Props {
+	backRoute?: string;
+}
+
+export default function EditNote(props: Props) {
 	let editTextArea!: HTMLTextAreaElement;
 	let bypassGuard = false;
 	const navigate = useNavigate();
@@ -45,15 +49,7 @@ export default function EditNote() {
 	const isPinned = createMemo(() => !!existingNote()?.pinnedAt && !existingNote()?.deletedAt);
 	const isArchived = createMemo(() => !!existingNote()?.archivedAt && !existingNote()?.deletedAt);
 	const isTrashed = createMemo(() => !!existingNote()?.deletedAt);
-	const backRoute = createMemo(() => {
-		if (isTrashed()) {
-			return "/notes/trash";
-		}
-		if (isArchived()) {
-			return "/notes/archive";
-		}
-		return "/notes";
-	});
+	const backRoute = createMemo(() => props.backRoute ?? "/notes");
 	const hasUnsavedChanges = createMemo(() => {
 		if (!isEditing()) {
 			return false;
@@ -152,7 +148,7 @@ export default function EditNote() {
 		}
 		if (isCreateMode()) {
 			setIsEditing(false);
-			navigate("/notes");
+			navigate(backRoute());
 		} else {
 			const note = existingNote();
 			setIsEditing(false);
@@ -186,7 +182,6 @@ export default function EditNote() {
 		if (!note) {
 			return;
 		}
-		const returnTo = backRoute();
 		const ok = await confirm({
 			title: "Move note to Trash?",
 			message: "This note will be moved to Trash. You can restore it within 30 days.",
@@ -199,7 +194,7 @@ export default function EditNote() {
 		}
 		store.trashNote(note.id);
 		requestSync();
-		navigate(returnTo);
+		navigate(backRoute());
 	}
 
 	async function faveCurrent() {
@@ -245,7 +240,7 @@ export default function EditNote() {
 		}
 		store.archiveNote(note.id);
 		requestSync();
-		navigate("/notes");
+		navigate(backRoute());
 	}
 
 	function unarchiveCurrent() {
@@ -255,7 +250,7 @@ export default function EditNote() {
 		}
 		store.unarchiveNote(note.id);
 		requestSync();
-		navigate("/notes/archive");
+		navigate(backRoute());
 	}
 
 	function restoreNote() {
@@ -265,7 +260,7 @@ export default function EditNote() {
 		}
 		store.restoreFromTrash(note.id);
 		requestSync();
-		navigate("/notes/trash");
+		navigate(backRoute());
 	}
 
 	async function permanentlyDeleteNote() {
@@ -286,7 +281,7 @@ export default function EditNote() {
 		const noteId = note.id;
 		await store.permanentlyDelete(noteId);
 		requestSync([noteId]);
-		navigate("/notes/trash");
+		navigate(backRoute());
 	}
 
 	function formatDate(date?: Date): string {

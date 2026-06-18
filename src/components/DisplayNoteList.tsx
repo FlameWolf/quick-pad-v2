@@ -260,33 +260,48 @@ export default function DisplayNoteList(props: Props) {
 								fallback={
 									<>
 										<SortControls sortBy={sortBy()} sortDirection={sortDirection()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
-										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>Select</button>
+										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>
+											<Icon type="check2Square"/>
+											<span class="d-none d-sm-inline ms-2">Select</span>
+										</button>
 										<Show when={view() === "active"}>
-											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport}>Import</button>
-											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>Export All</button>
+											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport}>
+												<Icon type="boxArrowDownRight"/>
+												<span class="d-none d-sm-inline ms-2">Import</span>
+											</button>
+											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>
+												<Icon type="boxArrowUpRight"/>
+												<span class="d-none d-sm-inline ms-2">Export All</span>
+											</button>
 											<A href="/notes/favourite" class="btn btn-outline-secondary btn-sm">
 												<Icon type="star"/>
-												<span class="ms-2">Favourited</span>
+												<span class="d-none d-sm-inline ms-2">Favourited</span>
 											</A>
 											<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
 												<Icon type="archive"/>
-												<span class="ms-2">Archived</span>
+												<span class="d-none d-sm-inline ms-2">Archived</span>
 											</A>
 											<A href="/notes/trash" class="btn btn-outline-secondary btn-sm">
 												<Icon type="trash"/>
-												<span class="ms-2">Trash</span>
+												<span class="d-none d-sm-inline ms-2">Trash</span>
 											</A>
 										</Show>
 										<Show when={view() === "trash"}>
 											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
 												<Icon type="trashFill"/>
-												<span class="ms-2">Empty Trash</span>
+												<span class="d-none d-sm-inline ms-2">Empty Trash</span>
 											</button>
 										</Show>
 									</>
 								}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll}>{allSelected() ? "Deselect All" : "Select All"}</button>
-								<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode}>Cancel</button>
+								<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll}>
+									<Icon type="listCheck"/>
+									<span class="d-none d-sm-inline ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
+								</button>
+								<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode}>
+									<Icon type="xCircle"/>
+									<span class="d-none d-sm-inline ms-2">Cancel</span>
+								</button>
 							</Show>
 						</div>
 						<div class="notes-grid">

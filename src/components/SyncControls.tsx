@@ -177,10 +177,7 @@ export default function SyncControls() {
 									</span>
 								</Show>
 							</Show>
-							<span class="d-none d-md-inline">
-								<span>&#xA0;</span>
-								<span>{user()?.name ?? "Sync"}</span>
-							</span>
+							<span class="d-none d-md-inline ms-2">{user()?.name ?? "Sync"}</span>
 						</button>
 						<Show when={showSyncMenu()}>
 							<div class="dropdown-menu show sync-dropdown">

@@ -8,6 +8,7 @@ import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { emptyString } from "@/constants/common";
 import { bulkActions } from "@/constants/actions";
+import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";
 import NoteCard from "@/components/NoteCard";
@@ -236,9 +237,7 @@ export default function DisplayNoteList(props: Props) {
 				<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
 					<h2 class="mb-0">{pageTitle()}</h2>
 					<A href="/notes" class="btn btn-outline-secondary btn-sm">
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-left" viewBox="0 0 16 16">
-							<path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
-						</svg>
+						<Icon type="chevronLeft"/>
 						<span class="ms-2">Back to Notes</span>
 					</A>
 				</div>
@@ -266,30 +265,21 @@ export default function DisplayNoteList(props: Props) {
 											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport}>Import</button>
 											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>Export All</button>
 											<A href="/notes/favourite" class="btn btn-outline-secondary btn-sm">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16">
-													<path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.56.56 0 0 0-.163-.505L1.71 6.745l4.052-.576a.53.53 0 0 0 .393-.288L8 2.223l1.847 3.658a.53.53 0 0 0 .393.288l4.052.575-2.906 2.77a.56.56 0 0 0-.163.506l.694 3.957-3.686-1.894a.5.5 0 0 0-.461 0z"/>
-												</svg>
+												<Icon type="star"/>
 												<span class="ms-2">Favourited</span>
 											</A>
 											<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-archive" viewBox="0 0 16 16">
-													<path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
-												</svg>
+												<Icon type="archive"/>
 												<span class="ms-2">Archived</span>
 											</A>
 											<A href="/notes/trash" class="btn btn-outline-secondary btn-sm">
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-													<path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-													<path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-												</svg>
+												<Icon type="trash"/>
 												<span class="ms-2">Trash</span>
 											</A>
 										</Show>
 										<Show when={view() === "trash"}>
 											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
-												<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash-fill" viewBox="0 0 16 16">
-													<path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>
-												</svg>
+												<Icon type="trashFill"/>
 												<span class="ms-2">Empty Trash</span>
 											</button>
 										</Show>

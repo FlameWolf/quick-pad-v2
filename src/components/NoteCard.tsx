@@ -26,7 +26,7 @@ export default function NoteCard(props: Props) {
 	const isSelected = () => props.selected;
 
 	return (
-		<A href={`/notes/${note().id}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected() }} onClick={e => props.clickAction(e, note().id)}>
+		<A href={`/notes/${note().id}?from=${props.currentView}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected() }} onClick={e => props.clickAction(e, note().id)}>
 			<div class="d-flex gap-2 small position-absolute top-0 p-2 status-badge">
 				<Show when={note().pinnedAt}>
 					<Icon type="pinAngleFill"/>

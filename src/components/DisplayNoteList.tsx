@@ -17,7 +17,6 @@ import Toast from "./Toast";
 import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 
-type View = "active" | "favourited" | "archived" | "trash";
 interface Props {
 	view?: View;
 }
@@ -45,6 +44,7 @@ export default function DisplayNoteList(props: Props) {
 	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
 	const hasNotes = createMemo(() => sourceNotes().length > 0);
 	const allSelected = createMemo(() => sourceNotes().length > 0 && selectedCount() === sourceNotes().length);
+	const selectAllText = createMemo(() => allSelected() ? "Deselect All" : "Select All");
 	const pageTitle = createMemo(() => {
 		switch (view()) {
 			case "favourited":
@@ -260,45 +260,45 @@ export default function DisplayNoteList(props: Props) {
 								fallback={
 									<>
 										<SortControls sortBy={sortBy()} sortDirection={sortDirection()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
-										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode}>
+										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode} title="Select" aria-label="Select">
 											<Icon type="check2Square"/>
 											<span class="d-none d-sm-inline ms-2">Select</span>
 										</button>
 										<Show when={view() === "active"}>
-											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport}>
+											<button class="btn btn-outline-secondary btn-sm" onClick={handleImport} title="Import" aria-label="Import">
 												<Icon type="boxArrowDownRight"/>
 												<span class="d-none d-sm-inline ms-2">Import</span>
 											</button>
-											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes}>
+											<button class="btn btn-outline-secondary btn-sm" onClick={exportAllNotes} title="Export All" aria-label="Export All">
 												<Icon type="boxArrowUpRight"/>
 												<span class="d-none d-sm-inline ms-2">Export All</span>
 											</button>
-											<A href="/notes/favourite" class="btn btn-outline-secondary btn-sm">
+											<A href="/notes/favourite" class="btn btn-outline-secondary btn-sm" title="Favourited" aria-label="Favourited">
 												<Icon type="star"/>
 												<span class="d-none d-sm-inline ms-2">Favourited</span>
 											</A>
-											<A href="/notes/archive" class="btn btn-outline-secondary btn-sm">
+											<A href="/notes/archive" class="btn btn-outline-secondary btn-sm" title="Archived" aria-label="Archived">
 												<Icon type="archive"/>
 												<span class="d-none d-sm-inline ms-2">Archived</span>
 											</A>
-											<A href="/notes/trash" class="btn btn-outline-secondary btn-sm">
+											<A href="/notes/trash" class="btn btn-outline-secondary btn-sm" title="Trash" aria-label="Trash">
 												<Icon type="trash"/>
 												<span class="d-none d-sm-inline ms-2">Trash</span>
 											</A>
 										</Show>
 										<Show when={view() === "trash"}>
-											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash}>
+											<button class="btn btn-outline-danger btn-sm" onClick={handleEmptyTrash} title="Empty Trash" aria-label="Empty Trash">
 												<Icon type="trashFill"/>
 												<span class="d-none d-sm-inline ms-2">Empty Trash</span>
 											</button>
 										</Show>
 									</>
 								}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll}>
-									<Icon type="listCheck"/>
-									<span class="d-none d-sm-inline ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
+								<button class="btn btn-outline-secondary btn-sm" onClick={toggleSelectAll} title={selectAllText()} aria-label={selectAllText()}>
+									<Icon type={allSelected() ? "list" : "listCheck"}/>
+									<span class="d-none d-sm-inline ms-2">{selectAllText()}</span>
 								</button>
-								<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode}>
+								<button class="btn btn-outline-secondary btn-sm" onClick={exitSelectionMode} title="Cancel" aria-label="Cancel">
 									<Icon type="xCircle"/>
 									<span class="d-none d-sm-inline ms-2">Cancel</span>
 								</button>
@@ -312,7 +312,7 @@ export default function DisplayNoteList(props: Props) {
 									</div>
 								</A>
 							</Show>
-							<For each={sortedNotes()}>{note => <NoteCard note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
+							<For each={sortedNotes()}>{note => <NoteCard currentView={view()} note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
 						</div>
 						<Show when={isSelectionMode() && selectedCount() > 0}>
 							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>

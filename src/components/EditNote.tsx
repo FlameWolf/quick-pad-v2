@@ -1,5 +1,5 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
-import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
+import { A, useNavigate, useLocation, useParams, useBeforeLeave, useSearchParams } from "@solidjs/router";
 import * as store from "@/stores/notes";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
@@ -23,9 +23,11 @@ export default function EditNote(props: Props) {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const params = useParams<{ id?: UUID }>();
+	const [searchParams] = useSearchParams<{ from?: View }>();
 	const { exportNote } = useFileIO();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
+	const fromView = createMemo(() => searchParams.from ?? "active");
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? store.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
@@ -241,7 +243,9 @@ export default function EditNote(props: Props) {
 		}
 		store.archiveNote(note.id);
 		requestSync();
-		navigate(backRoute());
+		if (fromView() !== "favourited") {
+			navigate(backRoute());
+		}
 	}
 
 	function unarchiveCurrent() {
@@ -251,7 +255,9 @@ export default function EditNote(props: Props) {
 		}
 		store.unarchiveNote(note.id);
 		requestSync();
-		navigate(backRoute());
+		if (fromView() !== "favourited") {
+			navigate(backRoute());
+		}
 	}
 
 	function restoreNote() {
@@ -362,14 +368,17 @@ export default function EditNote(props: Props) {
 						<div class="d-flex flex-wrap gap-2">
 							<button class="btn btn-outline-primary btn-sm" onClick={restoreNote} title="Restore" aria-label="Restore">
 								<Icon type="reply"/>
+								<span class="d-none d-sm-inline ms-2">Restore</span>
 							</button>
 							<Show when={existingNote()}>
 								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
 									<Icon type="download"/>
+									<span class="d-none d-sm-inline ms-2">Export</span>
 								</button>
 							</Show>
 							<button class="btn btn-outline-danger btn-sm" onClick={permanentlyDeleteNote} title="Delete Permanently" aria-label="Delete Permanently">
 								<Icon type="trashFill"/>
+								<span class="d-none d-sm-inline ms-2">Delete Permanently</span>
 							</button>
 						</div>
 					</Show>
@@ -377,19 +386,23 @@ export default function EditNote(props: Props) {
 						<div class="d-flex flex-wrap gap-2">
 							<button class="btn btn-outline-primary btn-sm" onClick={startEditing} title="Edit" aria-label="Edit">
 								<Icon type="pen"/>
+								<span class="d-none d-sm-inline ms-2">Edit</span>
 							</button>
 							<button class="btn btn-outline-secondary btn-sm" onClick={copyToClipboard} title="Copy to clipboard" aria-label="Copy to clipboard">
 								<Icon type="copy"/>
+								<span class="d-none d-sm-inline ms-2">Copy to clipboard</span>
 							</button>
 							<Show
 								when={isFaved()}
 								fallback={
 									<button class="btn btn-outline-secondary btn-sm" onClick={faveCurrent} title="Favourite" aria-label="Favourite">
 										<Icon type="star"/>
+										<span class="d-none d-sm-inline ms-2">Favourite</span>
 									</button>
 								}>
 								<button class="btn btn-outline-secondary btn-sm" onClick={unfaveCurrent} title="Unfavourite" aria-label="Unfavourite">
 									<Icon type="starFill"/>
+									<span class="d-none d-sm-inline ms-2">Unfavourite</span>
 								</button>
 							</Show>
 							<Show when={!isArchived()}>
@@ -398,16 +411,19 @@ export default function EditNote(props: Props) {
 									fallback={
 										<button class="btn btn-outline-secondary btn-sm" onClick={pinCurrent} title="Pin" aria-label="Pin">
 											<Icon type="pinAngle"/>
+											<span class="d-none d-sm-inline ms-2">Pin</span>
 										</button>
 									}>
 									<button class="btn btn-outline-secondary btn-sm" onClick={unpinCurrent} title="Unpin" aria-label="Unpin">
 										<Icon type="pinAngleFill"/>
+										<span class="d-none d-sm-inline ms-2">Unpin</span>
 									</button>
 								</Show>
 							</Show>
 							<Show when={existingNote()}>
 								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
 									<Icon type="download"/>
+									<span class="d-none d-sm-inline ms-2">Export</span>
 								</button>
 							</Show>
 							<Show
@@ -415,14 +431,17 @@ export default function EditNote(props: Props) {
 								fallback={
 									<button class="btn btn-outline-secondary btn-sm" onClick={archiveCurrent} title="Archive" aria-label="Archive">
 										<Icon type="archive"/>
+										<span class="d-none d-sm-inline ms-2">Archive</span>
 									</button>
 								}>
 								<button class="btn btn-outline-secondary btn-sm" onClick={unarchiveCurrent} title="Unarchive" aria-label="Unarchive">
 									<Icon type="boxArrowUp"/>
+									<span class="d-none d-sm-inline ms-2">Unarchive</span>
 								</button>
 							</Show>
 							<button class="btn btn-outline-danger btn-sm" onClick={deleteNote} title="Delete" aria-label="Delete">
 								<Icon type="trash"/>
+								<span class="d-none d-sm-inline ms-2">Delete</span>
 							</button>
 						</div>
 					</Show>
@@ -430,15 +449,19 @@ export default function EditNote(props: Props) {
 						<div class="d-flex flex-wrap gap-2">
 							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
 								<Icon type="arrowCounterclockwise"/>
+								<span class="d-none d-sm-inline ms-2">Undo</span>
 							</button>
 							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
 								<Icon type="arrowClockwise"/>
+								<span class="d-none d-sm-inline ms-2">Redo</span>
 							</button>
 							<button class="btn btn-primary btn-sm" disabled={!hasUnsavedChanges()} onClick={saveNote} title="Save" aria-label="Save">
 								<Icon type="floppy"/>
+								<span class="d-none d-sm-inline ms-2">Save</span>
 							</button>
 							<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing} title="Cancel" aria-label="Cancel">
 								<Icon type="xLg"/>
+								<span class="d-none d-sm-inline ms-2">Cancel</span>
 							</button>
 						</div>
 					</Show>

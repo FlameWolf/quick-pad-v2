@@ -1,5 +1,5 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
-import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
+import { A, useNavigate, useLocation, useParams, useBeforeLeave, useSearchParams } from "@solidjs/router";
 import * as store from "@/stores/notes";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
@@ -23,9 +23,11 @@ export default function EditNote(props: Props) {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const params = useParams<{ id?: UUID }>();
+	const [searchParams] = useSearchParams<{ from?: View }>();
 	const { exportNote } = useFileIO();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
+	const fromView = createMemo(() => searchParams.from ?? "active");
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? store.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
@@ -241,7 +243,9 @@ export default function EditNote(props: Props) {
 		}
 		store.archiveNote(note.id);
 		requestSync();
-		navigate(backRoute());
+		if (fromView() !== "favourited") {
+			navigate(backRoute());
+		}
 	}
 
 	function unarchiveCurrent() {
@@ -251,7 +255,9 @@ export default function EditNote(props: Props) {
 		}
 		store.unarchiveNote(note.id);
 		requestSync();
-		navigate(backRoute());
+		if (fromView() !== "favourited") {
+			navigate(backRoute());
+		}
 	}
 
 	function restoreNote() {

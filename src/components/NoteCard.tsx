@@ -6,6 +6,7 @@ import Icon from "@/components/Icon";
 import type { UUID } from "node:crypto";
 
 interface Props {
+	currentView: View;
 	note: Note;
 	selectionMode: boolean;
 	selected: boolean;

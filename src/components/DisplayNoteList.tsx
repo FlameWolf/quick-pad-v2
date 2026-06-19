@@ -17,7 +17,6 @@ import Toast from "./Toast";
 import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 
-type View = "active" | "favourited" | "archived" | "trash";
 interface Props {
 	view?: View;
 }
@@ -312,7 +311,7 @@ export default function DisplayNoteList(props: Props) {
 									</div>
 								</A>
 							</Show>
-							<For each={sortedNotes()}>{note => <NoteCard note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
+							<For each={sortedNotes()}>{note => <NoteCard currentView={view()} note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
 						</div>
 						<Show when={isSelectionMode() && selectedCount() > 0}>
 							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>

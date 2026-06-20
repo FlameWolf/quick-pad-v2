@@ -166,18 +166,16 @@ export default function EditNote(props: Props) {
 		if (isCreateMode()) {
 			const note = create(title, content);
 			await store.addNote(note);
-			setIsEditing(false);
-			requestSync();
 			navigate(`/notes/${note.id}`);
-			return;
-		}
-		const note = existingNote();
-		if (note) {
-			store.updateNote(note.id, title, content);
-			setLoadedContent(content);
-			requestSync();
+		} else {
+			const note = existingNote();
+			if (note) {
+				store.updateNote(note.id, title, content);
+				setLoadedContent(content);
+			}
 		}
 		setIsEditing(false);
+		requestSync();
 	}
 
 	async function deleteNote() {

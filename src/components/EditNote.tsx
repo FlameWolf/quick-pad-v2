@@ -1,6 +1,8 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
-import { A, useNavigate, useLocation, useParams, useBeforeLeave, useSearchParams } from "@solidjs/router";
-import * as store from "@/stores/notes";
+import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
+import { listViewRoutes } from "@/router";
+import * as notesStore from "@/stores/notes";
+import * as appStore from "@/stores/app";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
@@ -23,13 +25,11 @@ export default function EditNote(props: Props) {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const params = useParams<{ id?: UUID }>();
-	const [searchParams] = useSearchParams<{ from?: View }>();
 	const { exportNote } = useFileIO();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
-	const fromView = createMemo(() => searchParams.from ?? "active");
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
-	const existingNote = createMemo(() => (params.id && !isCreateMode() ? store.getNote(params.id) : undefined));
+	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
 	const [copyResult, setCopyResult] = createSignal<{
 		status: "success" | "error";
@@ -165,12 +165,12 @@ export default function EditNote(props: Props) {
 		const content = editContent();
 		if (isCreateMode()) {
 			const note = create(title, content);
-			await store.addNote(note);
+			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else {
 			const note = existingNote();
 			if (note) {
-				store.updateNote(note.id, title, content);
+				notesStore.updateNote(note.id, title, content);
 				setLoadedContent(content);
 			}
 		}
@@ -193,7 +193,7 @@ export default function EditNote(props: Props) {
 		if (!ok) {
 			return;
 		}
-		store.trashNote(note.id);
+		notesStore.trashNote(note.id);
 		requestSync();
 		navigate(backRoute());
 	}
@@ -203,7 +203,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.faveNote(note.id);
+		notesStore.faveNote(note.id);
 		requestSync();
 	}
 
@@ -212,7 +212,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.unfaveNote(note.id);
+		notesStore.unfaveNote(note.id);
 		requestSync();
 	}
 
@@ -221,7 +221,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.pinNote(note.id);
+		notesStore.pinNote(note.id);
 		requestSync();
 	}
 
@@ -230,7 +230,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.unpinNote(note.id);
+		notesStore.unpinNote(note.id);
 		requestSync();
 	}
 
@@ -239,9 +239,9 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.archiveNote(note.id);
+		notesStore.archiveNote(note.id);
 		requestSync();
-		if (fromView() !== "favourited") {
+		if (appStore.lastView() !== "favourited") {
 			navigate(backRoute());
 		}
 	}
@@ -251,9 +251,9 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.unarchiveNote(note.id);
+		notesStore.unarchiveNote(note.id);
 		requestSync();
-		if (fromView() !== "favourited") {
+		if (appStore.lastView() !== "favourited") {
 			navigate(backRoute());
 		}
 	}
@@ -263,7 +263,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return;
 		}
-		store.restoreFromTrash(note.id);
+		notesStore.restoreFromTrash(note.id);
 		requestSync();
 		navigate(backRoute());
 	}
@@ -284,7 +284,7 @@ export default function EditNote(props: Props) {
 			return;
 		}
 		const noteId = note.id;
-		await store.permanentlyDelete(noteId);
+		await notesStore.permanentlyDelete(noteId);
 		requestSync([noteId]);
 		navigate(backRoute());
 	}
@@ -309,6 +309,9 @@ export default function EditNote(props: Props) {
 	}
 
 	onMount(() => {
+		if (!listViewRoutes.includes(backRoute())) {
+			appStore.setLastView(null);
+		}
 		window.addEventListener("beforeunload", onBeforeUnload);
 		window.addEventListener("resize", adjustTextAreaHeight);
 	});
@@ -342,7 +345,7 @@ export default function EditNote(props: Props) {
 				setEditContent(emptyString);
 				setIsEditing(isCreateMode());
 				if (id && !isCreateMode()) {
-					setLoadedContent((await store.getNoteContent(id)) ?? emptyString);
+					setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
 				} else {
 					setLoadedContent(emptyString);
 				}

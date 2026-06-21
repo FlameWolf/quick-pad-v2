@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, on } from "solid-js";
 import { useGoogleDrive } from "./useGoogleDrive";
 import { useGoogleAuth } from "./useGoogleAuth";
-import * as store from "@/stores/notes";
+import * as notesStore from "@/stores/notes";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
 import { deleteKV, getKV, setKV } from "@/storage/db";
 import { getTime } from "@/utils/dates";
@@ -133,7 +133,7 @@ export function useNotesSync() {
 	}
 
 	async function buildUploadPayload(note: Note): Promise<NoteJSON> {
-		const content = await store.getNoteContent(note.id);
+		const content = await notesStore.getNoteContent(note.id);
 		return Object.assign(toJSON(note), {
 			content: content ?? emptyString
 		});
@@ -147,7 +147,7 @@ export function useNotesSync() {
 			if (remoteJSON) {
 				const remoteNote = fromJSON(remoteJSON);
 				if (modifiedAtRemote(remoteNote, note)) {
-					await store.replaceNote(remoteNote);
+					await notesStore.replaceNote(remoteNote);
 					return NoteUploadResult.Conflict;
 				}
 				await writeJSONById(remoteFile.id, await buildUploadPayload(note));
@@ -172,10 +172,10 @@ export function useNotesSync() {
 				continue;
 			}
 			remoteCount += readCount;
-			const changes = mergeNotesByModifiedAt(store.notes(), remoteNotes);
+			const changes = mergeNotesByModifiedAt(notesStore.notes(), remoteNotes);
 			const changeCount = changes.length;
 			if (changeCount > 0) {
-				await store.replaceMultiple(changes);
+				await notesStore.replaceMultiple(changes);
 				downloaded += changeCount;
 			}
 			setLastSyncMessage({
@@ -184,7 +184,7 @@ export function useNotesSync() {
 				timeStamp: Date.now()
 			});
 		} while (pageToken);
-		await purgeRemoteFiles(await store.purgeExpiredTrash());
+		await purgeRemoteFiles(await notesStore.purgeExpiredTrash());
 		setLastSyncedToLocalAt(syncStartedAt);
 		return { remoteCount, downloaded };
 	}
@@ -192,7 +192,7 @@ export function useNotesSync() {
 	async function runPush(purged: ReadonlyArray<UUID> = [], force = false) {
 		const syncStartedAt = new Date();
 		await purgeRemoteFiles(purged);
-		const candidates = force ? store.notes() : store.notes().filter(n => noteEffectiveTime(n) > (lastSyncedToCloudAt()?.getTime() ?? 0));
+		const candidates = force ? notesStore.notes() : notesStore.notes().filter(n => noteEffectiveTime(n) > (lastSyncedToCloudAt()?.getTime() ?? 0));
 		const results = await Promise.all(candidates.map(uploadNote));
 		setLastSyncedToCloudAt(syncStartedAt);
 		return {
@@ -209,7 +209,7 @@ export function useNotesSync() {
 		try {
 			const pullResult = await runPull(force);
 			const pushResult = await runPush(purged, force);
-			const empty = pullResult.remoteCount === 0 && store.notes().length === 0;
+			const empty = pullResult.remoteCount === 0 && notesStore.notes().length === 0;
 			const changes = pushResult.conflicts + pullResult.downloaded;
 			setLastSyncMessage({
 				text: empty ? "Nothing to sync" : `Synced${changes > 0 ? ` (pulled ${changes} change${changes > 1 ? "s" : emptyString} from cloud)` : emptyString}`,

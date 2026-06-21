@@ -1,5 +1,5 @@
 import { createMemo, Show } from "solid-js";
-import * as store from "@/stores/notes";
+import * as notesStore from "@/stores/notes";
 import { debounce } from "@/utils/timing";
 import { emptyString } from "@/constants/common";
 
@@ -9,14 +9,14 @@ interface Props {
 
 export default function SearchBar(props: Props) {
 	let searchInput!: HTMLInputElement;
-	const isSearchMode = createMemo(() => !!store.searchText());
+	const isSearchMode = createMemo(() => !!notesStore.searchText());
 	const debouncedSearch = debounce(() => {
-		store.setSearchText(searchInput.value?.trim() ?? emptyString);
+		notesStore.setSearchText(searchInput.value?.trim() ?? emptyString);
 	}, 300);
 
 	function clearSearch() {
 		debouncedSearch.cancel();
-		store.setSearchText(emptyString);
+		notesStore.setSearchText(emptyString);
 		searchInput.value = emptyString;
 	}
 

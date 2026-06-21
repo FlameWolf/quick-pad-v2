@@ -1,4 +1,4 @@
-import { icons } from "@/constants/icons";
+import { icons } from "@/content/icons";
 
 interface Props {
 	type: keyof typeof icons;

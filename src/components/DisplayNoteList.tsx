@@ -1,6 +1,7 @@
 import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from "solid-js";
-import { A } from "@solidjs/router";
-import * as store from "@/stores/notes";
+import { A, useBeforeLeave } from "@solidjs/router";
+import * as notesStore from "@/stores/notes";
+import * as appStore from "@/stores/app";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
@@ -28,17 +29,17 @@ export default function DisplayNoteList(props: Props) {
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
-	const isSearchMode = createMemo(() => !!store.searchText());
+	const isSearchMode = createMemo(() => !!notesStore.searchText());
 	const sourceNotes = createMemo<Note[]>(() => {
 		switch (view()) {
 			case "favourited":
-				return store.favedNotes();
+				return notesStore.favedNotes();
 			case "archived":
-				return store.archivedNotes();
+				return notesStore.archivedNotes();
 			case "trash":
-				return store.trashedNotes();
+				return notesStore.trashedNotes();
 			default:
-				return store.activeNotes();
+				return notesStore.activeNotes();
 		}
 	});
 	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
@@ -59,7 +60,7 @@ export default function DisplayNoteList(props: Props) {
 	});
 	const emptyMessage = createMemo(() => {
 		if (isSearchMode()) {
-			return `No results found for "${store.searchText()}"`;
+			return `No results found for "${notesStore.searchText()}"`;
 		}
 		switch (view()) {
 			case "favourited":
@@ -149,19 +150,19 @@ export default function DisplayNoteList(props: Props) {
 				break;
 			}
 			case "fave": {
-				store.faveMultiple(ids);
+				notesStore.faveMultiple(ids);
 				break;
 			}
 			case "unfave": {
-				store.unfaveMultiple(ids);
+				notesStore.unfaveMultiple(ids);
 				break;
 			}
 			case "archive": {
-				store.archiveMultiple(ids);
+				notesStore.archiveMultiple(ids);
 				break;
 			}
 			case "unarchive": {
-				store.unarchiveMultiple(ids);
+				notesStore.unarchiveMultiple(ids);
 				break;
 			}
 			case "trash": {
@@ -175,11 +176,11 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				store.trashMultiple(ids);
+				notesStore.trashMultiple(ids);
 				break;
 			}
 			case "restore": {
-				store.restoreFromTrashMultiple(ids);
+				notesStore.restoreFromTrashMultiple(ids);
 				break;
 			}
 			case "permanent": {
@@ -193,7 +194,7 @@ export default function DisplayNoteList(props: Props) {
 				if (!ok) {
 					return;
 				}
-				await store.permanentlyDeleteMultiple(ids);
+				await notesStore.permanentlyDeleteMultiple(ids);
 				purgeNotes = true;
 				break;
 			}
@@ -205,7 +206,7 @@ export default function DisplayNoteList(props: Props) {
 	}
 
 	async function handleEmptyTrash() {
-		const trashed = store.trashedNotes();
+		const trashed = notesStore.trashedNotes();
 		const count = trashed.length;
 		if (count === 0) {
 			return;
@@ -221,12 +222,16 @@ export default function DisplayNoteList(props: Props) {
 			return;
 		}
 		const trashedNoteIds = trashed.map(n => n.id);
-		await store.permanentlyDeleteMultiple(trashedNoteIds);
+		await notesStore.permanentlyDeleteMultiple(trashedNoteIds);
 		requestSync(trashedNoteIds);
 	}
 
 	onMount(() => {
 		exitSelectionMode();
+	});
+
+	useBeforeLeave(() => {
+		appStore.setLastView(view());
 	});
 
 	createEffect(on(view, exitSelectionMode, { defer: true }));
@@ -243,10 +248,10 @@ export default function DisplayNoteList(props: Props) {
 				</div>
 			</Show>
 			<Switch>
-				<Match when={store.isLoading() || store.isSearching()}>
+				<Match when={notesStore.isLoading() || notesStore.isSearching()}>
 					<div class="d-flex flex-column justify-content-center align-items-center">
 						<div class="spinner-border" aria-hidden="true"></div>
-						<div class="mt-3" role="status">{store.isSearching() ? "Searching..." : "Loading notes..."}</div>
+						<div class="mt-3" role="status">{notesStore.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
 				<Match when={!hasNotes()}>
@@ -312,7 +317,7 @@ export default function DisplayNoteList(props: Props) {
 									</div>
 								</A>
 							</Show>
-							<For each={sortedNotes()}>{note => <NoteCard currentView={view()} note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
+							<For each={sortedNotes()}>{note => <NoteCard note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
 						</div>
 						<Show when={isSelectionMode() && selectedCount() > 0}>
 							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>

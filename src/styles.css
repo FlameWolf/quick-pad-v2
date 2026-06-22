@@ -167,7 +167,7 @@ body {
 
 .note-content,
 .note-textarea {
-	font-size: calc(1rem + var(--font-scale-factor) * 0.25rem);
+	font-size: calc(1rem + var(--font-scale-factor) * 1pt);
 }
 
 .note-content {

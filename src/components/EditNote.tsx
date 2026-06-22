@@ -382,10 +382,10 @@ export default function EditNote(props: Props) {
 					</A>
 					<div class="d-flex flex-wrap gap-2 ms-auto">
 						<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("+")} title="Increase font size" aria-label="Increase font size">
-							<span>A+</span>
+							<Icon type="aPlus"/>
 						</button>
 						<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("-")} title="Decrease font size" aria-label="Decrease font size">
-							<span>A-</span>
+							<Icon type="aMinus"/>
 						</button>
 					</div>
 					<Show when={!isCreateMode() && !isEditing() && isTrashed()}>

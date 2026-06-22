@@ -66,6 +66,7 @@ export default function EditNote(props: Props) {
 		}
 		return editTitle() !== note.title || editContent() !== loadedContent();
 	});
+	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
 
 	function adjustTextAreaHeight() {
 		if (CSS.supports("field-sizing", "content")) {
@@ -87,7 +88,10 @@ export default function EditNote(props: Props) {
 		}
 	}
 
-	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
+	function setFontScaling(operator: "+" | "-") {
+		const multiplier = operator === "+" ? 1 : -1;
+		appStore.setFontScaleFactor(appStore.fontScaleFactor() + 1 * multiplier);
+	}
 
 	function onContentInput(e: Event) {
 		const value = (e.target as HTMLTextAreaElement).value;
@@ -357,6 +361,17 @@ export default function EditNote(props: Props) {
 
 	createEffect(on(editContent, adjustTextAreaHeight, { defer: true }));
 
+	createEffect(
+		on(appStore.fontScaleFactor, factor => {
+			const rootElement = document.documentElement;
+			if (factor === 0) {
+				rootElement.style.removeProperty("--font-scale-factor");
+				return;
+			}
+			rootElement.style.setProperty("--font-scale-factor", factor.toString());
+		})
+	);
+
 	return (
 		<>
 			<div class="edit-note">
@@ -365,6 +380,14 @@ export default function EditNote(props: Props) {
 						<Icon type="chevronLeft"/>
 						<span class="ms-2">Back</span>
 					</A>
+					<div class="d-flex flex-wrap gap-2 ms-auto">
+						<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("+")} title="Increase font size" aria-label="Increase font size">
+							<span>A+</span>
+						</button>
+						<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("-")} title="Decrease font size" aria-label="Decrease font size">
+							<span>A-</span>
+						</button>
+					</div>
 					<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
 						<div class="d-flex flex-wrap gap-2">
 							<button class="btn btn-outline-primary btn-sm" onClick={restoreNote} title="Restore" aria-label="Restore">

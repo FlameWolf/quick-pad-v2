@@ -1,5 +1,9 @@
 @import "bootstrap/dist/css/bootstrap.min.css";
 
+:root {
+	--font-scale-factor: 0;
+}
+
 body {
 	min-height: 100vh;
 }
@@ -159,6 +163,11 @@ body {
 .edit-note {
 	max-width: calc(100vw - 2rem);
 	margin: 0 auto;
+}
+
+.note-content,
+.note-textarea {
+	font-size: calc(1rem + var(--font-scale-factor) * 0.25rem);
 }
 
 .note-content {

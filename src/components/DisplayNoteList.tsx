@@ -21,6 +21,12 @@ import type { UUID } from "crypto";
 interface Props {
 	view?: View;
 }
+type NoteSection = {
+	key: string;
+	notes: Note[];
+	divider?: string;
+	showNewCard?: boolean;
+};
 
 export default function DisplayNoteList(props: Props) {
 	const view = createMemo<View>(() => props.view ?? "active");
@@ -43,6 +49,32 @@ export default function DisplayNoteList(props: Props) {
 		}
 	});
 	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
+	const noteSections = createMemo(() => {
+		if (view() === "favourited") {
+			const sections: NoteSection[] = [
+				{
+					key: "active",
+					notes: sortedNotes().filter(n => !n.archivedAt)
+				}
+			];
+			const archived = sortedNotes().filter(n => n.archivedAt);
+			if (archived.length) {
+				sections.push({
+					key: "archived",
+					notes: archived,
+					divider: "ARCHIVE"
+				});
+			}
+			return sections;
+		}
+		return [
+			{
+				key: "all",
+				notes: sortedNotes(),
+				showNewCard: view() === "active"
+			}
+		];
+	});
 	const hasNotes = createMemo(() => sourceNotes().length > 0);
 	const allSelected = createMemo(() => sourceNotes().length > 0 && selectedCount() === sourceNotes().length);
 	const selectAllText = createMemo(() => allSelected() ? "Deselect All" : "Select All");
@@ -309,16 +341,29 @@ export default function DisplayNoteList(props: Props) {
 								</button>
 							</Show>
 						</div>
-						<div class="notes-grid">
-							<Show when={view() === "active" && !isSelectionMode()}>
-								<A href="/notes/new" class="card note-card new-note-card text-decoration-none">
-									<div class="card-body d-flex align-items-center justify-content-center">
-										<span class="fs-1 text-muted">+</span>
+						<For each={noteSections()}>
+							{section => (
+								<>
+									<Show when={section.divider}>
+										<div class="d-flex align-items-center my-4">
+											<div class="flex-grow-1 border-bottom"></div>
+											<span class="px-3 text-muted small">{section.divider}</span>
+											<div class="flex-grow-1 border-bottom"></div>
+										</div>
+									</Show>
+									<div class="notes-grid">
+										<Show when={section.showNewCard && !isSelectionMode()}>
+											<A href="/notes/new" class="card note-card new-note-card text-decoration-none">
+												<div class="card-body d-flex align-items-center justify-content-center">
+													<span class="fs-1 text-muted">+</span>
+												</div>
+											</A>
+										</Show>
+										<For each={section.notes}>{note => <NoteCard note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
 									</div>
-								</A>
-							</Show>
-							<For each={sortedNotes()}>{note => <NoteCard note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
-						</div>
+								</>
+							)}
+						</For>
 						<Show when={isSelectionMode() && selectedCount() > 0}>
 							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
 						</Show>

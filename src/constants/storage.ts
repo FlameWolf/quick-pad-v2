@@ -6,6 +6,7 @@ export const KV_STORE = "kv";
 export const MIGRATION_FLAG = "__migrated-to-idb";
 export const LEGACY_NOTES_KEY = "quick-pad-notes";
 export const NOTE_PREFIX = "qp-note:";
+export const DRAFT_PREFIX = "qp-draft:";
 export const KV_MAPPINGS: ReadonlyArray<readonly [string, string, "string" | "number" | "boolean" | "json"]> = [
 	["quick-pad-sort-by", "sort-by", "string"],
 	["quick-pad-sort-direction", "sort-direction", "string"],

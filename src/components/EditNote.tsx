@@ -6,6 +6,7 @@ import * as appStore from "@/stores/app";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
+import { useNoteDraft } from "@/composables/useNoteDraft";
 import { useFileIO } from "@/composables/useFileIO";
 import { create } from "@/models/Note";
 import { emptyString } from "@/constants/common";
@@ -28,6 +29,7 @@ export default function EditNote(props: Props) {
 	const { exportNote } = useFileIO();
 	const { confirm } = useConfirmDialog();
 	const { requestSync } = useNotesSync();
+	const { saveDraft, loadDraft, clearDraft } = useNoteDraft();
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
@@ -66,7 +68,15 @@ export default function EditNote(props: Props) {
 		}
 		return editTitle() !== note.title || editContent() !== loadedContent();
 	});
+	const draftId = createMemo(() => (isCreateMode() ? "new" : params.id!));
 	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
+	const persistDraft = debounce(() => {
+		if (hasUnsavedChanges()) {
+			saveDraft(draftId(), editTitle(), editContent());
+		} else {
+			clearDraft(draftId());
+		}
+	}, 500);
 
 	function adjustTextAreaHeight() {
 		if (CSS.supports("field-sizing", "content")) {
@@ -152,6 +162,7 @@ export default function EditNote(props: Props) {
 			if (!ok) {
 				return;
 			}
+			clearDraft(draftId());
 		}
 		if (isCreateMode()) {
 			setIsEditing(false);
@@ -167,6 +178,7 @@ export default function EditNote(props: Props) {
 	async function saveNote() {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
+		clearDraft(draftId());
 		if (isCreateMode()) {
 			const note = create(title, content);
 			await notesStore.addNote(note);
@@ -293,6 +305,34 @@ export default function EditNote(props: Props) {
 		navigate(backRoute());
 	}
 
+	async function restoreDraft() {
+		const draft = loadDraft(draftId());
+		const baselineTitle = existingNote()?.title ?? emptyString;
+		if (draft && (draft.title !== baselineTitle || draft.content !== loadedContent())) {
+			const ok = await confirm({
+				title: "Restore unsaved draft?",
+				message: `An unsaved draft from ${new Date(draft.savedAt).toLocaleString()} was found for this note.`,
+				confirmText: "Restore",
+				cancelText: "Discard draft"
+			});
+			if (ok) {
+				setIsEditing(true);
+				setEditTitle(draft.title);
+				setEditContent(draft.content);
+				undoRedo.push(editContent());
+			} else {
+				clearDraft(draftId());
+			}
+		}
+	}
+
+	function flushDraft() {
+		persistDraft.cancel();
+		if (hasUnsavedChanges()) {
+			saveDraft(draftId(), editTitle(), editContent());
+		}
+	}
+
 	function formatDate(date?: Date): string {
 		if (!date) {
 			return emptyString;
@@ -318,24 +358,28 @@ export default function EditNote(props: Props) {
 		}
 		window.addEventListener("beforeunload", onBeforeUnload);
 		window.addEventListener("resize", adjustTextAreaHeight);
+		window.addEventListener("pagehide", flushDraft);
 	});
 
 	onCleanup(() => {
+		persistDraft.cancel();
 		debouncedPushUndo.cancel();
+		window.removeEventListener("pagehide", flushDraft);
 		window.removeEventListener("resize", adjustTextAreaHeight);
 		window.removeEventListener("beforeunload", onBeforeUnload);
 	});
 
-	useBeforeLeave(e => {
+	useBeforeLeave(event => {
 		if (bypassGuard || !hasUnsavedChanges()) {
 			return;
 		}
-		e.preventDefault();
+		event.preventDefault();
 		(async () => {
 			const ok = await confirmDiscardChanges();
 			if (ok) {
 				bypassGuard = true;
-				e.retry(true);
+				clearDraft(draftId());
+				event.retry(true);
 			}
 		})();
 	});
@@ -355,11 +399,21 @@ export default function EditNote(props: Props) {
 				}
 				setIsContentLoaded(true);
 				undoRedo.reset(loadedContent());
+				await restoreDraft();
 			}
 		)
 	);
 
-	createEffect(on(editContent, adjustTextAreaHeight, { defer: true }));
+	createEffect(
+		on(
+			[editTitle, editContent],
+			() => {
+				adjustTextAreaHeight();
+				persistDraft();
+			},
+			{ defer: true }
+		)
+	);
 
 	createEffect(
 		on(appStore.fontScaleFactor, factor => {

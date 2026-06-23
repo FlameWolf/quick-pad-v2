@@ -21,7 +21,7 @@ export default function Toast(props: Props) {
 
 	function resetDismissTimeout() {
 		clearDismissTimeout();
-		dismissTimeout = setTimeout(() => props.onDismiss(), 5000);
+		dismissTimeout = setTimeout(props.onDismiss, 5000);
 	}
 
 	createEffect(

@@ -34,10 +34,12 @@ export default function EditNote(props: Props) {
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
 	const [copyResult, setCopyResult] = createSignal<{
-		status: "success" | "error";
+		type: "success" | "error";
+		timeStamp: number;
 		message: string;
 	}>({
-		status: "success",
+		type: "success",
+		timeStamp: 0,
 		message: emptyString
 	});
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());
@@ -125,13 +127,15 @@ export default function EditNote(props: Props) {
 			.writeText(loadedContent())
 			.then(() => {
 				setCopyResult({
-					status: "success",
+					type: "success",
+					timeStamp: Date.now(),
 					message: "Copied to clipboard"
 				});
 			})
 			.catch(err => {
 				setCopyResult({
-					status: "error",
+					type: "error",
+					timeStamp: Date.now(),
 					message: `Failed to copy: ${(err as Error).message}`
 				});
 			});
@@ -468,7 +472,7 @@ export default function EditNote(props: Props) {
 							</button>
 							<button class="btn btn-outline-secondary btn-sm" onClick={copyToClipboard} title="Copy to clipboard" aria-label="Copy to clipboard">
 								<Icon type="copy"/>
-								<span class="d-none d-sm-inline ms-2">Copy to clipboard</span>
+								<span class="d-none d-sm-inline ms-2">Copy</span>
 							</button>
 							<Show
 								when={isFaved()}
@@ -573,7 +577,7 @@ export default function EditNote(props: Props) {
 					</div>
 				</Show>
 			</div>
-			<Toast message={copyResult().message} type={copyResult().status} visible={isCopying()} timeStamp={Date.now()} onDismiss={() => void 0}/>
+			<Toast {...copyResult()} visible={isCopying()} onDismiss={() => setIsCopying(false)}/>
 		</>
 	);
 }

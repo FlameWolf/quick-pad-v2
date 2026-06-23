@@ -17,7 +17,7 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Per-note undo / redo history while editing (debounced, up to 100 steps).
 - "Discard unsaved changes" guard when navigating away or reloading mid-edit.
 - Confirm dialog (with Enter / Escape keyboard shortcuts) protects destructive actions.
-- Tapping on a note tile opens it in read-only mode. A one-tap **Copy to clipboard** button allows easy copy-pasting of note contents anywhere (with a toast confirming success or failure). Tap the **Edit** button to switch to _Edit_ mode.
+- Tapping on a note tile opens it in read-only mode. A one-tap **Copy** button allows easy copy-pasting of note contents anywhere (with a toast confirming success or failure). Tap the **Edit** button to switch to _Edit_ mode.
 - The editing area auto-grows to fit your text (using `field-sizing` where supported, with a JavaScript fallback).
 - Create a new note from a dedicated **+** tile on the dashboard.
 - When a list is empty, an empty-state panel is shown — on the dashboard it offers quick actions to create a note, import files, or jump to the Archive / Trash.

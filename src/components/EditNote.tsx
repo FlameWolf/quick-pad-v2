@@ -468,7 +468,7 @@ export default function EditNote(props: Props) {
 							</button>
 							<button class="btn btn-outline-secondary btn-sm" onClick={copyToClipboard} title="Copy to clipboard" aria-label="Copy to clipboard">
 								<Icon type="copy"/>
-								<span class="d-none d-sm-inline ms-2">Copy to clipboard</span>
+								<span class="d-none d-sm-inline ms-2">Copy</span>
 							</button>
 							<Show
 								when={isFaved()}

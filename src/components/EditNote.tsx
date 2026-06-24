@@ -549,7 +549,7 @@ export default function EditNote(props: Props) {
 					</Show>
 				</div>
 				<Show when={!isEditing() && existingNote()}>
-					<h2 class="mb-3">{existingNote()!.title}</h2>
+					<h2 class="note-title mb-3">{existingNote()!.title}</h2>
 					<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
 						<div class="text-muted small mb-3">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
 					</Show>

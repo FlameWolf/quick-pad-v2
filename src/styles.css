@@ -270,7 +270,7 @@ textarea.form-control {
 .toast-text {
 	flex: 1;
 	max-height: 25vh;
-	overflow-y: scroll;
+	overflow-y: auto;
 }
 
 .nav-overlay {

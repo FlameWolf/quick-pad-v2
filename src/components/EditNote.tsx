@@ -13,7 +13,7 @@ import { emptyString } from "@/constants/common";
 import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
 import { debounce } from "@/utils/timing";
 import Icon from "@/components/Icon";
-import Toast from "@/components/Toast";
+import Toast, { type ToastDetails } from "@/components/Toast";
 import type { UUID } from "crypto";
 
 interface Props {
@@ -33,11 +33,7 @@ export default function EditNote(props: Props) {
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
 	const [isCopying, setIsCopying] = createSignal(false);
-	const [copyResult, setCopyResult] = createSignal<{
-		type: "success" | "error";
-		timeStamp: number;
-		message: string;
-	}>({
+	const [copyResult, setCopyResult] = createSignal<ToastDetails>({
 		type: "success",
 		timeStamp: 0,
 		message: emptyString

@@ -1,10 +1,12 @@
 import { createEffect, on, onMount, onCleanup } from "solid-js";
 import Icon from "@/components/Icon";
 
-interface Props {
-	message: string;
+export type ToastDetails = {
 	type: "success" | "error";
 	timeStamp: number;
+	message: string;
+};
+interface Props extends ToastDetails {
 	onDismiss: () => void;
 }
 
@@ -18,17 +20,17 @@ export default function Toast(props: Props) {
 		}
 	}
 
-	function resetDismissTimeout() {
-		clearDismissTimeout();
+	function setDismissTimeout() {
 		dismissTimeout = setTimeout(props.onDismiss, 5000);
 	}
 
 	createEffect(
 		on(
 			() => props.timeStamp,
-			val => {
-				if (val && props.type === "success") {
-					resetDismissTimeout();
+			() => {
+				clearDismissTimeout();
+				if (props.type === "success") {
+					setDismissTimeout();
 				}
 			},
 			{ defer: true }
@@ -36,7 +38,7 @@ export default function Toast(props: Props) {
 	);
 
 	onMount(() => {
-		resetDismissTimeout();
+		setDismissTimeout();
 	});
 
 	onCleanup(() => {

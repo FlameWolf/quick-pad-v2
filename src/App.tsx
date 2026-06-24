@@ -1,7 +1,9 @@
-import { createMemo, Show, type JSX } from "solid-js";
+import { createMemo, onMount, Show, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
-import { useNotesSync } from "@/composables/useNotesSync";
 import { listViewRoutes, RouteTransition } from "@/router";
+import * as notesStore from "@/stores/notes";
+import { useNotesSync } from "@/composables/useNotesSync";
+import { useNoteDraft } from "@/composables/useNoteDraft";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
 import Toast from "@/components/Toast";
@@ -15,9 +17,18 @@ interface AppProps {
 }
 
 export default function App(props: AppProps) {
-	const { lastSyncMessage, dismissMessage } = useNotesSync();
 	const location = useLocation();
+	const { dismissMessage, lastSyncMessage, requestSync } = useNotesSync();
+	const { purgeStaleDrafts } = useNoteDraft();
 	const searchDisabled = createMemo(() => !listViewRoutes.includes(location.pathname));
+
+	onMount(async () => {
+		const purgedIds = await notesStore.purgeExpiredTrash();
+		if (purgedIds.length > 0) {
+			requestSync(purgedIds);
+		}
+		purgeStaleDrafts();
+	});
 
 	return (
 		<>

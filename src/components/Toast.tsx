@@ -1,4 +1,4 @@
-import { createEffect, on, onMount, onCleanup } from "solid-js";
+import { createEffect, on, onCleanup } from "solid-js";
 import Icon from "@/components/Icon";
 
 export type ToastDetails = {
@@ -32,14 +32,9 @@ export default function Toast(props: Props) {
 				if (props.type === "success") {
 					setDismissTimeout();
 				}
-			},
-			{ defer: true }
+			}
 		)
 	);
-
-	onMount(() => {
-		setDismissTimeout();
-	});
 
 	onCleanup(() => {
 		clearDismissTimeout();

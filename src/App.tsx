@@ -47,7 +47,7 @@ export default function App(props: AppProps) {
 			</footer>
 			<ScrollButtons/>
 			<Show when={lastSyncMessage()}>
-				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} visible={!!lastSyncMessage()} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={dismissMessage}/>
+				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={dismissMessage}/>
 			</Show>
 			<ConfirmDialog/>
 			<RouteTransition/>

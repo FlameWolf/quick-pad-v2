@@ -370,7 +370,9 @@ export default function DisplayNoteList(props: Props) {
 					</div>
 				</Match>
 			</Switch>
-			<Toast message={formatImportErrors()} type="error" visible={importErrors().length > 0} timeStamp={Date.now()} onDismiss={dismissErrors}/>
+			<Show when={importErrors().length > 0}>
+				<Toast message={formatImportErrors()} type="error" timeStamp={Date.now()} onDismiss={dismissErrors}/>
+			</Show>
 		</>
 	);
 }

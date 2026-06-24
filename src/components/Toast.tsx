@@ -1,10 +1,9 @@
-import { createEffect, on, onMount, onCleanup, Show } from "solid-js";
+import { createEffect, on, onMount, onCleanup } from "solid-js";
 import Icon from "@/components/Icon";
 
 interface Props {
 	message: string;
 	type: "success" | "error";
-	visible: boolean;
 	timeStamp: number;
 	onDismiss: () => void;
 }
@@ -45,16 +44,14 @@ export default function Toast(props: Props) {
 	});
 
 	return (
-		<div class="toast-container" data-visible={props.visible}>
-			<Show when={props.visible}>
-				<div class={`toast-notification rounded ${props.type}`}>
-					<span class="toast-icon">
-						<Icon type={props.type === "success" ? "check2" : "exclamationTriangle"}/>
-					</span>
-					<span class="toast-text" innerHTML={props.message}></span>
-					<button class="btn-close align-self-start ms-auto" onClick={props.onDismiss}></button>
-				</div>
-			</Show>
+		<div class="toast-container">
+			<div class={`toast-notification rounded ${props.type}`}>
+				<span class="toast-icon">
+					<Icon type={props.type === "success" ? "check2" : "exclamationTriangle"}/>
+				</span>
+				<span class="toast-text" innerHTML={props.message}></span>
+				<button class="btn-close align-self-start ms-auto" onClick={props.onDismiss}></button>
+			</div>
 		</div>
 	);
 }

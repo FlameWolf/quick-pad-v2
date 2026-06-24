@@ -577,7 +577,9 @@ export default function EditNote(props: Props) {
 					</div>
 				</Show>
 			</div>
-			<Toast {...copyResult()} visible={isCopying()} onDismiss={() => setIsCopying(false)}/>
+			<Show when={isCopying()}>
+				<Toast {...copyResult()} onDismiss={() => setIsCopying(false)}/>
+			</Show>
 		</>
 	);
 }

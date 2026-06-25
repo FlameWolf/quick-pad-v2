@@ -114,8 +114,11 @@ body {
 	width: auto;
 }
 
-.note-card {
+.card.note-card {
 	height: 12rem;
+}
+
+.note-card {
 	transition: box-shadow 0.15s ease;
 	overflow: hidden;
 }

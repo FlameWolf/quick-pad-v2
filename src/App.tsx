@@ -1,8 +1,11 @@
+import "@/styles.css";
 import { createMemo, onMount, Show, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import { listViewRoutes, RouteTransition } from "@/router";
-import * as notesStore from "@/stores/notes";
-import { useNotesSync } from "@/composables/useNotesSync";
+import { hydrateNotes, purgeExpiredTrash } from "@/stores/notes";
+import { hydrateAuthState } from "@/composables/useGoogleAuth";
+import { hydrateSortPrefs } from "@/composables/useNoteSort";
+import { hydrateSyncMetadata, useNotesSync } from "@/composables/useNotesSync";
 import { useNoteDraft } from "@/composables/useNoteDraft";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -22,10 +25,21 @@ export default function App(props: AppProps) {
 	const { purgeStaleDrafts } = useNoteDraft();
 	const searchDisabled = createMemo(() => !listViewRoutes.includes(location.pathname));
 
+	async function hydrateAll() {
+		try {
+			await Promise.all([hydrateSortPrefs(), hydrateSyncMetadata(), hydrateAuthState(), hydrateNotes()]);
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
 	onMount(async () => {
-		const purgedIds = await notesStore.purgeExpiredTrash();
-		if (purgedIds.length > 0) {
-			requestSync(purgedIds);
+		if (await hydrateAll()) {
+			const purgedIds = await purgeExpiredTrash();
+			if (purgedIds.length > 0) {
+				requestSync(purgedIds);
+			}
 		}
 		purgeStaleDrafts();
 	});

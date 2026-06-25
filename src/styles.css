@@ -55,7 +55,6 @@ body {
 	justify-content: center;
 	padding: 1rem;
 	background-color: color-mix(in srgb, var(--bs-body-color) 50%, transparent);
-	z-index: 1080;
 	opacity: 0;
 	pointer-events: none;
 	transition: opacity 0.15s ease;
@@ -154,13 +153,6 @@ body {
 	height: 1.25rem;
 	cursor: pointer;
 	pointer-events: none;
-}
-
-.card-text {
-	display: -webkit-box;
-	line-clamp: 3;
-	box-orient: vertical;
-	overflow: hidden;
 }
 
 .edit-note {

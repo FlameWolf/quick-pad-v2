@@ -258,12 +258,7 @@ export default function DisplayNoteList(props: Props) {
 		requestSync(trashedNoteIds);
 	}
 
-	onMount(async () => {
-		await notesStore.hydrateNotes();
-		const purgedIds = await notesStore.purgeExpiredTrash();
-		if (purgedIds.length > 0) {
-			requestSync(purgedIds);
-		}
+	onMount(() => {
 		exitSelectionMode();
 	});
 

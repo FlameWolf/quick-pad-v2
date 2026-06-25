@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
-import { useGoogleAuth } from "@/composables/useGoogleAuth";
-import { useNotesSync } from "@/composables/useNotesSync";
+import { hydrateAuthState, useGoogleAuth } from "@/composables/useGoogleAuth";
+import { hydrateSyncMetadata, useNotesSync } from "@/composables/useNotesSync";
 import { isLoading, purgeExpiredTrash } from "@/stores/notes";
 import Icon from "@/components/Icon";
 
@@ -95,7 +95,7 @@ export default function SyncControls() {
 		)
 	);
 
-	onMount(() => {
+	onMount(async () => {
 		if (isConfigured()) {
 			readyTimeout = setTimeout(() => {
 				if (!isReady()) {
@@ -103,6 +103,8 @@ export default function SyncControls() {
 				}
 			}, 6000);
 		}
+		await hydrateAuthState();
+		await hydrateSyncMetadata();
 		tryRestoreSession();
 	});
 

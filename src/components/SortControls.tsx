@@ -1,5 +1,5 @@
-import { createMemo } from "solid-js";
-import { SortDirection, SortField } from "@/composables/useNoteSort";
+import { createMemo, onMount } from "solid-js";
+import { hydrateSortPrefs, type SortDirection, type SortField } from "@/composables/useNoteSort";
 import Icon from "@/components/Icon";
 
 interface Props {
@@ -11,6 +11,10 @@ interface Props {
 
 export default function SortControls(props: Props) {
 	const isAscending = createMemo(() => props.sortDirection === "asc");
+
+	onMount(async () => {
+		await hydrateSortPrefs();
+	});
 
 	return (
 		<div class="d-flex gap-1 align-items-center sort-controls">

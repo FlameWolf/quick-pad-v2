@@ -428,151 +428,153 @@ export default function EditNote(props: Props) {
 
 	return (
 		<>
-			<div class="edit-note">
-				<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-					<A href={backRoute()} class="btn btn-outline-secondary btn-sm" aria-label="Back to notes">
-						<Icon type="chevronLeft"/>
-						<span class="ms-2">Back</span>
-					</A>
-					<div class="d-flex flex-wrap gap-2 ms-auto">
-						<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("+")} title="Increase font size" aria-label="Increase font size">
-							<Icon type="aPlus"/>
+			<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+				<A href={backRoute()} class="btn btn-outline-secondary btn-sm" aria-label="Back to notes">
+					<Icon type="chevronLeft"/>
+					<span class="ms-2">Back</span>
+				</A>
+				<div class="d-flex flex-wrap gap-2 ms-auto">
+					<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("+")} title="Increase font size" aria-label="Increase font size">
+						<Icon type="aPlus"/>
+					</button>
+					<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("-")} title="Decrease font size" aria-label="Decrease font size">
+						<Icon type="aMinus"/>
+					</button>
+				</div>
+				<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
+					<div class="d-flex flex-wrap gap-2">
+						<button class="btn btn-outline-primary btn-sm" onClick={restoreNote} title="Restore" aria-label="Restore">
+							<Icon type="reply"/>
+							<span class="d-none d-sm-inline ms-2">Restore</span>
 						</button>
-						<button class="btn btn-outline-secondary btn-sm" onClick={() => setFontScaling("-")} title="Decrease font size" aria-label="Decrease font size">
-							<Icon type="aMinus"/>
+						<Show when={existingNote()}>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
+								<Icon type="download"/>
+								<span class="d-none d-sm-inline ms-2">Export</span>
+							</button>
+						</Show>
+						<button class="btn btn-outline-danger btn-sm" onClick={permanentlyDeleteNote} title="Delete Permanently" aria-label="Delete Permanently">
+							<Icon type="trashFill"/>
+							<span class="d-none d-sm-inline ms-2">Delete Permanently</span>
 						</button>
 					</div>
-					<Show when={!isCreateMode() && !isEditing() && isTrashed()}>
-						<div class="d-flex flex-wrap gap-2">
-							<button class="btn btn-outline-primary btn-sm" onClick={restoreNote} title="Restore" aria-label="Restore">
-								<Icon type="reply"/>
-								<span class="d-none d-sm-inline ms-2">Restore</span>
-							</button>
-							<Show when={existingNote()}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
-									<Icon type="download"/>
-									<span class="d-none d-sm-inline ms-2">Export</span>
+				</Show>
+				<Show when={!isCreateMode() && !isEditing() && !isTrashed()}>
+					<div class="d-flex flex-wrap gap-2">
+						<button class="btn btn-outline-primary btn-sm" onClick={startEditing} title="Edit" aria-label="Edit">
+							<Icon type="pen"/>
+							<span class="d-none d-sm-inline ms-2">Edit</span>
+						</button>
+						<button class="btn btn-outline-secondary btn-sm" onClick={copyToClipboard} title="Copy to clipboard" aria-label="Copy to clipboard">
+							<Icon type="copy"/>
+							<span class="d-none d-sm-inline ms-2">Copy</span>
+						</button>
+						<Show
+							when={isFaved()}
+							fallback={
+								<button class="btn btn-outline-secondary btn-sm" onClick={faveCurrent} title="Favourite" aria-label="Favourite">
+									<Icon type="star"/>
+									<span class="d-none d-sm-inline ms-2">Favourite</span>
 								</button>
-							</Show>
-							<button class="btn btn-outline-danger btn-sm" onClick={permanentlyDeleteNote} title="Delete Permanently" aria-label="Delete Permanently">
-								<Icon type="trashFill"/>
-								<span class="d-none d-sm-inline ms-2">Delete Permanently</span>
+							}>
+							<button class="btn btn-outline-secondary btn-sm" onClick={unfaveCurrent} title="Unfavourite" aria-label="Unfavourite">
+								<Icon type="starFill"/>
+								<span class="d-none d-sm-inline ms-2">Unfavourite</span>
 							</button>
-						</div>
-					</Show>
-					<Show when={!isCreateMode() && !isEditing() && !isTrashed()}>
-						<div class="d-flex flex-wrap gap-2">
-							<button class="btn btn-outline-primary btn-sm" onClick={startEditing} title="Edit" aria-label="Edit">
-								<Icon type="pen"/>
-								<span class="d-none d-sm-inline ms-2">Edit</span>
-							</button>
-							<button class="btn btn-outline-secondary btn-sm" onClick={copyToClipboard} title="Copy to clipboard" aria-label="Copy to clipboard">
-								<Icon type="copy"/>
-								<span class="d-none d-sm-inline ms-2">Copy</span>
-							</button>
+						</Show>
+						<Show when={!isArchived()}>
 							<Show
-								when={isFaved()}
+								when={isPinned()}
 								fallback={
-									<button class="btn btn-outline-secondary btn-sm" onClick={faveCurrent} title="Favourite" aria-label="Favourite">
-										<Icon type="star"/>
-										<span class="d-none d-sm-inline ms-2">Favourite</span>
+									<button class="btn btn-outline-secondary btn-sm" onClick={pinCurrent} title="Pin" aria-label="Pin">
+										<Icon type="pinAngle"/>
+										<span class="d-none d-sm-inline ms-2">Pin</span>
 									</button>
 								}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={unfaveCurrent} title="Unfavourite" aria-label="Unfavourite">
-									<Icon type="starFill"/>
-									<span class="d-none d-sm-inline ms-2">Unfavourite</span>
+								<button class="btn btn-outline-secondary btn-sm" onClick={unpinCurrent} title="Unpin" aria-label="Unpin">
+									<Icon type="pinAngleFill"/>
+									<span class="d-none d-sm-inline ms-2">Unpin</span>
 								</button>
 							</Show>
-							<Show when={!isArchived()}>
-								<Show
-									when={isPinned()}
-									fallback={
-										<button class="btn btn-outline-secondary btn-sm" onClick={pinCurrent} title="Pin" aria-label="Pin">
-											<Icon type="pinAngle"/>
-											<span class="d-none d-sm-inline ms-2">Pin</span>
-										</button>
-									}>
-									<button class="btn btn-outline-secondary btn-sm" onClick={unpinCurrent} title="Unpin" aria-label="Unpin">
-										<Icon type="pinAngleFill"/>
-										<span class="d-none d-sm-inline ms-2">Unpin</span>
-									</button>
-								</Show>
-							</Show>
-							<Show when={existingNote()}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
-									<Icon type="download"/>
-									<span class="d-none d-sm-inline ms-2">Export</span>
+						</Show>
+						<Show when={existingNote()}>
+							<button class="btn btn-outline-secondary btn-sm" onClick={() => exportNote(existingNote()!)} title="Export" aria-label="Export">
+								<Icon type="download"/>
+								<span class="d-none d-sm-inline ms-2">Export</span>
+							</button>
+						</Show>
+						<Show
+							when={isArchived()}
+							fallback={
+								<button class="btn btn-outline-secondary btn-sm" onClick={archiveCurrent} title="Archive" aria-label="Archive">
+									<Icon type="archive"/>
+									<span class="d-none d-sm-inline ms-2">Archive</span>
 								</button>
-							</Show>
-							<Show
-								when={isArchived()}
-								fallback={
-									<button class="btn btn-outline-secondary btn-sm" onClick={archiveCurrent} title="Archive" aria-label="Archive">
-										<Icon type="archive"/>
-										<span class="d-none d-sm-inline ms-2">Archive</span>
-									</button>
-								}>
-								<button class="btn btn-outline-secondary btn-sm" onClick={unarchiveCurrent} title="Unarchive" aria-label="Unarchive">
-									<Icon type="boxArrowUp"/>
-									<span class="d-none d-sm-inline ms-2">Unarchive</span>
-								</button>
-							</Show>
-							<button class="btn btn-outline-danger btn-sm" onClick={deleteNote} title="Delete" aria-label="Delete">
-								<Icon type="trash"/>
-								<span class="d-none d-sm-inline ms-2">Delete</span>
+							}>
+							<button class="btn btn-outline-secondary btn-sm" onClick={unarchiveCurrent} title="Unarchive" aria-label="Unarchive">
+								<Icon type="boxArrowUp"/>
+								<span class="d-none d-sm-inline ms-2">Unarchive</span>
 							</button>
-						</div>
-					</Show>
-					<Show when={isEditing()}>
-						<div class="d-flex flex-wrap gap-2">
-							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
-								<Icon type="arrowCounterclockwise"/>
-								<span class="d-none d-sm-inline ms-2">Undo</span>
-							</button>
-							<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
-								<Icon type="arrowClockwise"/>
-								<span class="d-none d-sm-inline ms-2">Redo</span>
-							</button>
-							<button class="btn btn-primary btn-sm" disabled={!hasUnsavedChanges()} onClick={saveNote} title="Save" aria-label="Save">
-								<Icon type="floppy"/>
-								<span class="d-none d-sm-inline ms-2">Save</span>
-							</button>
-							<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing} title="Cancel" aria-label="Cancel">
-								<Icon type="xLg"/>
-								<span class="d-none d-sm-inline ms-2">Cancel</span>
-							</button>
-						</div>
-					</Show>
-				</div>
-				<Show when={!isEditing() && existingNote()}>
-					<h2 class="note-title mb-3">{existingNote()!.title}</h2>
-					<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
-						<div class="text-muted small mb-3">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
-					</Show>
-					<Show when={!isContentLoaded()} fallback={<div class="note-content">{loadedContent()}</div>}>
-						<div class="d-flex justify-content-center py-3">
-							<div class="spinner-border" role="status" aria-label="Loading note"></div>
-						</div>
-					</Show>
+						</Show>
+						<button class="btn btn-outline-danger btn-sm" onClick={deleteNote} title="Delete" aria-label="Delete">
+							<Icon type="trash"/>
+							<span class="d-none d-sm-inline ms-2">Delete</span>
+						</button>
+					</div>
 				</Show>
 				<Show when={isEditing()}>
-					<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg mb-3" placeholder="Title"/>
-					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
-				</Show>
-				<Show when={hasContent()}>
-					<div class="d-flex flex-wrap gap-2 mt-3">
-						<Show when={sentenceCount()}>
-							<span class="badge text-bg-secondary">{sentenceCount()} sentences</span>
-						</Show>
-						<Show when={wordCount()}>
-							<span class="badge text-bg-secondary">{wordCount()} words</span>
-						</Show>
-						<Show when={characterCount()}>
-							<span class="badge text-bg-secondary">{characterCount()} characters</span>
-						</Show>
+					<div class="d-flex flex-wrap gap-2">
+						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
+							<Icon type="arrowCounterclockwise"/>
+							<span class="d-none d-sm-inline ms-2">Undo</span>
+						</button>
+						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canRedo()} onClick={doRedo} title="Redo" aria-label="Redo">
+							<Icon type="arrowClockwise"/>
+							<span class="d-none d-sm-inline ms-2">Redo</span>
+						</button>
+						<button class="btn btn-primary btn-sm" disabled={!hasUnsavedChanges()} onClick={saveNote} title="Save" aria-label="Save">
+							<Icon type="floppy"/>
+							<span class="d-none d-sm-inline ms-2">Save</span>
+						</button>
+						<button class="btn btn-outline-secondary btn-sm" onClick={cancelEditing} title="Cancel" aria-label="Cancel">
+							<Icon type="xLg"/>
+							<span class="d-none d-sm-inline ms-2">Cancel</span>
+						</button>
 					</div>
 				</Show>
 			</div>
+			<Show when={!isEditing() && existingNote()}>
+				<h2 class="note-title mb-3">{existingNote()!.title}</h2>
+				<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
+					<div class="text-muted small">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
+				</Show>
+				<hr/>
+				<Show when={!isContentLoaded()} fallback={<div class="note-content">{loadedContent()}</div>}>
+					<div class="d-flex justify-content-center py-3">
+						<div class="spinner-border" role="status" aria-label="Loading note"></div>
+					</div>
+				</Show>
+			</Show>
+			<div class="edit-note">
+				<Show when={isEditing()}>
+					<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg" placeholder="Title"/>
+					<hr class="my-1"/>
+					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
+				</Show>
+			</div>
+			<Show when={hasContent()}>
+				<div class="d-flex flex-wrap gap-2 mt-3">
+					<Show when={sentenceCount()}>
+						<span class="badge text-bg-secondary">{sentenceCount()} sentences</span>
+					</Show>
+					<Show when={wordCount()}>
+						<span class="badge text-bg-secondary">{wordCount()} words</span>
+					</Show>
+					<Show when={characterCount()}>
+						<span class="badge text-bg-secondary">{characterCount()} characters</span>
+					</Show>
+				</div>
+			</Show>
 			<Show when={isCopying()}>
 				<Toast {...copyResult()} onDismiss={() => setIsCopying(false)}/>
 			</Show>

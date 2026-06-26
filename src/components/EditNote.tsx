@@ -178,6 +178,7 @@ export default function EditNote(props: Props) {
 	async function saveNote() {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
+		setIsEditing(false);
 		clearDraft(draftId());
 		if (isCreateMode()) {
 			const note = create(title, content);
@@ -190,7 +191,7 @@ export default function EditNote(props: Props) {
 				setLoadedContent(content);
 			}
 		}
-		setIsEditing(false);
+		clearDraft(draftId());
 		requestSync();
 	}
 

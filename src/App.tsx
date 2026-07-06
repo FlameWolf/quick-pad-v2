@@ -1,17 +1,18 @@
 import "@/styles.css";
-import { createMemo, onMount, Show, type JSX } from "solid-js";
+import { createMemo, onMount, type JSX } from "solid-js";
 import { A, useLocation } from "@solidjs/router";
 import { listViewRoutes, RouteTransition } from "@/router";
 import { hydrateNotes, purgeExpiredTrash } from "@/stores/notes";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { useNoteDraft } from "@/composables/useNoteDraft";
+import Icon from "@/components/Icon";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
-import Toast from "@/components/Toast";
 import SyncControls from "@/components/SyncControls";
-import Icon from "@/components/Icon";
 import ScrollButtons from "@/components/ScrollButtons";
+import NotificationList from "@/components/NotificationList";
 import ConfirmDialog from "@/components/ConfirmDialog";
+
 
 interface AppProps {
 	children?: JSX.Element;
@@ -19,7 +20,7 @@ interface AppProps {
 
 export default function App(props: AppProps) {
 	const location = useLocation();
-	const { dismissMessage, lastSyncMessage, requestSync } = useNotesSync();
+	const { requestSync } = useNotesSync();
 	const { purgeStaleDrafts } = useNoteDraft();
 	const searchDisabled = createMemo(() => !listViewRoutes.includes(location.pathname));
 
@@ -59,9 +60,7 @@ export default function App(props: AppProps) {
 				</div>
 			</footer>
 			<ScrollButtons/>
-			<Show when={lastSyncMessage()}>
-				<Toast message={lastSyncMessage()!.text} type={lastSyncMessage()!.type} timeStamp={lastSyncMessage()!.timeStamp} onDismiss={dismissMessage}/>
-			</Show>
+			<NotificationList/>
 			<ConfirmDialog/>
 			<RouteTransition/>
 		</>

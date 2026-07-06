@@ -2,6 +2,7 @@ import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from 
 import { A, useBeforeLeave } from "@solidjs/router";
 import * as notesStore from "@/stores/notes";
 import * as appStore from "@/stores/app";
+import { addNotification } from "@/stores/notifications";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
@@ -14,7 +15,6 @@ import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";
 import NoteCard from "@/components/NoteCard";
 import SelectionActionBar from "./SelectionActionBar";
-import Toast from "./Toast";
 import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 
@@ -30,7 +30,7 @@ type NoteSection = {
 
 export default function DisplayNoteList(props: Props) {
 	const view = createMemo<View>(() => props.view ?? "active");
-	const { importFiles, importErrors, dismissErrors, exportNotes, exportAllNotes } = useFileIO();
+	const { importErrors, importFiles, exportNotes, exportAllNotes } = useFileIO();
 	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const { confirm } = useConfirmDialog();
@@ -132,16 +132,16 @@ export default function DisplayNoteList(props: Props) {
 		setSortBy((e.target as HTMLSelectElement).value as SortField);
 	}
 
-	function formatImportErrors(): string {
-		const errs = importErrors();
-		return ["Import failed for the following file", errs.length === 1 ? emptyString : "s", ":<hr/>", `<ul>${errs.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`].join(emptyString);
-	}
-
 	function onTileClick(e: MouseEvent, noteId: UUID) {
 		if (isSelectionMode()) {
 			e.preventDefault();
 			toggleSelection(noteId);
 		}
+	}
+
+	function formatImportErrors(): string {
+		const errs = importErrors();
+		return ["Import failed for the following file", errs.length === 1 ? emptyString : "s", ":<hr/>", `<ul>${errs.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`].join(emptyString);
 	}
 
 	function toggleSelectAll() {
@@ -266,6 +266,14 @@ export default function DisplayNoteList(props: Props) {
 		appStore.setLastView(view());
 	});
 
+	createEffect(
+		on(importErrors, errors => {
+			if (errors?.length) {
+				addNotification("danger", formatImportErrors());
+			}
+		})
+	);
+
 	createEffect(on(view, exitSelectionMode, { defer: true }));
 
 	return (
@@ -370,9 +378,6 @@ export default function DisplayNoteList(props: Props) {
 					</div>
 				</Match>
 			</Switch>
-			<Show when={importErrors().length > 0}>
-				<Toast message={formatImportErrors()} type="error" timeStamp={Date.now()} onDismiss={dismissErrors}/>
-			</Show>
 		</>
 	);
 }

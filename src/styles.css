@@ -227,7 +227,10 @@ textarea.form-control {
 	overflow: hidden;
 
 	&>.alert {
-		max-width: 50vw;
+		max-width: 75vw;
+		word-break: break-word;
+		transform: scale(0.9);
+		transform-origin: right bottom;
 	}
 }
 

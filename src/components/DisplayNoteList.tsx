@@ -268,7 +268,7 @@ export default function DisplayNoteList(props: Props) {
 
 	createEffect(
 		on(importErrors, errors => {
-			if (errors?.length) {
+			if (errors.length) {
 				addNotification("danger", formatImportErrors());
 			}
 		})

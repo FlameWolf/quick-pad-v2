@@ -32,6 +32,7 @@ function sanitizeFilename(name: string): string {
 export function useFileIO() {
 	function importFiles(): Promise<number> {
 		return new Promise(resolve => {
+			const errors: ImportError[] = [];
 			const input = document.createElement("input");
 			input.type = "file";
 			input.multiple = true;
@@ -44,7 +45,10 @@ export function useFileIO() {
 				let count = 0;
 				for (const file of files) {
 					if (!(await isTextFile(file))) {
-						setImportErrors([...importErrors(), { fileName: file.name, message: "Unsupported file type" }]);
+						errors.push({
+							fileName: file.name,
+							message: "Unsupported file type"
+						});
 						continue;
 					}
 					try {
@@ -53,17 +57,17 @@ export function useFileIO() {
 						await addNote(create(title, content));
 						count++;
 					} catch {
-						setImportErrors([...importErrors(), { fileName: file.name, message: "Failed to read file" }]);
+						errors.push({
+							fileName: file.name,
+							message: "Failed to read file"
+						});
 					}
 				}
+				setImportErrors(errors);
 				resolve(count);
 			});
 			input.click();
 		});
-	}
-
-	function dismissErrors() {
-		setImportErrors([]);
 	}
 
 	async function exportNote(note: Note) {
@@ -100,7 +104,6 @@ export function useFileIO() {
 	return {
 		importFiles,
 		importErrors,
-		dismissErrors,
 		exportNote,
 		exportNotes,
 		exportAllNotes

@@ -16,6 +16,7 @@ enum NoteUploadResult {
 	Conflict = "conflict"
 }
 
+let hydrated = false;
 const [isSyncing, setIsSyncing] = createSignal(false);
 const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
 const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
@@ -29,6 +30,10 @@ const [syncError, setSyncError] = createSignal<string | null>(null);
 const pendingPurges = new Set<UUID>();
 
 export async function hydrateSyncMetadata(): Promise<void> {
+	if (hydrated) {
+		return;
+	}
+	hydrated = true;
 	const storedLocal = await getKV(LAST_SYNCED_TO_LOCAL_KEY);
 	const storedCloud = await getKV(LAST_SYNCED_TO_CLOUD_KEY);
 	const storedAutoSync = await getKV(AUTO_SYNC_KEY);

@@ -222,55 +222,13 @@ textarea.form-control {
 	font-weight: 600;
 }
 
-.toast-container {
-	max-width: 80vw;
-	position: fixed;
-	bottom: 1.5rem;
-	right: 1.5rem;
-	pointer-events: none;
-	transform: translateX(100%);
-	opacity: 0;
-	transition:
-		transform 0.3s ease,
-		opacity 0.3s ease;
-}
+.notification-list {
+	max-height: 50vh;
+	overflow: hidden;
 
-.toast-container {
-	transform: translateX(0);
-	opacity: 1;
-	pointer-events: all;
-}
-
-.toast-notification {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.75rem 1rem;
-	font-size: 0.875rem;
-	filter: drop-shadow(0 0 0.75rem var(--bs-body-color));
-}
-
-.toast-notification.success {
-	background-color: var(--bs-success-bg-subtle, #d1e7dd);
-	color: var(--bs-success-text-emphasis, #0a3622);
-	border: 1pt solid var(--bs-success-border-subtle, #a3cfbb);
-}
-
-.toast-notification.error {
-	background-color: var(--bs-danger-bg-subtle, #f8d7da);
-	color: var(--bs-danger-text-emphasis, #58151c);
-	border: 1pt solid var(--bs-danger-border-subtle, #f1aeb5);
-}
-
-.toast-icon {
-	font-size: 1rem;
-	flex-shrink: 0;
-}
-
-.toast-text {
-	flex: 1;
-	max-height: 25vh;
-	overflow-y: auto;
+	&>.alert {
+		max-width: 50vw;
+	}
 }
 
 .nav-overlay {

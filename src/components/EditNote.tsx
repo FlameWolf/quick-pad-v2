@@ -3,17 +3,17 @@ import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs
 import { listViewRoutes } from "@/router";
 import * as notesStore from "@/stores/notes";
 import * as appStore from "@/stores/app";
-import { useUndoRedo } from "@/composables/useUndoRedo";
+import { addNotification } from "@/stores/notifications";
+import { useFileIO } from "@/composables/useFileIO";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
 import { useNoteDraft } from "@/composables/useNoteDraft";
-import { useFileIO } from "@/composables/useFileIO";
-import { create } from "@/models/Note";
+import { useUndoRedo } from "@/composables/useUndoRedo";
 import { emptyString } from "@/constants/common";
+import { create } from "@/models/Note";
 import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
 import { debounce } from "@/utils/timing";
 import Icon from "@/components/Icon";
-import Toast, { type ToastDetails } from "@/components/Toast";
 import type { UUID } from "crypto";
 
 interface Props {
@@ -32,12 +32,6 @@ export default function EditNote(props: Props) {
 	const { saveDraft, loadDraft, clearDraft } = useNoteDraft();
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
-	const [isCopying, setIsCopying] = createSignal(false);
-	const [copyResult, setCopyResult] = createSignal<ToastDetails>({
-		type: "success",
-		timeStamp: 0,
-		message: emptyString
-	});
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());
 	const [editTitle, setEditTitle] = createSignal(existingNote()?.title ?? emptyString);
 	const [editContent, setEditContent] = createSignal(emptyString);
@@ -118,22 +112,13 @@ export default function EditNote(props: Props) {
 	}
 
 	function copyToClipboard() {
-		setIsCopying(true);
 		navigator.clipboard
 			.writeText(loadedContent())
 			.then(() => {
-				setCopyResult({
-					type: "success",
-					timeStamp: Date.now(),
-					message: "Copied to clipboard"
-				});
+				addNotification("success", "Copied to clipboard");
 			})
 			.catch(err => {
-				setCopyResult({
-					type: "error",
-					timeStamp: Date.now(),
-					message: `Failed to copy: ${(err as Error).message}`
-				});
+				addNotification("danger", `Failed to copy: ${(err as Error).message}`);
 			});
 	}
 
@@ -575,9 +560,6 @@ export default function EditNote(props: Props) {
 						<span class="badge text-bg-secondary">{characterCount()} characters</span>
 					</Show>
 				</div>
-			</Show>
-			<Show when={isCopying()}>
-				<Toast {...copyResult()} onDismiss={() => setIsCopying(false)}/>
 			</Show>
 		</>
 	);

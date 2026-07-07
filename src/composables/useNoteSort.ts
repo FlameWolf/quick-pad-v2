@@ -6,10 +6,15 @@ import type { Note } from "@/models/Note";
 export type SortField = (typeof SORT_FIELDS)[number];
 export type SortDirection = (typeof SORT_DIRECTIONS)[number];
 
+let hydrated = false;
 const [sortBy, setSortBy] = createSignal<SortField>("modifiedAt");
 const [sortDirection, setSortDirection] = createSignal<SortDirection>("desc");
 
 export async function hydrateSortPrefs(): Promise<void> {
+	if (hydrated) {
+		return;
+	}
+	hydrated = true;
 	const storedBy = await getKV(SORT_BY_KEY);
 	if (SORT_FIELDS.includes(storedBy as SortField)) {
 		setSortBy(storedBy as SortField);

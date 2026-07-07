@@ -8,6 +8,7 @@ type UserInfo = {
 	name: string;
 };
 
+let hydrated = false;
 let cachedToken: string | null = null;
 let cachedExpiry: number = 0;
 let cachedUser: UserInfo | null = null;
@@ -19,6 +20,10 @@ const [isReady, setIsReady] = createSignal(false);
 const [isSignedIn, setIsSignedIn] = createSignal(false);
 
 export async function hydrateAuthState(): Promise<void> {
+	if (hydrated) {
+		return;
+	}
+	hydrated = true;
 	cachedToken = (await getKV(TOKEN_KEY)) ?? null;
 	cachedExpiry = (await getKV(EXPIRY_KEY)) ?? 0;
 	const stored = await getKV(USER_KEY);

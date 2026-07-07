@@ -7,14 +7,12 @@ import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
-import { emptyString } from "@/constants/common";
 import { bulkActions } from "@/constants/actions";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";
 import NoteCard from "@/components/NoteCard";
 import SelectionActionBar from "./SelectionActionBar";
-import Toast from "./Toast";
 import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 
@@ -30,7 +28,7 @@ type NoteSection = {
 
 export default function DisplayNoteList(props: Props) {
 	const view = createMemo<View>(() => props.view ?? "active");
-	const { importFiles, importErrors, dismissErrors, exportNotes, exportAllNotes } = useFileIO();
+	const { importFiles, exportNotes, exportAllNotes } = useFileIO();
 	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const { confirm } = useConfirmDialog();
@@ -130,11 +128,6 @@ export default function DisplayNoteList(props: Props) {
 
 	function onSortFieldChange(e: Event) {
 		setSortBy((e.target as HTMLSelectElement).value as SortField);
-	}
-
-	function formatImportErrors(): string {
-		const errs = importErrors();
-		return ["Import failed for the following file", errs.length === 1 ? emptyString : "s", ":<hr/>", `<ul>${errs.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`].join(emptyString);
 	}
 
 	function onTileClick(e: MouseEvent, noteId: UUID) {
@@ -370,9 +363,6 @@ export default function DisplayNoteList(props: Props) {
 					</div>
 				</Match>
 			</Switch>
-			<Show when={importErrors().length > 0}>
-				<Toast message={formatImportErrors()} type="error" timeStamp={Date.now()} onDismiss={dismissErrors}/>
-			</Show>
 		</>
 	);
 }

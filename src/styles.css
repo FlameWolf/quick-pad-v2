@@ -225,12 +225,12 @@ textarea.form-control {
 .notification-list {
 	max-height: 50vh;
 	overflow: hidden;
+	transform: scale(0.9);
+	transform-origin: right bottom;
 
 	&>.alert {
 		max-width: 75vw;
 		word-break: break-word;
-		transform: scale(0.9);
-		transform-origin: right bottom;
 	}
 }
 

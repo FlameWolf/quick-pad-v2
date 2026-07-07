@@ -5,7 +5,7 @@ export default function NotificationList() {
 	const sortedNotifications = createMemo(() => notifications().toSorted((a, b) => b.timeStamp - a.timeStamp));
 
 	return (
-		<div class="d-flex flex-column notification-list position-fixed end-0 bottom-0 me-2 mb-2">
+		<div class="d-flex flex-column gap-2 notification-list position-fixed end-0 bottom-0 me-2 mb-2">
 			<For each={sortedNotifications()}>
 				{notification => (
 					<div class="alert m-0" classList={{ [`alert-${notification.type}`]: true }} role="alert">

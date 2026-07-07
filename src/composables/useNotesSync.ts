@@ -2,6 +2,7 @@ import { createEffect, createMemo, createSignal, on } from "solid-js";
 import { useGoogleDrive } from "./useGoogleDrive";
 import { useGoogleAuth } from "./useGoogleAuth";
 import * as notesStore from "@/stores/notes";
+import { addNotification } from "@/stores/notifications";
 import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
 import { deleteKV, getKV, setKV } from "@/storage/db";
 import { getTime } from "@/utils/dates";
@@ -21,11 +22,6 @@ const [isSyncing, setIsSyncing] = createSignal(false);
 const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
 const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
 const [autoSyncEnabled, setAutoSyncEnabled] = createSignal<boolean>(true);
-const [lastSyncMessage, setLastSyncMessage] = createSignal<{
-	text: string;
-	type: "success" | "error";
-	timeStamp: number;
-} | null>(null);
 const [syncError, setSyncError] = createSignal<string | null>(null);
 const pendingPurges = new Set<UUID>();
 
@@ -183,11 +179,7 @@ export function useNotesSync() {
 				await notesStore.replaceMultiple(changes);
 				downloaded += changeCount;
 			}
-			setLastSyncMessage({
-				text: `Fetching remote notes (${remoteCount} loaded)`,
-				type: "success",
-				timeStamp: Date.now()
-			});
+			addNotification("success", `Fetching remote notes (${remoteCount} loaded)`);
 		} while (pageToken);
 		await purgeRemoteFiles(await notesStore.purgeExpiredTrash());
 		setLastSyncedToLocalAt(syncStartedAt);
@@ -216,14 +208,10 @@ export function useNotesSync() {
 			const pushResult = await runPush(purged, force);
 			const empty = pullResult.remoteCount === 0 && notesStore.notes().length === 0;
 			const changes = pushResult.conflicts + pullResult.downloaded;
-			setLastSyncMessage({
-				text: empty ? "Nothing to sync" : `Synced${changes > 0 ? ` (pulled ${changes} change${changes > 1 ? "s" : emptyString} from cloud)` : emptyString}`,
-				type: "success",
-				timeStamp: Date.now()
-			});
+			addNotification("success", empty ? "Nothing to sync" : `Synced${changes > 0 ? ` (pulled ${changes} change${changes > 1 ? "s" : emptyString} from cloud)` : emptyString}`);
 		} catch (err: any) {
 			setSyncError(err?.message ?? "Sync failed");
-			setLastSyncMessage({ text: `Sync failed: ${syncError()}`, type: "error", timeStamp: Date.now() });
+			addNotification("danger", `Sync failed: ${syncError()}`);
 		} finally {
 			setIsSyncing(false);
 		}
@@ -245,18 +233,10 @@ export function useNotesSync() {
 		if (isSignedIn() && autoSyncEnabled()) {
 			saveToCloud()
 				.then(() => {
-					setLastSyncMessage({
-						text: "Synced to cloud",
-						type: "success",
-						timeStamp: Date.now()
-					});
+					addNotification("success", "Synced to cloud");
 				})
 				.catch(() => {
-					setLastSyncMessage({
-						text: "Sync failed",
-						type: "error",
-						timeStamp: Date.now()
-					});
+					addNotification("danger", "Sync failed");
 				});
 		}
 	}, DEBOUNCE_MS);
@@ -282,10 +262,6 @@ export function useNotesSync() {
 		}
 	}
 
-	function dismissMessage() {
-		setLastSyncMessage(null);
-	}
-
 	return {
 		isSyncing,
 		lastSyncedAt: createMemo(() => {
@@ -294,10 +270,8 @@ export function useNotesSync() {
 		}),
 		syncError,
 		autoSyncEnabled,
-		lastSyncMessage,
 		doPullAndPush,
 		requestSync,
-		setAutoSync,
-		dismissMessage
+		setAutoSync
 	};
 }

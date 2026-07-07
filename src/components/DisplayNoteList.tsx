@@ -2,13 +2,11 @@ import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from 
 import { A, useBeforeLeave } from "@solidjs/router";
 import * as notesStore from "@/stores/notes";
 import * as appStore from "@/stores/app";
-import { addNotification } from "@/stores/notifications";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
 import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import { useNotesSync } from "@/composables/useNotesSync";
-import { emptyString } from "@/constants/common";
 import { bulkActions } from "@/constants/actions";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
@@ -30,7 +28,7 @@ type NoteSection = {
 
 export default function DisplayNoteList(props: Props) {
 	const view = createMemo<View>(() => props.view ?? "active");
-	const { importErrors, importFiles, exportNotes, exportAllNotes } = useFileIO();
+	const { importFiles, exportNotes, exportAllNotes } = useFileIO();
 	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const { confirm } = useConfirmDialog();
@@ -137,11 +135,6 @@ export default function DisplayNoteList(props: Props) {
 			e.preventDefault();
 			toggleSelection(noteId);
 		}
-	}
-
-	function formatImportErrors(): string {
-		const errs = importErrors();
-		return ["Import failed for the following file", errs.length === 1 ? emptyString : "s", ":<hr/>", `<ul>${errs.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`].join(emptyString);
 	}
 
 	function toggleSelectAll() {
@@ -265,14 +258,6 @@ export default function DisplayNoteList(props: Props) {
 	useBeforeLeave(() => {
 		appStore.setLastView(view());
 	});
-
-	createEffect(
-		on(importErrors, errors => {
-			if (errors.length) {
-				addNotification("danger", formatImportErrors());
-			}
-		})
-	);
 
 	createEffect(on(view, exitSelectionMode, { defer: true }));
 

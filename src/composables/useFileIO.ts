@@ -1,5 +1,5 @@
-import { createSignal } from "solid-js";
 import { activeNotes, addNote, getNoteContent } from "@/stores/notes";
+import { addNotification } from "@/stores/notifications";
 import { create, type Note } from "@/models/Note";
 import { emptyString } from "@/constants/common";
 import { isTextFile } from "@/utils/file-detection";
@@ -10,7 +10,10 @@ interface ImportError {
 }
 
 const JSZip = (await import("jszip")).default;
-const [importErrors, setImportErrors] = createSignal<ImportError[]>([]);
+
+function formatImportErrors(errors: ImportError[]): string {
+	return ["Import failed for the following file", errors.length === 1 ? emptyString : "s", ":<hr/>", `<ul>${errors.map(err => `<li>${err.fileName}: ${err.message}</li>`).join(emptyString)}</ul>`].join(emptyString);
+}
 
 function triggerDownload(blob: Blob, filename: string) {
 	const url = URL.createObjectURL(blob);
@@ -63,7 +66,9 @@ export function useFileIO() {
 						});
 					}
 				}
-				setImportErrors(errors);
+				if (errors.length) {
+					addNotification("danger", formatImportErrors(errors));
+				}
 				resolve(count);
 			});
 			input.click();
@@ -103,7 +108,6 @@ export function useFileIO() {
 
 	return {
 		importFiles,
-		importErrors,
 		exportNote,
 		exportNotes,
 		exportAllNotes

@@ -223,16 +223,14 @@ textarea.form-control {
 }
 
 .notification-list {
+	max-width: 75vw;
 	max-height: 50vh;
 	overflow: hidden;
-	transform: scale(0.9);
 	transform-origin: right bottom;
+	transform: scale(0.9);
 
 	&>.alert {
-		display: inline-flex;
 		word-break: break-word;
-		width: fit-content;
-		max-width: 75vw;
 	}
 }
 

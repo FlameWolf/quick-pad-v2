@@ -229,8 +229,10 @@ textarea.form-control {
 	transform-origin: right bottom;
 
 	&>.alert {
-		max-width: 75vw;
+		display: inline-flex;
 		word-break: break-word;
+		width: fit-content;
+		max-width: 75vw;
 	}
 }
 

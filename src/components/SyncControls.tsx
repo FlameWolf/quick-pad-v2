@@ -1,28 +1,21 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
-import { useConfirmDialog } from "@/composables/useConfirmDialog";
+import { isLoading, purgeExpiredTrash } from "@/stores/notes";
 import { hydrateAuthState, useGoogleAuth } from "@/composables/useGoogleAuth";
 import { hydrateSyncMetadata, useNotesSync } from "@/composables/useNotesSync";
-import { isLoading, purgeExpiredTrash } from "@/stores/notes";
+import { useDropdown } from "@/composables/useDropdown";
+import { useConfirmDialog } from "@/composables/useConfirmDialog";
 import Icon from "@/components/Icon";
 
 export default function SyncControls() {
 	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
 	const { isSignedIn, isReady, isConfigured, user, tryRestoreSession, signIn, signOut } = useGoogleAuth();
 	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, doPullAndPush, requestSync, setAutoSync } = useNotesSync();
+	const [syncMenuToggle, setSyncMenuToggle] = createSignal<HTMLButtonElement | undefined>();
+	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuToggle);
 	const { confirm } = useConfirmDialog();
-	const [showSyncMenu, setShowSyncMenu] = createSignal(false);
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
 
-	function toggleSyncMenu() {
-		setShowSyncMenu(prev => !prev);
-	}
-
-	function closeSyncMenu() {
-		setShowSyncMenu(false);
-	}
-
 	async function handleSync(force = false) {
-		closeSyncMenu();
 		if (!force) {
 			await doPullAndPush();
 			return;
@@ -40,7 +33,6 @@ export default function SyncControls() {
 	}
 
 	async function handleSignOut() {
-		closeSyncMenu();
 		await signOut();
 	}
 
@@ -70,8 +62,8 @@ export default function SyncControls() {
 	});
 
 	createEffect(
-		on([isSignedIn, autoSyncEnabled], ([signedIn, autoEnabled]) => {
-			if (signedIn && autoEnabled) {
+		on([isSignedIn, autoSyncEnabled], ([signedIn, autoSync]) => {
+			if (signedIn && autoSync) {
 				setTimeout(async () => {
 					await doPullAndPush();
 				});
@@ -140,7 +132,7 @@ export default function SyncControls() {
 						</button>
 					}>
 					<div class="position-relative">
-						<button class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+						<button ref={setSyncMenuToggle} class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
 							<Show
 								when={!isSyncing()}
 								fallback={
@@ -198,9 +190,6 @@ export default function SyncControls() {
 							</div>
 						</Show>
 					</div>
-					<Show when={showSyncMenu()}>
-						<div class="sync-backdrop" onClick={closeSyncMenu}></div>
-					</Show>
 				</Show>
 			</Show>
 		</Show>

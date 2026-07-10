@@ -1,9 +1,8 @@
 import "@/styles.css";
-import { createMemo, onMount, type JSX } from "solid-js";
-import { A, useLocation } from "@solidjs/router";
-import { listViewRoutes, RouteTransition } from "@/router";
-import { hydrateNotes, purgeExpiredTrash } from "@/stores/notes";
-import { useNotesSync } from "@/composables/useNotesSync";
+import { onMount, type JSX } from "solid-js";
+import { A } from "@solidjs/router";
+import { RouteTransition } from "@/router";
+import { hydrateNotes } from "@/stores/notes";
 import { useNoteDraft } from "@/composables/useNoteDraft";
 import Icon from "@/components/Icon";
 import SearchBar from "@/components/SearchBar";
@@ -13,23 +12,15 @@ import ScrollButtons from "@/components/ScrollButtons";
 import NotificationList from "@/components/NotificationList";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
-
 interface AppProps {
 	children?: JSX.Element;
 }
 
 export default function App(props: AppProps) {
-	const location = useLocation();
-	const { requestSync } = useNotesSync();
 	const { purgeStaleDrafts } = useNoteDraft();
-	const searchDisabled = createMemo(() => !listViewRoutes.includes(location.pathname));
 
 	onMount(async () => {
 		await hydrateNotes();
-		const purgedIds = await purgeExpiredTrash();
-		if (purgedIds.length > 0) {
-			requestSync(purgedIds);
-		}
 		purgeStaleDrafts();
 	});
 
@@ -40,7 +31,7 @@ export default function App(props: AppProps) {
 					<A href="/notes" class="navbar-brand">
 						<img class="logo" src="/logo.svg" alt="QuickPad Logo"/>
 					</A>
-					<SearchBar disabled={searchDisabled()}/>
+					<SearchBar/>
 					<div class="d-flex align-items-center gap-2">
 						<SyncControls/>
 						<ThemeToggle/>

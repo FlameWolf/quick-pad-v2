@@ -8,10 +8,11 @@ export function useDropdown(dropdownRoot: Accessor<HTMLElement | undefined>, ini
 	}
 
 	function clickedOutside(event: MouseEvent) {
-		if (!dropdownRoot()) {
+		const rootElement = dropdownRoot();
+		if (!rootElement) {
 			return;
 		}
-		if (!dropdownRoot()!.contains(event.target as Node)) {
+		if (!rootElement.contains(event.target as Node)) {
 			setShow(false);
 		}
 	}

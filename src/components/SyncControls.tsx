@@ -168,7 +168,7 @@ export default function SyncControls() {
 								<div class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</div>
 								<div class="dropdown-divider"></div>
 								<label class="dropdown-item sync-dropdown-item d-flex align-items-center gap-2 mb-0">
-									<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input m-0" onChange={handleToggleAutoSync}/>
+									<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input m-0" on:click={handleToggleAutoSync}/>
 									<span>Auto-sync</span>
 								</label>
 								<div class="dropdown-divider"></div>

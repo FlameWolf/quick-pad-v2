@@ -1,6 +1,8 @@
 import { createSignal, onCleanup, onMount, type Accessor } from "solid-js";
 
-export function useDropdown(dropdownRoot: Accessor<HTMLElement | undefined>, initialState: boolean = false) {
+const listenerOptions: AddEventListenerOptions = { capture: true };
+
+export function useDropdown(trigger: Accessor<HTMLElement | undefined>, dropdown: Accessor<HTMLElement | undefined>, initialState: boolean = false) {
 	const [show, setShow] = createSignal(initialState);
 
 	function toggle() {
@@ -8,21 +10,28 @@ export function useDropdown(dropdownRoot: Accessor<HTMLElement | undefined>, ini
 	}
 
 	function clickedOutside(event: MouseEvent) {
-		const rootElement = dropdownRoot();
-		if (!rootElement) {
+		const triggerElement = trigger();
+		const dropdownElement = dropdown();
+		if (!triggerElement || !dropdownElement || !show()) {
 			return;
 		}
-		if (!rootElement.contains(event.target as Node)) {
-			setShow(false);
+		const target = event.target as Node;
+		if (triggerElement === target || triggerElement.contains(target)) {
+			return;
 		}
+		if (!dropdownElement.contains(target)) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
+		setShow(false);
 	}
 
 	onMount(() => {
-		document.addEventListener("click", clickedOutside);
+		document.addEventListener("click", clickedOutside, listenerOptions);
 	});
 
 	onCleanup(() => {
-		document.removeEventListener("click", clickedOutside);
+		document.removeEventListener("click", clickedOutside, listenerOptions);
 	});
 
 	return {

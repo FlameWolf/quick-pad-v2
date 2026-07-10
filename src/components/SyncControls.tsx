@@ -10,8 +10,9 @@ export default function SyncControls() {
 	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
 	const { isSignedIn, isReady, isConfigured, user, tryRestoreSession, signIn, signOut } = useGoogleAuth();
 	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, doPullAndPush, requestSync, setAutoSync } = useNotesSync();
-	const [syncMenuToggle, setSyncMenuToggle] = createSignal<HTMLButtonElement | undefined>();
-	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuToggle);
+	const [syncMenuTrigger, setSyncMenuTrigger] = createSignal<HTMLButtonElement | undefined>();
+	const [syncMenuDropdown, setSyncMenuDropdown] = createSignal<HTMLDivElement | undefined>();
+	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuTrigger, syncMenuDropdown);
 	const { confirm } = useConfirmDialog();
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
 
@@ -132,7 +133,7 @@ export default function SyncControls() {
 						</button>
 					}>
 					<div class="position-relative">
-						<button ref={setSyncMenuToggle} class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+						<button ref={setSyncMenuTrigger} class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
 							<Show
 								when={!isSyncing()}
 								fallback={
@@ -163,7 +164,7 @@ export default function SyncControls() {
 							<span class="d-none d-md-inline ms-2">{user()?.name ?? "Sync"}</span>
 						</button>
 						<Show when={showSyncMenu()}>
-							<div class="dropdown-menu show sync-dropdown">
+							<div ref={setSyncMenuDropdown} class="dropdown-menu show sync-dropdown">
 								<div class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</div>
 								<div class="dropdown-divider"></div>
 								<label class="dropdown-item sync-dropdown-item d-flex align-items-center gap-2 mb-0">

@@ -11,8 +11,7 @@ export default function SyncControls() {
 	const { isSignedIn, isReady, isConfigured, user, tryRestoreSession, signIn, signOut } = useGoogleAuth();
 	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, doPullAndPush, requestSync, setAutoSync } = useNotesSync();
 	const [syncMenuTrigger, setSyncMenuTrigger] = createSignal<HTMLButtonElement | undefined>();
-	const [syncMenuDropdown, setSyncMenuDropdown] = createSignal<HTMLDivElement | undefined>();
-	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuTrigger, syncMenuDropdown);
+	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuTrigger);
 	const { confirm } = useConfirmDialog();
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
 
@@ -164,7 +163,7 @@ export default function SyncControls() {
 							<span class="d-none d-md-inline ms-2">{user()?.name ?? "Sync"}</span>
 						</button>
 						<Show when={showSyncMenu()}>
-							<div ref={setSyncMenuDropdown} class="dropdown-menu show sync-dropdown">
+							<div class="dropdown-menu show sync-dropdown">
 								<div class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</div>
 								<div class="dropdown-divider"></div>
 								<label class="dropdown-item sync-dropdown-item d-flex align-items-center gap-2 mb-0">

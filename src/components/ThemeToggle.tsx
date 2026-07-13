@@ -7,7 +7,7 @@ export default function ThemeToggle() {
 	const isDark = createMemo(() => activeTheme() === Theme.Dark);
 
 	return (
-		<button class="btn btn-secondary btn-sm" onClick={toggleTheme}>
+		<button class="btn btn-secondary btn-sm" onClick={toggleTheme} aria-label={`Switch to ${isDark() ? Theme.Light : Theme.Dark} theme`}>
 			<Icon type={isDark() ? "moonStarsFill" : "sunFill"}/>
 		</button>
 	);

@@ -531,9 +531,12 @@ export default function EditNote(props: Props) {
 			</div>
 			<Show when={!isEditing() && existingNote()}>
 				<h2 class="note-title mb-3">{existingNote()!.title}</h2>
-				<Show when={existingNote()!.modifiedAt || existingNote()!.createdAt}>
-					<div class="text-muted small">{existingNote()!.modifiedAt ? `Modified ${formatDate(existingNote()!.modifiedAt)}` : `Created ${formatDate(existingNote()!.createdAt)}`}</div>
-				</Show>
+				<div class="d-flex flex-wrap gap-2">
+					<div class="badge text-bg-secondary">Created {formatDate(existingNote()!.createdAt)}</div>
+					<Show when={existingNote()!.modifiedAt}>
+						<div class="badge text-bg-secondary">Modified {formatDate(existingNote()!.modifiedAt)}</div>
+					</Show>
+				</div>
 				<hr/>
 				<Show when={!isContentLoaded()} fallback={<div class="note-content">{loadedContent()}</div>}>
 					<div class="d-flex justify-content-center py-3">
@@ -548,6 +551,7 @@ export default function EditNote(props: Props) {
 					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
 				</Show>
 			</div>
+			<hr classList={{ [`mt-1`]: isEditing() }}/>
 			<Show when={hasContent()}>
 				<div class="d-flex flex-wrap gap-2 mt-3">
 					<Show when={sentenceCount()}>

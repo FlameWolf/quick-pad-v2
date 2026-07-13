@@ -1,29 +1,35 @@
 import { createSignal } from "solid-js";
 
-const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-const [isDark, setIsDark] = createSignal(mediaQuery.matches);
-
-function applyTheme(dark: boolean) {
-	document.documentElement.setAttribute("data-bs-theme", dark ? "dark" : "light");
+export enum Theme {
+	Dark = "dark",
+	Light = "light"
 }
 
-let isListening = false;
+const [activeTheme, setActiveTheme] = createSignal(
+	(() => {
+		const savedTheme = localStorage.getItem("theme");
+		if (savedTheme === Theme.Dark || savedTheme === Theme.Light) {
+			return savedTheme;
+		}
+		return window.matchMedia("(prefers-color-scheme: dark)").matches ? Theme.Dark : Theme.Light;
+	})()
+);
 
-function handleChange(e: MediaQueryListEvent) {
-	setIsDark(e.matches);
-	applyTheme(e.matches);
+function applyTheme(newTheme: Theme): void {
+	setActiveTheme(newTheme);
+	document.documentElement.setAttribute("data-bs-theme", newTheme);
+	localStorage.setItem("theme", newTheme);
 }
+
+function toggleTheme(): void {
+	applyTheme(activeTheme() === Theme.Dark ? Theme.Light : Theme.Dark);
+}
+
+applyTheme(activeTheme());
 
 export function useTheme() {
-	if (!isListening) {
-		applyTheme(isDark());
-		mediaQuery.addEventListener("change", handleChange);
-		isListening = true;
-	}
-
 	return {
-		isDark,
-		setIsDark,
-		applyTheme
+		activeTheme,
+		toggleTheme
 	};
 }

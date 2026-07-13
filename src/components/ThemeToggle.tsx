@@ -1,13 +1,10 @@
-import { useTheme } from "@/composables/useTheme";
+import { createMemo } from "solid-js";
+import { Theme, useTheme } from "@/composables/useTheme";
 import Icon from "@/components/Icon";
 
 export default function ThemeToggle() {
-	const { isDark, setIsDark, applyTheme } = useTheme();
-
-	function toggleTheme() {
-		setIsDark(!isDark());
-		applyTheme(isDark());
-	}
+	const { activeTheme, toggleTheme } = useTheme();
+	const isDark = createMemo(() => activeTheme() === Theme.Dark);
 
 	return (
 		<button class="btn btn-secondary btn-sm" onClick={toggleTheme}>

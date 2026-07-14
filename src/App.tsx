@@ -10,7 +10,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import SyncControls from "@/components/SyncControls";
 import ScrollButtons from "@/components/ScrollButtons";
 import NotificationList from "@/components/NotificationList";
-import ConfirmDialog from "@/components/ConfirmDialog";
+import ConfirmDialogue from "@/components/ConfirmDialogue";
 
 interface AppProps {
 	children?: JSX.Element;
@@ -52,7 +52,7 @@ export default function App(props: AppProps) {
 			</footer>
 			<ScrollButtons/>
 			<NotificationList/>
-			<ConfirmDialog/>
+			<ConfirmDialogue/>
 			<RouteTransition/>
 		</>
 	);

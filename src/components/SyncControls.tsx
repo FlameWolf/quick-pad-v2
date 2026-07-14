@@ -3,7 +3,7 @@ import { isLoading, purgeExpiredTrash } from "@/stores/notes";
 import { hydrateAuthState, useGoogleAuth } from "@/composables/useGoogleAuth";
 import { hydrateSyncMetadata, useNotesSync } from "@/composables/useNotesSync";
 import { useDropdown } from "@/composables/useDropdown";
-import { useConfirmDialog } from "@/composables/useConfirmDialog";
+import { useConfirmDialogue } from "@/composables/useConfirmDialogue";
 import Icon from "@/components/Icon";
 
 export default function SyncControls() {
@@ -12,7 +12,7 @@ export default function SyncControls() {
 	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, doPullAndPush, requestSync, setAutoSync } = useNotesSync();
 	const [syncMenuTrigger, setSyncMenuTrigger] = createSignal<HTMLButtonElement | undefined>();
 	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuTrigger);
-	const { confirm } = useConfirmDialog();
+	const { confirm } = useConfirmDialogue();
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
 
 	async function handleSync(force = false) {

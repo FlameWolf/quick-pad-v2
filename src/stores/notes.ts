@@ -74,8 +74,8 @@ export function getNoteContent(id: UUID): Promise<string | undefined> {
 }
 
 export async function addNote(note: Note) {
-	await notesRepository.saveFull(note);
 	setStore("notes", items => items.concat(note));
+	await notesRepository.saveFull(note);
 }
 
 export function updateNote(id: UUID, title: string, content: string) {
@@ -83,170 +83,89 @@ export function updateNote(id: UUID, title: string, content: string) {
 		"notes",
 		note => note.id === id,
 		produce(async note => {
-			await notesRepository.saveFull(note);
 			update(note, title, content);
+			await notesRepository.saveFull(note);
+		})
+	);
+}
+
+async function applyToNote(id: UUID, mutator: (note: Note) => void) {
+	setStore(
+		"notes",
+		note => note.id === id,
+		produce(async note => {
+			mutator(note);
+			await notesRepository.saveMeta(note);
+		})
+	);
+}
+
+async function applyToMany(ids: ReadonlyArray<UUID>, mutator: (note: Note) => void) {
+	const idSet = new Set<UUID>(ids);
+	setStore(
+		"notes",
+		produce(async notes => {
+			const targetNotes = notes.filter(note => idSet.has(note.id));
+			targetNotes.forEach(mutator);
+			await notesRepository.saveManyMeta(targetNotes);
 		})
 	);
 }
 
 export function faveNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			fave(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, fave);
 }
 
 export function faveMultiple(ids: ReadonlyArray<UUID>) {
-	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		produce(async notes => {
-			const toArchive = notes.filter(note => idSet.has(note.id));
-			toArchive.forEach(fave);
-			await notesRepository.saveManyMeta(toArchive);
-		})
-	);
+	applyToMany(ids, fave);
 }
 
 export function unfaveNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			unfave(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, unfave);
 }
 
 export function unfaveMultiple(ids: ReadonlyArray<UUID>) {
-	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		produce(async notes => {
-			const toArchive = notes.filter(note => idSet.has(note.id));
-			toArchive.forEach(unfave);
-			await notesRepository.saveManyMeta(toArchive);
-		})
-	);
+	applyToMany(ids, unfave);
 }
 
 export function pinNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			pin(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, pin);
 }
 
 export function unpinNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			unpin(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, unpin);
 }
 
 export function archiveNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			archive(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, archive);
 }
 
 export function archiveMultiple(ids: ReadonlyArray<UUID>) {
-	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		produce(async notes => {
-			const toArchive = notes.filter(note => idSet.has(note.id));
-			toArchive.forEach(archive);
-			await notesRepository.saveManyMeta(toArchive);
-		})
-	);
+	applyToMany(ids, archive);
 }
 
 export function unarchiveNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			unarchive(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, unarchive);
 }
 
 export function unarchiveMultiple(ids: ReadonlyArray<UUID>) {
-	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		produce(async notes => {
-			const toUnarchive = notes.filter(note => idSet.has(note.id));
-			toUnarchive.forEach(unarchive);
-			await notesRepository.saveManyMeta(toUnarchive);
-		})
-	);
+	applyToMany(ids, unarchive);
 }
 
 export function trashNote(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			trash(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, trash);
 }
 
 export function trashMultiple(ids: ReadonlyArray<UUID>) {
-	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		produce(async notes => {
-			const toTrash = notes.filter(note => idSet.has(note.id));
-			toTrash.forEach(trash);
-			await notesRepository.saveManyMeta(toTrash);
-		})
-	);
+	applyToMany(ids, trash);
 }
 
 export function restoreFromTrash(id: UUID) {
-	setStore(
-		"notes",
-		note => note.id === id,
-		produce(async note => {
-			restore(note);
-			await notesRepository.saveMeta(note);
-		})
-	);
+	applyToNote(id, restore);
 }
 
 export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
-	const idSet = new Set<UUID>(ids);
-	setStore(
-		"notes",
-		produce(async notes => {
-			const toRestore = notes.filter(note => idSet.has(note.id));
-			toRestore.forEach(restore);
-			await notesRepository.saveManyMeta(toRestore);
-		})
-	);
+	applyToMany(ids, restore);
 }
 
 export async function permanentlyDelete(id: UUID) {
@@ -276,9 +195,7 @@ export async function purgeExpiredTrash() {
 		})
 		.map(expired => expired.id);
 	if (expiredIds.length > 0) {
-		const expiredSet = new Set<UUID>(expiredIds);
-		setStore("notes", ns => ns.filter(note => !expiredSet.has(note.id)));
-		await notesRepository.removeMany(expiredIds);
+		await permanentlyDeleteMultiple(expiredIds);
 	}
 	return expiredIds;
 }
@@ -293,11 +210,11 @@ function addOrUpdate(note: Note) {
 }
 
 export async function replaceNote(updatedNote: Note) {
-	await notesRepository.saveFull(updatedNote);
 	addOrUpdate(updatedNote);
+	await notesRepository.saveFull(updatedNote);
 }
 
 export async function replaceMultiple(updatedNotes: Note[]) {
-	await notesRepository.saveManyFull(updatedNotes);
 	updatedNotes.forEach(addOrUpdate);
+	await notesRepository.saveManyFull(updatedNotes);
 }

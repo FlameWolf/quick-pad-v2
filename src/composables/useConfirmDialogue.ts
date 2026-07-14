@@ -29,7 +29,7 @@ const [state, setState] = createStore<ConfirmState>({
 
 let resolver: ((value: boolean) => void) | null = null;
 
-export function useConfirmDialog() {
+export function useConfirmDialogue() {
 	function confirm(options: ConfirmOptions): Promise<boolean> {
 		return new Promise(resolve => {
 			if (resolver) {

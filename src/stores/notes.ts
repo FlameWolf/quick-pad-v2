@@ -75,7 +75,7 @@ export function getNoteContent(id: UUID): Promise<string | undefined> {
 
 export async function addNote(note: Note) {
 	await notesRepository.saveFull(note);
-	setStore("notes", items => items.concat([note]));
+	setStore("notes", items => items.concat(note));
 }
 
 export function updateNote(id: UUID, title: string, content: string) {
@@ -286,7 +286,7 @@ export async function purgeExpiredTrash() {
 function addOrUpdate(note: Note) {
 	const index = store.notes.findIndex(n => n.id === note.id);
 	if (index === -1) {
-		setStore("notes", items => items.concat([note]));
+		setStore("notes", items => items.concat(note));
 	} else {
 		setStore("notes", index, note);
 	}

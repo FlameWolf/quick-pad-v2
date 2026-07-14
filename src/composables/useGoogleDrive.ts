@@ -96,7 +96,7 @@ export function useGoogleDrive() {
 		const body = JSON.stringify(data);
 		await fetchOrThrow(`${UPLOAD_API}/${fileId}?uploadType=media`, {
 			method: "PATCH",
-			headers: { ...(await headers()), "Content-Type": "application/json" },
+			headers: Object.assign(await headers(), { "Content-Type": "application/json" }),
 			body
 		});
 	}

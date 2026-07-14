@@ -29,7 +29,7 @@ function createNotification(type: Notification["type"], message: string) {
 	if (store.length >= maxNotifications) {
 		deleteNotification(store[0]!.id);
 	}
-	setStore(store.concat([notification]));
+	setStore(store.concat(notification));
 }
 
 function deleteNotification(id: UUID) {

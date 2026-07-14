@@ -22,7 +22,7 @@ export function useUndoRedo<T>(initial: T): UndoRedo<T> {
 		if (value === current()) {
 			return;
 		}
-		const newPast = [...past(), current()];
+		const newPast = past().concat(current());
 		if (newPast.length > MAX_HISTORY) {
 			newPast.shift();
 		}
@@ -43,7 +43,7 @@ export function useUndoRedo<T>(initial: T): UndoRedo<T> {
 			return;
 		}
 		const prev = p[p.length - 1] as T;
-		setFuture([...future(), current()]);
+		setFuture(future().concat(current()));
 		setPast(p.slice(0, -1));
 		setCurrent(() => prev);
 	}
@@ -54,7 +54,7 @@ export function useUndoRedo<T>(initial: T): UndoRedo<T> {
 			return;
 		}
 		const next = f[f.length - 1] as T;
-		setPast([...past(), current()]);
+		setPast(past().concat(current()));
 		setFuture(f.slice(0, -1));
 		setCurrent(() => next);
 	}

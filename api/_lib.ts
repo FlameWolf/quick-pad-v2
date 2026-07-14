@@ -1,3 +1,5 @@
+import process from "node:process";
+import { Buffer } from "node:buffer";
 import crypto from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
@@ -114,7 +116,7 @@ function appendCookie(res: ServerResponse, cookie: string): void {
 	if (!existing) {
 		res.setHeader("Set-Cookie", cookie);
 	} else if (Array.isArray(existing)) {
-		res.setHeader("Set-Cookie", [...existing, cookie]);
+		res.setHeader("Set-Cookie", existing.concat(cookie));
 	} else {
 		res.setHeader("Set-Cookie", [String(existing), cookie]);
 	}

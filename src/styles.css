@@ -160,7 +160,7 @@ body {
 
 	/*! purgecss start ignore */
 	&:focus {
-		background-color: color-mix(in srgb, var(--bs-yellow), transparent 75%);
+		background-color: color-mix(in oklab, var(--bs-yellow), transparent 87.5%);
 	}
 
 	/*! purgecss end ignore */

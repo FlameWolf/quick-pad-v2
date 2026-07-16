@@ -1,4 +1,4 @@
-import { getKV, putNote, setKV, setKVRaw } from "./db";
+import { getKV, putNote, setKV, setKVRaw } from "@/storage/db";
 import { KV_MAPPINGS, MIGRATION_FLAG, LEGACY_NOTES_KEY, NOTE_PREFIX } from "@/constants/storage";
 import type { NoteJSON } from "@/models/Note";
 

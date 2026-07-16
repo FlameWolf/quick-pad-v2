@@ -1,4 +1,4 @@
-import { useGoogleAuth } from "./useGoogleAuth";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import { DRIVE_API, UPLOAD_API } from "@/constants/sync";
 
 interface DriveFile {

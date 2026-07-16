@@ -12,7 +12,7 @@ import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";
 import NoteCard from "@/components/NoteCard";
-import SelectionActionBar from "./SelectionActionBar";
+import SelectionActionBar from "@/components/SelectionActionBar";
 import type { Note } from "@/models/Note";
 import type { UUID } from "crypto";
 

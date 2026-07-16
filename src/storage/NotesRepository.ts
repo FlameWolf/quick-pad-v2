@@ -1,4 +1,4 @@
-import * as db from "./db";
+import * as db from "@/storage/db";
 import { fromJSON, toJSON, toMetaJSON, type Note } from "@/models/Note";
 import type { UUID } from "crypto";
 

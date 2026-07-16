@@ -1,4 +1,4 @@
-import { emptyString } from "./common";
+import { emptyString } from "@/constants/common";
 
 export const CLIENT_ID = import.meta.env.VITE_GOOG_OAUTH_CLIENT_ID ?? emptyString;
 export const SESSION_KEY = "google-session-hint";

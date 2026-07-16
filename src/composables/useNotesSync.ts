@@ -1,15 +1,16 @@
-import { createEffect, createMemo, createSignal, on } from "solid-js";
-import { useGoogleDrive } from "./useGoogleDrive";
-import { useGoogleAuth } from "./useGoogleAuth";
-import * as notesStore from "@/stores/notes";
-import { addNotification } from "@/stores/notifications";
-import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
-import { deleteKV, getKV, setKV } from "@/storage/db";
-import { getTime } from "@/utils/dates";
-import { debounce } from "@/utils/timing";
+import { createEffect, createMemo, createSignal, on, runWithOwner } from "solid-js";
 import { emptyString } from "@/constants/common";
 import { NOTE_PREFIX } from "@/constants/storage";
 import { LAST_SYNCED_TO_LOCAL_KEY, LAST_SYNCED_TO_CLOUD_KEY, AUTO_SYNC_KEY, DEBOUNCE_MS } from "@/constants/sync";
+import { getTime } from "@/utils/dates";
+import { debounce } from "@/utils/timing";
+import { fromJSON, toJSON, type Note, type NoteJSON } from "@/models/Note";
+import { deleteKV, getKV, setKV } from "@/storage/db";
+import * as notesStore from "@/stores/notes";
+import { addNotification } from "@/stores/notifications";
+import { getAppOwner } from "@/composables/useAppOwner";
+import { useGoogleDrive } from "@/composables/useGoogleDrive";
+import { useGoogleAuth } from "@/composables/useGoogleAuth";
 import type { UUID } from "crypto";
 
 enum NoteUploadResult {
@@ -62,41 +63,43 @@ export async function hydrateSyncMetadata(): Promise<void> {
 	setLastSyncedToLocalAt(storedLocal ? new Date(storedLocal) : null);
 	setLastSyncedToCloudAt(storedCloud ? new Date(storedCloud) : null);
 	setAutoSyncEnabled(storedAutoSync === undefined ? true : storedAutoSync);
-	createEffect(
-		on(
-			autoSyncEnabled,
-			async flag => {
-				await setKV(AUTO_SYNC_KEY, flag);
-			},
-			{ defer: true }
-		)
-	);
-	createEffect(
-		on(
-			lastSyncedToLocalAt,
-			async date => {
-				if (date) {
-					await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
-				} else {
-					await deleteKV(LAST_SYNCED_TO_LOCAL_KEY);
-				}
-			},
-			{ defer: true }
-		)
-	);
-	createEffect(
-		on(
-			lastSyncedToCloudAt,
-			async date => {
-				if (date) {
-					await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
-				} else {
-					await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
-				}
-			},
-			{ defer: true }
-		)
-	);
+	runWithOwner(getAppOwner(), () => {
+		createEffect(
+			on(
+				autoSyncEnabled,
+				async flag => {
+					await setKV(AUTO_SYNC_KEY, flag);
+				},
+				{ defer: true }
+			)
+		);
+		createEffect(
+			on(
+				lastSyncedToLocalAt,
+				async date => {
+					if (date) {
+						await setKV(LAST_SYNCED_TO_LOCAL_KEY, date.toISOString());
+					} else {
+						await deleteKV(LAST_SYNCED_TO_LOCAL_KEY);
+					}
+				},
+				{ defer: true }
+			)
+		);
+		createEffect(
+			on(
+				lastSyncedToCloudAt,
+				async date => {
+					if (date) {
+						await setKV(LAST_SYNCED_TO_CLOUD_KEY, date.toISOString());
+					} else {
+						await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
+					}
+				},
+				{ defer: true }
+			)
+		);
+	});
 }
 
 function getFileName(id: UUID) {

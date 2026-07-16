@@ -1,6 +1,7 @@
-import { createEffect, createSignal, on } from "solid-js";
-import { getKV, setKV } from "@/storage/db";
+import { createEffect, createSignal, on, runWithOwner } from "solid-js";
 import { SORT_FIELDS, SORT_DIRECTIONS, SORT_BY_KEY, SORT_DIRECTION_KEY } from "@/constants/sort";
+import { getKV, setKV } from "@/storage/db";
+import { getAppOwner } from "@/composables/useAppOwner";
 import type { Note } from "@/models/Note";
 
 export type SortField = (typeof SORT_FIELDS)[number];
@@ -23,24 +24,26 @@ export async function hydrateSortPrefs(): Promise<void> {
 	if (SORT_DIRECTIONS.includes(storedDir as SortDirection)) {
 		setSortDirection(storedDir as SortDirection);
 	}
-	createEffect(
-		on(
-			sortBy,
-			async field => {
-				await setKV(SORT_BY_KEY, field);
-			},
-			{ defer: true }
-		)
-	);
-	createEffect(
-		on(
-			sortDirection,
-			async direction => {
-				await setKV(SORT_DIRECTION_KEY, direction);
-			},
-			{ defer: true }
-		)
-	);
+	runWithOwner(getAppOwner(), () => {
+		createEffect(
+			on(
+				sortBy,
+				async field => {
+					await setKV(SORT_BY_KEY, field);
+				},
+				{ defer: true }
+			)
+		);
+		createEffect(
+			on(
+				sortDirection,
+				async direction => {
+					await setKV(SORT_DIRECTION_KEY, direction);
+				},
+				{ defer: true }
+			)
+		);
+	});
 }
 
 function compareNotes(a: Note, b: Note, field: SortField): number {

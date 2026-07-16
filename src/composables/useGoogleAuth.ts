@@ -1,7 +1,8 @@
-import { createSignal, createEffect, on } from "solid-js";
-import { deleteKV, getKV, setKV } from "@/storage/db";
+import { createSignal, createEffect, on, runWithOwner } from "solid-js";
 import { TOKEN_KEY, EXPIRY_KEY, USER_KEY, CLIENT_ID, SESSION_KEY, TOKEN_REFRESH_BUFFER_MS, AUTH_TOKEN_URL, AUTH_START_URL, AUTH_SIGNOUT_URL } from "@/constants/auth";
 import { LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY } from "@/constants/sync";
+import { deleteKV, getKV, setKV } from "@/storage/db";
+import { getAppOwner } from "@/composables/useAppOwner";
 
 type UserInfo = {
 	email: string;
@@ -33,38 +34,40 @@ export async function hydrateAuthState(): Promise<void> {
 	} else {
 		cachedUser = null;
 	}
-	createEffect(
-		on(
-			[accessToken, tokenExpiresAt],
-			async ([token, expiresAt]) => {
-				if (!token || !expiresAt) {
-					await deleteKV(TOKEN_KEY);
-					await deleteKV(EXPIRY_KEY);
-					return;
-				}
-				if (token !== cachedToken || expiresAt !== cachedExpiry) {
-					await setKV(TOKEN_KEY, token);
-					await setKV(EXPIRY_KEY, expiresAt);
-				}
-			},
-			{ defer: true }
-		)
-	);
-	createEffect(
-		on(
-			user,
-			async info => {
-				if (!info) {
-					await deleteKV(USER_KEY);
-					return;
-				}
-				if (info && (info.email !== cachedUser?.email || info.name !== cachedUser?.name)) {
-					await setKV(USER_KEY, info);
-				}
-			},
-			{ defer: true }
-		)
-	);
+	runWithOwner(getAppOwner(), () => {
+		createEffect(
+			on(
+				[accessToken, tokenExpiresAt],
+				async ([token, expiresAt]) => {
+					if (!token || !expiresAt) {
+						await deleteKV(TOKEN_KEY);
+						await deleteKV(EXPIRY_KEY);
+						return;
+					}
+					if (token !== cachedToken || expiresAt !== cachedExpiry) {
+						await setKV(TOKEN_KEY, token);
+						await setKV(EXPIRY_KEY, expiresAt);
+					}
+				},
+				{ defer: true }
+			)
+		);
+		createEffect(
+			on(
+				user,
+				async info => {
+					if (!info) {
+						await deleteKV(USER_KEY);
+						return;
+					}
+					if (info && (info.email !== cachedUser?.email || info.name !== cachedUser?.name)) {
+						await setKV(USER_KEY, info);
+					}
+				},
+				{ defer: true }
+			)
+		);
+	});
 }
 
 async function clearSession(keepUser = false) {

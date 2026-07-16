@@ -32,80 +32,80 @@ function sanitizeFilename(name: string): string {
 	return name.replace(/[<>:"/\\|?*]+/g, "_").trim() || "Untitled";
 }
 
-export function useFileIO() {
-	function importFiles(): Promise<number> {
-		return new Promise(resolve => {
-			const errors: ImportError[] = [];
-			const input = document.createElement("input");
-			input.type = "file";
-			input.multiple = true;
-			input.addEventListener("change", async () => {
-				const files = input.files;
-				if (!files || files.length === 0) {
-					resolve(0);
-					return;
-				}
-				let count = 0;
-				for (const file of files) {
-					if (!(await isTextFile(file))) {
-						errors.push({
-							fileName: file.name,
-							message: "Unsupported file type"
-						});
-						continue;
-					}
-					try {
-						const content = await file.text();
-						const title = file.name.replace(/\.txt$/i, emptyString) || "Untitled";
-						await addNote(create(title, content));
-						count++;
-					} catch {
-						errors.push({
-							fileName: file.name,
-							message: "Failed to read file"
-						});
-					}
-				}
-				if (errors.length) {
-					addNotification("danger", formatImportErrors(errors));
-				}
-				resolve(count);
-			});
-			input.click();
-		});
-	}
-
-	async function exportNote(note: Note) {
-		const content = (await getNoteContent(note.id)) ?? emptyString;
-		const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-		triggerDownload(blob, `${sanitizeFilename(note.title)}.txt`);
-	}
-
-	async function exportNotes(notes: Note[]) {
-		if (notes.length === 0) {
-			return;
-		}
-		const zip = new JSZip();
-		const usedNames = new Set<string>();
-		for (const note of notes) {
-			const name = sanitizeFilename(note.title);
-			let uniqueName = name;
-			let counter = 1;
-			while (usedNames.has(uniqueName)) {
-				uniqueName = `${name} (${counter++})`;
+function importFiles(): Promise<number> {
+	return new Promise(resolve => {
+		const errors: ImportError[] = [];
+		const input = document.createElement("input");
+		input.type = "file";
+		input.multiple = true;
+		input.addEventListener("change", async () => {
+			const files = input.files;
+			if (!files || files.length === 0) {
+				resolve(0);
+				return;
 			}
-			usedNames.add(uniqueName);
-			const content = (await getNoteContent(note.id)) ?? emptyString;
-			zip.file(`${uniqueName}.txt`, content);
+			let count = 0;
+			for (const file of files) {
+				if (!(await isTextFile(file))) {
+					errors.push({
+						fileName: file.name,
+						message: "Unsupported file type"
+					});
+					continue;
+				}
+				try {
+					const content = await file.text();
+					const title = file.name.replace(/\.txt$/i, emptyString) || "Untitled";
+					await addNote(create(title, content));
+					count++;
+				} catch {
+					errors.push({
+						fileName: file.name,
+						message: "Failed to read file"
+					});
+				}
+			}
+			if (errors.length) {
+				addNotification("danger", formatImportErrors(errors));
+			}
+			resolve(count);
+		});
+		input.click();
+	});
+}
+
+async function exportNote(note: Note) {
+	const content = (await getNoteContent(note.id)) ?? emptyString;
+	const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+	triggerDownload(blob, `${sanitizeFilename(note.title)}.txt`);
+}
+
+async function exportNotes(notes: Note[]) {
+	if (notes.length === 0) {
+		return;
+	}
+	const zip = new JSZip();
+	const usedNames = new Set<string>();
+	for (const note of notes) {
+		const name = sanitizeFilename(note.title);
+		let uniqueName = name;
+		let counter = 1;
+		while (usedNames.has(uniqueName)) {
+			uniqueName = `${name} (${counter++})`;
 		}
-		const blob = await zip.generateAsync({ type: "blob" });
-		triggerDownload(blob, "quick-pad-notes.zip");
+		usedNames.add(uniqueName);
+		const content = (await getNoteContent(note.id)) ?? emptyString;
+		zip.file(`${uniqueName}.txt`, content);
 	}
+	const blob = await zip.generateAsync({ type: "blob" });
+	triggerDownload(blob, "quick-pad-notes.zip");
+}
 
-	async function exportAllNotes() {
-		await exportNotes(activeNotes());
-	}
+async function exportAllNotes() {
+	await exportNotes(activeNotes());
+}
 
+export function useFileIO() {
 	return {
 		importFiles,
 		exportNote,

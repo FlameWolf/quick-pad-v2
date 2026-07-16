@@ -18,6 +18,7 @@ export interface ConfirmState {
 	variant: ConfirmVariant;
 }
 
+let resolver: ((value: boolean) => void) | null = null;
 const [state, setState] = createStore<ConfirmState>({
 	visible: false,
 	title: emptyString,
@@ -27,44 +28,42 @@ const [state, setState] = createStore<ConfirmState>({
 	variant: "primary"
 });
 
-let resolver: ((value: boolean) => void) | null = null;
+function confirm(options: ConfirmOptions): Promise<boolean> {
+	return new Promise(resolve => {
+		if (resolver) {
+			resolver(false);
+		}
+		setState({
+			visible: true,
+			title: options.title,
+			message: options.message,
+			confirmText: options.confirmText ?? "Confirm",
+			cancelText: options.cancelText ?? "Cancel",
+			variant: options.variant ?? "primary"
+		});
+		resolver = resolve;
+	});
+}
+
+function onConfirm() {
+	const r = resolver;
+	resolver = null;
+	setState("visible", false);
+	if (r) {
+		r(true);
+	}
+}
+
+function onCancel() {
+	const r = resolver;
+	resolver = null;
+	setState("visible", false);
+	if (r) {
+		r(false);
+	}
+}
 
 export function useConfirmDialogue() {
-	function confirm(options: ConfirmOptions): Promise<boolean> {
-		return new Promise(resolve => {
-			if (resolver) {
-				resolver(false);
-			}
-			setState({
-				visible: true,
-				title: options.title,
-				message: options.message,
-				confirmText: options.confirmText ?? "Confirm",
-				cancelText: options.cancelText ?? "Cancel",
-				variant: options.variant ?? "primary"
-			});
-			resolver = resolve;
-		});
-	}
-
-	function onConfirm() {
-		const r = resolver;
-		resolver = null;
-		setState("visible", false);
-		if (r) {
-			r(true);
-		}
-	}
-
-	function onCancel() {
-		const r = resolver;
-		resolver = null;
-		setState("visible", false);
-		if (r) {
-			r(false);
-		}
-	}
-
 	return {
 		state,
 		confirm,

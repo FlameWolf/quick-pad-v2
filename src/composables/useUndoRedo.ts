@@ -59,5 +59,13 @@ export function useUndoRedo<T>(initial: T): UndoRedo<T> {
 		setCurrent(() => next);
 	}
 
-	return { current, push, reset, undo, redo, canUndo, canRedo };
+	return {
+		current,
+		canUndo,
+		canRedo,
+		push,
+		reset,
+		undo,
+		redo
+	};
 }

@@ -63,27 +63,27 @@ function compareNotes(a: Note, b: Note, field: SortField): number {
 	}
 }
 
+function toggleSortDirection() {
+	setSortDirection(sortDirection() === "asc" ? "desc" : "asc");
+}
+
+function getSortedNotes(notes: ReadonlyArray<Note>): Note[] {
+	const multiplier = sortDirection() === "asc" ? 1 : -1;
+	return notes.toSorted((a, b) => {
+		if (a.pinnedAt && !b.pinnedAt) {
+			return -1;
+		}
+		if (b.pinnedAt && !a.pinnedAt) {
+			return 1;
+		}
+		if (a.pinnedAt && b.pinnedAt) {
+			return b.pinnedAt.getTime() - a.pinnedAt.getTime();
+		}
+		return compareNotes(a, b, sortBy()) * multiplier;
+	});
+}
+
 export function useNoteSort() {
-	function toggleSortDirection() {
-		setSortDirection(sortDirection() === "asc" ? "desc" : "asc");
-	}
-
-	function getSortedNotes(notes: ReadonlyArray<Note>): Note[] {
-		const multiplier = sortDirection() === "asc" ? 1 : -1;
-		return notes.toSorted((a, b) => {
-			if (a.pinnedAt && !b.pinnedAt) {
-				return -1;
-			}
-			if (b.pinnedAt && !a.pinnedAt) {
-				return 1;
-			}
-			if (a.pinnedAt && b.pinnedAt) {
-				return b.pinnedAt.getTime() - a.pinnedAt.getTime();
-			}
-			return compareNotes(a, b, sortBy()) * multiplier;
-		});
-	}
-
 	return {
 		sortBy,
 		sortDirection,

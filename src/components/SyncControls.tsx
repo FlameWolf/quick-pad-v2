@@ -1,18 +1,15 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { isLoading, purgeExpiredTrash } from "@/stores/notes";
-import { hydrateAuthState, useGoogleAuth } from "@/composables/useGoogleAuth";
-import { hydrateSyncMetadata, useNotesSync } from "@/composables/useNotesSync";
+import { hydrateAuthState, isConfigured, isReady, isSignedIn, signIn, signOut, tryRestoreSession, user } from "@/composables/useGoogleAuth";
+import { autoSyncEnabled, doPullAndPush, hydrateSyncMetadata, isSyncing, lastSyncedAt, requestSync, setAutoSync, syncError } from "@/composables/useNotesSync";
 import { useDropdown } from "@/composables/useDropdown";
-import { useConfirmDialogue } from "@/composables/useConfirmDialogue";
+import { confirm } from "@/composables/useConfirmDialogue";
 import Icon from "@/components/Icon";
 
 export default function SyncControls() {
 	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
-	const { isSignedIn, isReady, isConfigured, user, tryRestoreSession, signIn, signOut } = useGoogleAuth();
-	const { isSyncing, lastSyncedAt, syncError, autoSyncEnabled, doPullAndPush, requestSync, setAutoSync } = useNotesSync();
 	const [syncMenuTrigger, setSyncMenuTrigger] = createSignal<HTMLButtonElement | undefined>();
 	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuTrigger);
-	const { confirm } = useConfirmDialogue();
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
 
 	async function handleSync(force = false) {

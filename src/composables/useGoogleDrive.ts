@@ -1,4 +1,4 @@
-import { useGoogleAuth } from "@/composables/useGoogleAuth";
+import { getAccessToken } from "@/composables/useGoogleAuth";
 import { DRIVE_API, UPLOAD_API } from "@/constants/sync";
 
 interface DriveFile {
@@ -6,8 +6,6 @@ interface DriveFile {
 	name: string;
 	modifiedTime: string;
 }
-
-const { getAccessToken } = useGoogleAuth();
 
 async function fetchOrThrow(url: string, init?: RequestInit): Promise<Response> {
 	const res = await fetch(url, init);
@@ -29,7 +27,7 @@ async function headers() {
 	};
 }
 
-async function listFiles(namePrefix?: string, modifiedTime?: Date | null, pageToken?: string): Promise<{ pageToken: string | undefined; fileList: DriveFile[] }> {
+export async function listFiles(namePrefix?: string, modifiedTime?: Date | null, pageToken?: string): Promise<{ pageToken: string | undefined; fileList: DriveFile[] }> {
 	const queryParts = ["'appDataFolder' in parents", "trashed=false"];
 	if (namePrefix) {
 		queryParts.push(`name contains '${namePrefix}'`);
@@ -60,7 +58,7 @@ async function listFiles(namePrefix?: string, modifiedTime?: Date | null, pageTo
 	};
 }
 
-async function findFile(name: string): Promise<DriveFile | null> {
+export async function findFile(name: string): Promise<DriveFile | null> {
 	const params = new URLSearchParams({
 		spaces: "appDataFolder",
 		q: `name='${name}' and 'appDataFolder' in parents and trashed=false`,
@@ -73,7 +71,7 @@ async function findFile(name: string): Promise<DriveFile | null> {
 	return data.files?.[0] ?? null;
 }
 
-async function readJSON<T = unknown>(filename: string): Promise<T | null> {
+export async function readJSON<T = unknown>(filename: string): Promise<T | null> {
 	const file = await findFile(filename);
 	if (!file) {
 		return null;
@@ -84,14 +82,14 @@ async function readJSON<T = unknown>(filename: string): Promise<T | null> {
 	return res.json();
 }
 
-async function readJSONById<T = unknown>(fileId: string): Promise<T | null> {
+export async function readJSONById<T = unknown>(fileId: string): Promise<T | null> {
 	const res = await fetchOrThrow(`${DRIVE_API}/${fileId}?alt=media`, {
 		headers: await headers()
 	});
 	return res.json();
 }
 
-async function writeJSONById(fileId: string, data: unknown): Promise<void> {
+export async function writeJSONById(fileId: string, data: unknown): Promise<void> {
 	const body = JSON.stringify(data);
 	await fetchOrThrow(`${UPLOAD_API}/${fileId}?uploadType=media`, {
 		method: "PATCH",
@@ -100,7 +98,7 @@ async function writeJSONById(fileId: string, data: unknown): Promise<void> {
 	});
 }
 
-async function writeJSON(filename: string, data: unknown): Promise<void> {
+export async function writeJSON(filename: string, data: unknown): Promise<void> {
 	const file = await findFile(filename);
 	if (file) {
 		await writeJSONById(file.id, data);
@@ -122,30 +120,18 @@ async function writeJSON(filename: string, data: unknown): Promise<void> {
 	}
 }
 
-async function deleteFileById(fileId: string): Promise<void> {
+export async function deleteFileById(fileId: string): Promise<void> {
 	await fetchOrThrow(`${DRIVE_API}/${fileId}`, {
 		method: "DELETE",
 		headers: await headers()
 	});
 }
 
-async function deleteFile(filename: string): Promise<boolean> {
+export async function deleteFile(filename: string): Promise<boolean> {
 	const file = await findFile(filename);
 	if (!file) {
 		return false;
 	}
 	await deleteFileById(file.id);
 	return true;
-}
-
-export function useGoogleDrive() {
-	return {
-		listFiles,
-		findFile,
-		readJSON,
-		readJSONById,
-		writeJSONById,
-		writeJSON,
-		deleteFile
-	};
 }

@@ -1,8 +1,7 @@
 import { onMount, onCleanup, Show } from "solid-js";
-import { useConfirmDialogue } from "@/composables/useConfirmDialogue";
+import { onCancel, onConfirm, state } from "@/composables/useConfirmDialogue";
 
 export default function ConfirmDialogue() {
-	const { state, onConfirm, onCancel } = useConfirmDialogue();
 	const handlers: Record<string, (() => void) | undefined> = {
 		Escape: onCancel,
 		Enter: onConfirm

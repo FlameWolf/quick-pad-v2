@@ -4,7 +4,7 @@ import { A } from "@solidjs/router";
 import { RouteTransition } from "@/router";
 import { hydrateNotes } from "@/stores/notes";
 import { setAppOwner } from "@/composables/useAppOwner";
-import { useNoteDraft } from "@/composables/useNoteDraft";
+import { purgeStaleDrafts } from "@/composables/useNoteDraft";
 import Icon from "@/components/Icon";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -18,8 +18,6 @@ interface AppProps {
 }
 
 export default function App(props: AppProps) {
-	const { purgeStaleDrafts } = useNoteDraft();
-
 	setAppOwner(getOwner());
 
 	onMount(async () => {

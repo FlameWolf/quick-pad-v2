@@ -14,12 +14,16 @@ let cachedToken: string | null = null;
 let cachedExpiry: number = 0;
 let cachedUser: UserInfo | null = null;
 let refreshInFlight: Promise<string> | null = null;
-const isConfigured = () => Boolean(CLIENT_ID);
-const [isReady, setIsReady] = createSignal(false);
-const [isSignedIn, setIsSignedIn] = createSignal(false);
+const [configured] = createSignal(Boolean(CLIENT_ID));
+const [ready, setReady] = createSignal(false);
+const [signedIn, setSignedIn] = createSignal(false);
+const [userInfo, setUserInfo] = createSignal<UserInfo | null>(null);
 const [accessToken, setAccessToken] = createSignal<string | null>(null);
 const [tokenExpiresAt, setTokenExpiresAt] = createSignal(0);
-const [user, setUser] = createSignal<UserInfo | null>(null);
+export const isConfigured = configured;
+export const isReady = ready;
+export const isSignedIn = signedIn;
+export const user = userInfo;
 
 export async function hydrateAuthState(): Promise<void> {
 	if (hydrated) {
@@ -54,7 +58,7 @@ export async function hydrateAuthState(): Promise<void> {
 		);
 		createEffect(
 			on(
-				user,
+				userInfo,
 				async info => {
 					if (!info) {
 						await deleteKV(USER_KEY);
@@ -76,8 +80,8 @@ async function clearSession(keepUser = false) {
 	cachedToken = null;
 	cachedExpiry = 0;
 	if (!keepUser) {
-		setUser(null);
-		setIsSignedIn(false);
+		setUserInfo(null);
+		setSignedIn(false);
 		cachedUser = null;
 		await deleteKV(SESSION_KEY);
 		await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
@@ -85,24 +89,24 @@ async function clearSession(keepUser = false) {
 	}
 }
 
-function tryRestoreSession() {
-	if (isReady()) {
+export function tryRestoreSession() {
+	if (ready()) {
 		return;
 	}
 	if (!CLIENT_ID) {
-		setIsReady(true);
+		setReady(true);
 		return;
 	}
 	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
 		setAccessToken(cachedToken);
 		setTokenExpiresAt(cachedExpiry);
-		setUser(cachedUser);
-		setIsSignedIn(true);
+		setUserInfo(cachedUser);
+		setSignedIn(true);
 	} else if (cachedUser) {
-		setUser(cachedUser);
-		setIsSignedIn(true);
+		setUserInfo(cachedUser);
+		setSignedIn(true);
 	}
-	setIsReady(true);
+	setReady(true);
 }
 
 async function refreshFromServer(): Promise<string> {
@@ -127,10 +131,10 @@ async function refreshFromServer(): Promise<string> {
 			setAccessToken(data.access_token);
 			setTokenExpiresAt(Date.now() + (data.expires_in || 3600) * 1000);
 			if (data.user) {
-				setUser(data.user);
+				setUserInfo(data.user);
 			}
 			await setKV(SESSION_KEY, true);
-			setIsSignedIn(true);
+			setSignedIn(true);
 			return data.access_token;
 		} finally {
 			refreshInFlight = null;
@@ -139,7 +143,7 @@ async function refreshFromServer(): Promise<string> {
 	return refreshInFlight;
 }
 
-async function getAccessToken(): Promise<string> {
+export async function getAccessToken(): Promise<string> {
 	const token = accessToken();
 	if (token && Date.now() < tokenExpiresAt() - TOKEN_REFRESH_BUFFER_MS) {
 		return token;
@@ -147,7 +151,7 @@ async function getAccessToken(): Promise<string> {
 	return refreshFromServer();
 }
 
-function signIn(): Promise<void> {
+export function signIn(): Promise<void> {
 	if (!CLIENT_ID) {
 		return Promise.resolve();
 	}
@@ -180,10 +184,10 @@ function signIn(): Promise<void> {
 			}
 			if (event.data.ok) {
 				if (event.data.user) {
-					setUser(event.data.user);
+					setUserInfo(event.data.user);
 				}
 				await setKV(SESSION_KEY, true);
-				setIsSignedIn(true);
+				setSignedIn(true);
 				try {
 					await refreshFromServer();
 				} catch (err) {
@@ -206,24 +210,11 @@ function signIn(): Promise<void> {
 	});
 }
 
-async function signOut() {
+export async function signOut() {
 	try {
 		await fetch(AUTH_SIGNOUT_URL, { method: "POST", credentials: "include" });
 	} catch (err) {
 		console.warn("Failed to notify the server of sign-out", err);
 	}
 	await clearSession();
-}
-
-export function useGoogleAuth() {
-	return {
-		user,
-		isReady,
-		isSignedIn,
-		isConfigured,
-		tryRestoreSession,
-		signIn,
-		signOut,
-		getAccessToken
-	};
 }

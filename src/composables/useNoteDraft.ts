@@ -10,7 +10,7 @@ function draftKey(id: string) {
 	return `${DRAFT_PREFIX}${id}`;
 }
 
-function saveDraft(id: string, title: string, content: string): void {
+export function saveDraft(id: string, title: string, content: string): void {
 	const key = draftKey(id);
 	try {
 		localStorage.setItem(key, JSON.stringify({ title, content, savedAt: Date.now() } satisfies NoteDraft));
@@ -19,7 +19,7 @@ function saveDraft(id: string, title: string, content: string): void {
 	}
 }
 
-function loadDraft(id: string): NoteDraft | null {
+export function loadDraft(id: string): NoteDraft | null {
 	try {
 		const raw = localStorage.getItem(draftKey(id));
 		const parsed = raw ? (JSON.parse(raw) as NoteDraft) : null;
@@ -29,7 +29,7 @@ function loadDraft(id: string): NoteDraft | null {
 	}
 }
 
-function clearDraft(id: string): void {
+export function clearDraft(id: string): void {
 	const key = draftKey(id);
 	try {
 		localStorage.removeItem(key);
@@ -38,7 +38,7 @@ function clearDraft(id: string): void {
 	}
 }
 
-function purgeStaleDrafts() {
+export function purgeStaleDrafts() {
 	for (let index = 0; index < localStorage.length; index++) {
 		const key = localStorage.key(index);
 		if (key?.startsWith(DRAFT_PREFIX)) {
@@ -55,13 +55,4 @@ function purgeStaleDrafts() {
 			}
 		}
 	}
-}
-
-export function useNoteDraft() {
-	return {
-		saveDraft,
-		loadDraft,
-		clearDraft,
-		purgeStaleDrafts
-	};
 }

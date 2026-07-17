@@ -9,8 +9,8 @@ import { deleteKV, getKV, setKV } from "@/storage/db";
 import * as notesStore from "@/stores/notes";
 import { addNotification } from "@/stores/notifications";
 import { getAppOwner } from "@/composables/useAppOwner";
-import { useGoogleDrive } from "@/composables/useGoogleDrive";
-import { useGoogleAuth } from "@/composables/useGoogleAuth";
+import { deleteFile, findFile, listFiles, readJSONById, writeJSON, writeJSONById } from "@/composables/useGoogleDrive";
+import { isSignedIn } from "@/composables/useGoogleAuth";
 import type { UUID } from "crypto";
 
 enum NoteUploadResult {
@@ -19,16 +19,14 @@ enum NoteUploadResult {
 }
 
 let hydrated = false;
-const [isSyncing, setIsSyncing] = createSignal(false);
+const [syncing, setSyncing] = createSignal(false);
+const [allowAutoSync, setAllowAutoSync] = createSignal<boolean>(true);
+const [errorText, setErrorText] = createSignal<string | null>(null);
 const [lastSyncedToLocalAt, setLastSyncedToLocalAt] = createSignal<Date | null>(null);
 const [lastSyncedToCloudAt, setLastSyncedToCloudAt] = createSignal<Date | null>(null);
-const [autoSyncEnabled, setAutoSyncEnabled] = createSignal<boolean>(true);
-const [syncError, setSyncError] = createSignal<string | null>(null);
-const { listFiles, findFile, readJSONById, writeJSONById, writeJSON, deleteFile } = useGoogleDrive();
-const { isSignedIn } = useGoogleAuth();
 const pendingPurges = new Set<UUID>();
 const debouncedFlush = debounce(() => {
-	if (isSignedIn() && autoSyncEnabled()) {
+	if (isSignedIn() && allowAutoSync()) {
 		saveToCloud()
 			.then(() => {
 				addNotification("success", "Synced to cloud");
@@ -38,7 +36,14 @@ const debouncedFlush = debounce(() => {
 			});
 	}
 }, DEBOUNCE_MS);
-const requestSync = Object.assign(
+export const isSyncing = syncing;
+export const autoSyncEnabled = allowAutoSync;
+export const syncError = errorText;
+export const lastSyncedAt = createMemo(() => {
+	const max = Math.max(lastSyncedToLocalAt()?.getTime() ?? 0, lastSyncedToCloudAt()?.getTime() ?? 0);
+	return max > 0 ? new Date(max) : null;
+});
+export const requestSync = Object.assign(
 	function (purged: ReadonlyArray<UUID> = []) {
 		if (purged.length > 0) {
 			purged.forEach(Set.prototype.add, pendingPurges);
@@ -62,11 +67,11 @@ export async function hydrateSyncMetadata(): Promise<void> {
 	const storedAutoSync = await getKV(AUTO_SYNC_KEY);
 	setLastSyncedToLocalAt(storedLocal ? new Date(storedLocal) : null);
 	setLastSyncedToCloudAt(storedCloud ? new Date(storedCloud) : null);
-	setAutoSyncEnabled(storedAutoSync === undefined ? true : storedAutoSync);
+	setAllowAutoSync(storedAutoSync === undefined ? true : storedAutoSync);
 	runWithOwner(getAppOwner(), () => {
 		createEffect(
 			on(
-				autoSyncEnabled,
+				allowAutoSync,
 				async flag => {
 					await setKV(AUTO_SYNC_KEY, flag);
 				},
@@ -225,12 +230,24 @@ async function runPush(purged: ReadonlyArray<UUID> = [], force = false) {
 	};
 }
 
-async function doPullAndPush({ force = false as boolean, purged = [] as ReadonlyArray<UUID> } = {}) {
-	if (isSyncing()) {
+async function saveToCloud(purged: ReadonlyArray<UUID> = []) {
+	if (syncing()) {
 		return;
 	}
-	setIsSyncing(true);
-	setSyncError(null);
+	try {
+		setSyncing(true);
+		await runPush(purged, false);
+	} finally {
+		setSyncing(false);
+	}
+}
+
+export async function doPullAndPush({ force = false as boolean, purged = [] as ReadonlyArray<UUID> } = {}) {
+	if (syncing()) {
+		return;
+	}
+	setSyncing(true);
+	setErrorText(null);
 	try {
 		const pullResult = await runPull(force);
 		const pushResult = await runPush(purged, force);
@@ -238,43 +255,16 @@ async function doPullAndPush({ force = false as boolean, purged = [] as Readonly
 		const changes = pushResult.conflicts + pullResult.downloaded;
 		addNotification("success", empty ? "Nothing to sync" : `Synced${changes > 0 ? ` (pulled ${changes} change${changes > 1 ? "s" : emptyString} from cloud)` : emptyString}`);
 	} catch (err: any) {
-		setSyncError(err?.message ?? "Sync failed");
-		addNotification("danger", `Sync failed: ${syncError()}`);
+		setErrorText(err?.message ?? "Sync failed");
+		addNotification("danger", `Sync failed: ${errorText()}`);
 	} finally {
-		setIsSyncing(false);
+		setSyncing(false);
 	}
 }
 
-async function saveToCloud(purged: ReadonlyArray<UUID> = []) {
-	if (isSyncing()) {
-		return;
-	}
-	try {
-		setIsSyncing(true);
-		await runPush(purged, false);
-	} finally {
-		setIsSyncing(false);
-	}
-}
-
-async function setAutoSync(enabled: boolean) {
-	setAutoSyncEnabled(enabled);
+export async function setAutoSync(enabled: boolean) {
+	setAllowAutoSync(enabled);
 	if (!enabled) {
 		requestSync.cancel();
 	}
-}
-
-export function useNotesSync() {
-	return {
-		isSyncing,
-		lastSyncedAt: createMemo(() => {
-			const max = Math.max(lastSyncedToLocalAt()?.getTime() ?? 0, lastSyncedToCloudAt()?.getTime() ?? 0);
-			return max > 0 ? new Date(max) : null;
-		}),
-		syncError,
-		autoSyncEnabled,
-		doPullAndPush,
-		requestSync,
-		setAutoSync
-	};
 }

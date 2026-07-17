@@ -1,6 +1,6 @@
 import { Route, Navigate, useBeforeLeave, useLocation } from "@solidjs/router";
 import { createEffect, createSignal, lazy, on, Show } from "solid-js";
-import { useConfirmDialogue } from "@/composables/useConfirmDialogue";
+import { state as confirmState } from "@/composables/useConfirmDialogue";
 import DisplayNoteList from "@/components/DisplayNoteList";
 import EditNote from "@/components/EditNote";
 
@@ -9,7 +9,6 @@ const scrollPositions = new Map<string, number>();
 
 export function RouteTransition() {
 	const location = useLocation();
-	const { state: confirmState } = useConfirmDialogue();
 	const [isNavigating, setIsNavigating] = createSignal(false);
 
 	useBeforeLeave(event => {

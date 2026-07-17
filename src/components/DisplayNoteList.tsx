@@ -5,8 +5,8 @@ import * as appStore from "@/stores/app";
 import { useFileIO } from "@/composables/useFileIO";
 import { useNoteSelection } from "@/composables/useNoteSelection";
 import { useNoteSort, type SortField } from "@/composables/useNoteSort";
-import { useConfirmDialogue } from "@/composables/useConfirmDialogue";
-import { useNotesSync } from "@/composables/useNotesSync";
+import { confirm } from "@/composables/useConfirmDialogue";
+import { requestSync } from "@/composables/useNotesSync";
 import { bulkActions } from "@/constants/actions";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
@@ -31,8 +31,6 @@ export default function DisplayNoteList(props: Props) {
 	const { importFiles, exportNotes, exportAllNotes } = useFileIO();
 	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
 	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
-	const { confirm } = useConfirmDialogue();
-	const { requestSync } = useNotesSync();
 	const isSearchMode = createMemo(() => !!notesStore.searchText());
 	const sourceNotes = createMemo<Note[]>(() => {
 		switch (view()) {

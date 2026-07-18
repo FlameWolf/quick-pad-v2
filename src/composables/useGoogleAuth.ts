@@ -14,13 +14,12 @@ let cachedToken: string | null = null;
 let cachedExpiry: number = 0;
 let cachedUser: UserInfo | null = null;
 let refreshInFlight: Promise<string> | null = null;
-const [configured] = createSignal(Boolean(CLIENT_ID));
 const [ready, setReady] = createSignal(false);
 const [signedIn, setSignedIn] = createSignal(false);
 const [userInfo, setUserInfo] = createSignal<UserInfo | null>(null);
 const [accessToken, setAccessToken] = createSignal<string | null>(null);
 const [tokenExpiresAt, setTokenExpiresAt] = createSignal(0);
-export const isConfigured = configured;
+export const isConfigured = !!CLIENT_ID;
 export const isReady = ready;
 export const isSignedIn = signedIn;
 export const user = userInfo;
@@ -89,26 +88,6 @@ async function clearSession(keepUser = false) {
 	}
 }
 
-export function tryRestoreSession() {
-	if (ready()) {
-		return;
-	}
-	if (!CLIENT_ID) {
-		setReady(true);
-		return;
-	}
-	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
-		setAccessToken(cachedToken);
-		setTokenExpiresAt(cachedExpiry);
-		setUserInfo(cachedUser);
-		setSignedIn(true);
-	} else if (cachedUser) {
-		setUserInfo(cachedUser);
-		setSignedIn(true);
-	}
-	setReady(true);
-}
-
 async function refreshFromServer(): Promise<string> {
 	if (refreshInFlight) {
 		return refreshInFlight;
@@ -149,6 +128,26 @@ export async function getAccessToken(): Promise<string> {
 		return token;
 	}
 	return refreshFromServer();
+}
+
+export function tryRestoreSession() {
+	if (ready()) {
+		return;
+	}
+	if (!CLIENT_ID) {
+		setReady(true);
+		return;
+	}
+	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
+		setAccessToken(cachedToken);
+		setTokenExpiresAt(cachedExpiry);
+		setUserInfo(cachedUser);
+		setSignedIn(true);
+	} else if (cachedUser) {
+		setUserInfo(cachedUser);
+		setSignedIn(true);
+	}
+	setReady(true);
 }
 
 export function signIn(): Promise<void> {

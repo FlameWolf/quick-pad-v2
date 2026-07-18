@@ -1,51 +1,39 @@
 import { createSignal, createMemo } from "solid-js";
 import type { UUID } from "crypto";
 
-const [selectedIds, setSelectedIds] = createSignal<Set<UUID>>(new Set<UUID>());
-const [isSelectionMode, setIsSelectionMode] = createSignal(false);
-const selectedCount = createMemo(() => selectedIds().size);
+const [selecting, setSelecting] = createSignal(false);
+const [selectedNoteIds, setSelectedNoteIds] = createSignal<Set<UUID>>(new Set<UUID>());
+export const isSelecting = selecting;
+export const selectedIds = selectedNoteIds;
+export const selectedCount = createMemo(() => selectedNoteIds().size);
 
-function enterSelectionMode() {
-	setIsSelectionMode(true);
+export function enterSelectionMode() {
+	setSelecting(true);
 }
 
-function exitSelectionMode() {
-	setSelectedIds(new Set<UUID>());
-	setIsSelectionMode(false);
+export function exitSelectionMode() {
+	setSelectedNoteIds(new Set<UUID>());
+	setSelecting(false);
 }
 
-function toggleSelection(id: UUID) {
-	const next = new Set(selectedIds());
+export function toggleSelection(id: UUID) {
+	const next = new Set(selectedNoteIds());
 	if (next.has(id)) {
 		next.delete(id);
 	} else {
 		next.add(id);
 	}
-	setSelectedIds(next);
+	setSelectedNoteIds(next);
 }
 
-function isSelected(id: UUID): boolean {
-	return selectedIds().has(id);
+export function isSelected(id: UUID): boolean {
+	return selectedNoteIds().has(id);
 }
 
-function selectAll(ids: UUID[]) {
-	setSelectedIds(new Set(ids));
+export function selectAll(ids: UUID[]) {
+	setSelectedNoteIds(new Set(ids));
 }
 
-function clearSelection() {
-	setSelectedIds(new Set<UUID>());
-}
-
-export function useNoteSelection() {
-	return {
-		isSelectionMode,
-		selectedIds,
-		selectedCount,
-		enterSelectionMode,
-		exitSelectionMode,
-		toggleSelection,
-		isSelected,
-		selectAll,
-		clearSelection
-	};
+export function clearSelection() {
+	setSelectedNoteIds(new Set<UUID>());
 }

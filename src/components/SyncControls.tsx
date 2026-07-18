@@ -85,7 +85,7 @@ export default function SyncControls() {
 	);
 
 	onMount(async () => {
-		if (isConfigured()) {
+		if (isConfigured) {
 			readyTimeout = setTimeout(() => {
 				if (!isReady()) {
 					setAuthTimedOut(true);
@@ -104,7 +104,7 @@ export default function SyncControls() {
 	});
 
 	return (
-		<Show when={isConfigured()}>
+		<Show when={isConfigured}>
 			<Show
 				when={isReady()}
 				fallback={

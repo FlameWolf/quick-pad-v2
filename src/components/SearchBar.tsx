@@ -21,7 +21,7 @@ export default function SearchBar() {
 
 	return (
 		<div class="me-auto position-relative">
-			<input type="text" class="form-control pe-5" placeholder="Search" ref={searchInput} disabled={!listViewRoutes.includes(location.pathname)} onInput={debouncedSearch}/>
+			<input ref={searchInput} type="text" class="form-control pe-5" placeholder="Search" disabled={!listViewRoutes.includes(location.pathname)} onInput={debouncedSearch}/>
 			<Show when={isSearchMode()}>
 				<button class="btn-close small position-absolute top-50 end-0 translate-middle-y me-2" onClick={clearSearch}></button>
 			</Show>

@@ -1,11 +1,10 @@
-import { createEffect, createMemo, createSignal, on, runWithOwner } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
 import { contains } from "@/utils/text-analysis";
 import { archive, fave, pin, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
-import { getAppOwner } from "@/composables/useAppOwner";
 import type { UUID } from "crypto";
 
 interface NotesState {
@@ -18,6 +17,12 @@ const [store, setStore] = createStore<NotesState>({
 	notes: [],
 	searchText: emptyString
 });
+
+export const notes = () => store.notes;
+export const searchText = () => store.searchText;
+export const [isLoading, setIsLoading] = createSignal(true);
+export const [isSearching, setIsSearching] = createSignal(false);
+export const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
 const searchResults = createMemo(() => {
 	const trimmed = store.searchText.trim();
 	if (!trimmed) {
@@ -25,12 +30,6 @@ const searchResults = createMemo(() => {
 	}
 	return store.notes.filter(note => contains(note.title, trimmed) || contentMatchedIds()?.has(note.id));
 });
-export const notes = () => store.notes;
-export const searchText = () => store.searchText;
-export const [isLoading, setIsLoading] = createSignal(true);
-export const [isSearching, setIsSearching] = createSignal(false);
-export const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
-export const setSearchText = (value: string) => setStore("searchText", value);
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
 export const favedNotes = createMemo(() => searchResults().filter(note => note.favedAt && !note.deletedAt));
 export const archivedNotes = createMemo(() => searchResults().filter(note => note.archivedAt && !note.deletedAt));
@@ -49,35 +48,25 @@ export async function hydrateNotes(): Promise<void> {
 	} finally {
 		setIsLoading(false);
 	}
-	runWithOwner(getAppOwner(), () => {
-		createEffect(
-			on(
-				() => store.searchText,
-				async query => {
-					const trimmed = query.trim();
-					setContentMatchedIds(null);
-					if (!trimmed) {
-						setIsSearching(false);
-						return;
-					}
-					setIsSearching(true);
-					const matches = await notesRepository.search(content => contains(content, trimmed));
-					if (store.searchText.trim() === trimmed) {
-						setContentMatchedIds(matches as Set<UUID>);
-						setIsSearching(false);
-					}
-				}
-			)
-		);
-	});
 }
 
-export function getNote(id: UUID): Note | undefined {
-	return store.notes.find(note => note.id === id);
-}
-
-export function getNoteContent(id: UUID): Promise<string | undefined> {
-	return notesRepository.loadContent(id);
+export function setSearchText(query: string) {
+	const trimmed = query.trim();
+	setStore("searchText", trimmed);
+	if (!trimmed) {
+		setIsSearching(false);
+		setContentMatchedIds(null);
+		return;
+	}
+	setIsSearching(true);
+	notesRepository
+		.search(content => contains(content, trimmed))
+		.then(matches => {
+			setContentMatchedIds(matches as Set<UUID>);
+		})
+		.finally(() => {
+			setIsSearching(false);
+		});
 }
 
 export async function addNote(note: Note) {
@@ -94,6 +83,14 @@ export function updateNote(id: UUID, title: string, content: string) {
 			await notesRepository.saveFull(note);
 		})
 	);
+}
+
+export function getNote(id: UUID): Note | undefined {
+	return store.notes.find(note => note.id === id);
+}
+
+export function getNoteContent(id: UUID): Promise<string | undefined> {
+	return notesRepository.loadContent(id);
 }
 
 async function applyToNote(id: UUID, mutator: (note: Note) => void) {

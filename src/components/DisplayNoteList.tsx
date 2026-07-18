@@ -2,9 +2,9 @@ import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from 
 import { A, useBeforeLeave } from "@solidjs/router";
 import * as notesStore from "@/stores/notes";
 import * as appStore from "@/stores/app";
-import { useFileIO } from "@/composables/useFileIO";
-import { useNoteSelection } from "@/composables/useNoteSelection";
-import { useNoteSort, type SortField } from "@/composables/useNoteSort";
+import { exportAllNotes, exportNotes, importFiles } from "@/composables/useFileIO";
+import { clearSelection, enterSelectionMode, exitSelectionMode, isSelected, isSelecting, selectAll, selectedCount, toggleSelection } from "@/composables/useNoteSelection";
+import { getSortedNotes, setSortField, sortField, sortOrder, toggleSortDirection, type SortField } from "@/composables/useNoteSort";
 import { confirm } from "@/composables/useConfirmDialogue";
 import { requestSync } from "@/composables/useNotesSync";
 import { bulkActions } from "@/constants/actions";
@@ -28,9 +28,6 @@ type NoteSection = {
 
 export default function DisplayNoteList(props: Props) {
 	const view = createMemo<View>(() => props.view ?? "active");
-	const { importFiles, exportNotes, exportAllNotes } = useFileIO();
-	const { isSelectionMode, selectedCount, enterSelectionMode, exitSelectionMode, toggleSelection, isSelected, selectAll, clearSelection } = useNoteSelection();
-	const { sortBy, sortDirection, setSortBy, toggleSortDirection, getSortedNotes } = useNoteSort();
 	const isSearchMode = createMemo(() => !!notesStore.searchText());
 	const sourceNotes = createMemo<Note[]>(() => {
 		switch (view()) {
@@ -125,11 +122,11 @@ export default function DisplayNoteList(props: Props) {
 	});
 
 	function onSortFieldChange(e: Event) {
-		setSortBy((e.target as HTMLSelectElement).value as SortField);
+		setSortField((e.target as HTMLSelectElement).value as SortField);
 	}
 
 	function onTileClick(e: MouseEvent, noteId: UUID) {
-		if (isSelectionMode()) {
+		if (isSelecting()) {
 			e.preventDefault();
 			toggleSelection(noteId);
 		}
@@ -284,10 +281,10 @@ export default function DisplayNoteList(props: Props) {
 					<div>
 						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
 							<Show
-								when={isSelectionMode()}
+								when={isSelecting()}
 								fallback={
 									<>
-										<SortControls sortBy={sortBy()} sortDirection={sortDirection()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
+										<SortControls sortField={sortField()} sortOrder={sortOrder()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
 										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode} title="Select" aria-label="Select">
 											<Icon type="check2Square"/>
 											<span class="d-none d-sm-inline ms-2">Select</span>
@@ -343,19 +340,19 @@ export default function DisplayNoteList(props: Props) {
 										</div>
 									</Show>
 									<div class="notes-grid">
-										<Show when={section.showNewCard && !isSelectionMode()}>
+										<Show when={section.showNewCard && !isSelecting()}>
 											<A href="/notes/new" class="card note-card new-note-card text-decoration-none">
 												<div class="card-body d-flex align-items-center justify-content-center">
 													<span class="fs-1 text-muted">+</span>
 												</div>
 											</A>
 										</Show>
-										<For each={section.notes}>{note => <NoteCard note={note} selectionMode={isSelectionMode()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
+										<For each={section.notes}>{note => <NoteCard note={note} selectionMode={isSelecting()} selected={isSelected(note.id)} clickAction={onTileClick}/>}</For>
 									</div>
 								</>
 							)}
 						</For>
-						<Show when={isSelectionMode() && selectedCount() > 0}>
+						<Show when={isSelecting() && selectedCount() > 0}>
 							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
 						</Show>
 					</div>

@@ -89,26 +89,6 @@ async function clearSession(keepUser = false) {
 	}
 }
 
-export function tryRestoreSession() {
-	if (ready()) {
-		return;
-	}
-	if (!CLIENT_ID) {
-		setReady(true);
-		return;
-	}
-	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
-		setAccessToken(cachedToken);
-		setTokenExpiresAt(cachedExpiry);
-		setUserInfo(cachedUser);
-		setSignedIn(true);
-	} else if (cachedUser) {
-		setUserInfo(cachedUser);
-		setSignedIn(true);
-	}
-	setReady(true);
-}
-
 async function refreshFromServer(): Promise<string> {
 	if (refreshInFlight) {
 		return refreshInFlight;
@@ -149,6 +129,26 @@ export async function getAccessToken(): Promise<string> {
 		return token;
 	}
 	return refreshFromServer();
+}
+
+export function tryRestoreSession() {
+	if (ready()) {
+		return;
+	}
+	if (!CLIENT_ID) {
+		setReady(true);
+		return;
+	}
+	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
+		setAccessToken(cachedToken);
+		setTokenExpiresAt(cachedExpiry);
+		setUserInfo(cachedUser);
+		setSignedIn(true);
+	} else if (cachedUser) {
+		setUserInfo(cachedUser);
+		setSignedIn(true);
+	}
+	setReady(true);
 }
 
 export function signIn(): Promise<void> {

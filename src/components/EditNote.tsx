@@ -4,7 +4,7 @@ import { listViewRoutes } from "@/router";
 import * as notesStore from "@/stores/notes";
 import * as appStore from "@/stores/app";
 import { addNotification } from "@/stores/notifications";
-import { useFileIO } from "@/composables/useFileIO";
+import { exportNote } from "@/composables/useFileIO";
 import { confirm } from "@/composables/useConfirmDialogue";
 import { requestSync } from "@/composables/useNotesSync";
 import { clearDraft, loadDraft, saveDraft } from "@/composables/useNoteDraft";
@@ -26,7 +26,6 @@ export default function EditNote(props: Props) {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const params = useParams<{ id?: UUID }>();
-	const { exportNote } = useFileIO();
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());

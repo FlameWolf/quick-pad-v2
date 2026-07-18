@@ -1,16 +1,16 @@
 import { createMemo, onMount } from "solid-js";
-import { hydrateSortPrefs, type SortDirection, type SortField } from "@/composables/useNoteSort";
+import { hydrateSortPrefs, type SortOrder, type SortField } from "@/composables/useNoteSort";
 import Icon from "@/components/Icon";
 
 interface Props {
-	sortBy: SortField;
-	sortDirection: SortDirection;
+	sortField: SortField;
+	sortOrder: SortOrder;
 	sortAction: (e: Event) => void;
 	toggleAction: () => void;
 }
 
 export default function SortControls(props: Props) {
-	const isAscending = createMemo(() => props.sortDirection === "asc");
+	const isAscending = createMemo(() => props.sortOrder === "asc");
 
 	onMount(async () => {
 		await hydrateSortPrefs();
@@ -21,7 +21,7 @@ export default function SortControls(props: Props) {
 			<label for="sort-by-select" class="form-label text-muted small mb-0 me-1">
 				Sort:
 			</label>
-			<select id="sort-by-select" class="form-select form-select-sm sort-select" value={props.sortBy} onChange={props.sortAction} aria-label="Sort notes by">
+			<select id="sort-by-select" class="form-select form-select-sm sort-select" value={props.sortField} onChange={props.sortAction} aria-label="Sort notes by">
 				<option value="modifiedAt">Updated</option>
 				<option value="createdAt">Created</option>
 				<option value="title">Title</option>

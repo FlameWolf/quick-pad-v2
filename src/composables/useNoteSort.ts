@@ -84,7 +84,7 @@ export function setSortOrder(order: SortOrder) {
 }
 
 export function toggleSortDirection() {
-	setState("sortOrder", state.sortOrder === "asc" ? "desc" : "asc");
+	setSortOrder(state.sortOrder === "asc" ? "desc" : "asc");
 }
 
 export function getSortedNotes(notes: ReadonlyArray<Note>): Note[] {

@@ -10,20 +10,23 @@ import type { UUID } from "crypto";
 interface NotesState {
 	notes: Note[];
 	searchText: string;
+	isLoading: boolean;
+	isSearching: boolean;
 }
 
 let hydrated = false;
 const [store, setStore] = createStore<NotesState>({
 	notes: [],
-	searchText: emptyString
+	searchText: emptyString,
+	isLoading: true,
+	isSearching: false
 });
-
 export const notes = () => store.notes;
-export const searchText = () => store.searchText;
-export const [isLoading, setIsLoading] = createSignal(true);
-export const [isSearching, setIsSearching] = createSignal(false);
+export const searchText = createMemo(() => store.searchText);
+export const isLoading = createMemo(() => store.isLoading);
+export const isSearching = createMemo(() => store.isSearching);
 export const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
-const searchResults = createMemo(() => {
+export const searchResults = createMemo(() => {
 	const trimmed = store.searchText.trim();
 	if (!trimmed) {
 		return store.notes;
@@ -46,7 +49,7 @@ export async function hydrateNotes(): Promise<void> {
 		setStore("notes", []);
 		console.error("Failed to load notes from storage", err);
 	} finally {
-		setIsLoading(false);
+		setStore("isLoading", false);
 	}
 }
 
@@ -54,18 +57,18 @@ export function setSearchText(query: string) {
 	const trimmed = query.trim();
 	setStore("searchText", trimmed);
 	if (!trimmed) {
-		setIsSearching(false);
+		setStore("isSearching", false);
 		setContentMatchedIds(null);
 		return;
 	}
-	setIsSearching(true);
+	setStore("isSearching", true);
 	notesRepository
 		.search(content => contains(content, trimmed))
 		.then(matches => {
 			setContentMatchedIds(matches as Set<UUID>);
 		})
 		.finally(() => {
-			setIsSearching(false);
+			setStore("isSearching", false);
 		});
 }
 

@@ -1,3 +1,4 @@
+import { createMemo } from "solid-js";
 import { createStore } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 import { FONT_SCALE_FACTOR } from "@/constants/ui";
@@ -11,8 +12,8 @@ const [store, setStore] = createStore<AppState>({
 	lastView: undefined,
 	fontScaleFactor: getFontScaleFactor()
 });
-export const lastView = () => store.lastView;
-export const fontScaleFactor = () => store.fontScaleFactor;
+export const lastView = createMemo(() => store.lastView);
+export const fontScaleFactor = createMemo(() => store.fontScaleFactor);
 
 function getFontScaleFactor(): number {
 	const factor = parseInt(localStorage.getItem(FONT_SCALE_FACTOR) ?? emptyString);

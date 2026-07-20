@@ -1,4 +1,5 @@
-import { createSignal, createEffect, on, runWithOwner } from "solid-js";
+import { createEffect, createMemo, createSignal, on, runWithOwner } from "solid-js";
+import { createStore } from "solid-js/store";
 import { TOKEN_KEY, EXPIRY_KEY, USER_KEY, CLIENT_ID, SESSION_KEY, TOKEN_REFRESH_BUFFER_MS, AUTH_TOKEN_URL, AUTH_START_URL, AUTH_SIGNOUT_URL } from "@/constants/auth";
 import { LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY } from "@/constants/sync";
 import { deleteKV, getKV, setKV } from "@/storage/db";
@@ -8,21 +9,28 @@ type UserInfo = {
 	email: string;
 	name: string;
 };
+interface AuthState {
+	isReady: boolean;
+	isSignedIn: boolean;
+	user: UserInfo | null;
+}
 
 let hydrated = false;
 let cachedToken: string | null = null;
 let cachedExpiry: number = 0;
 let cachedUser: UserInfo | null = null;
 let refreshInFlight: Promise<string> | null = null;
-const [ready, setReady] = createSignal(false);
-const [signedIn, setSignedIn] = createSignal(false);
-const [userInfo, setUserInfo] = createSignal<UserInfo | null>(null);
+const [state, setState] = createStore<AuthState>({
+	isReady: false,
+	isSignedIn: false,
+	user: null
+});
 const [accessToken, setAccessToken] = createSignal<string | null>(null);
 const [tokenExpiresAt, setTokenExpiresAt] = createSignal(0);
 export const isConfigured = !!CLIENT_ID;
-export const isReady = ready;
-export const isSignedIn = signedIn;
-export const user = userInfo;
+export const isReady = createMemo(() => state.isReady);
+export const isSignedIn = createMemo(() => state.isSignedIn);
+export const user = createMemo(() => state.user);
 
 export async function hydrateAuthState(): Promise<void> {
 	if (hydrated) {
@@ -57,7 +65,7 @@ export async function hydrateAuthState(): Promise<void> {
 		);
 		createEffect(
 			on(
-				userInfo,
+				() => state.user,
 				async info => {
 					if (!info) {
 						await deleteKV(USER_KEY);
@@ -79,8 +87,8 @@ async function clearSession(keepUser = false) {
 	cachedToken = null;
 	cachedExpiry = 0;
 	if (!keepUser) {
-		setUserInfo(null);
-		setSignedIn(false);
+		setState("user", null);
+		setState("isSignedIn", false);
 		cachedUser = null;
 		await deleteKV(SESSION_KEY);
 		await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
@@ -110,10 +118,10 @@ async function refreshFromServer(): Promise<string> {
 			setAccessToken(data.access_token);
 			setTokenExpiresAt(Date.now() + (data.expires_in || 3600) * 1000);
 			if (data.user) {
-				setUserInfo(data.user);
+				setState("user", data.user);
 			}
 			await setKV(SESSION_KEY, true);
-			setSignedIn(true);
+			setState("isSignedIn", true);
 			return data.access_token;
 		} finally {
 			refreshInFlight = null;
@@ -131,23 +139,23 @@ export async function getAccessToken(): Promise<string> {
 }
 
 export function tryRestoreSession() {
-	if (ready()) {
+	if (state.isReady) {
 		return;
 	}
 	if (!CLIENT_ID) {
-		setReady(true);
+		setState("isReady", true);
 		return;
 	}
 	if (cachedToken && cachedExpiry && Date.now() < cachedExpiry - TOKEN_REFRESH_BUFFER_MS) {
 		setAccessToken(cachedToken);
 		setTokenExpiresAt(cachedExpiry);
-		setUserInfo(cachedUser);
-		setSignedIn(true);
+		setState("user", cachedUser);
+		setState("isSignedIn", true);
 	} else if (cachedUser) {
-		setUserInfo(cachedUser);
-		setSignedIn(true);
+		setState("user", cachedUser);
+		setState("isSignedIn", true);
 	}
-	setReady(true);
+	setState("isReady", true);
 }
 
 export function signIn(): Promise<void> {
@@ -183,10 +191,10 @@ export function signIn(): Promise<void> {
 			}
 			if (event.data.ok) {
 				if (event.data.user) {
-					setUserInfo(event.data.user);
+					setState("user", event.data.user);
 				}
 				await setKV(SESSION_KEY, true);
-				setSignedIn(true);
+				setState("isSignedIn", true);
 				try {
 					await refreshFromServer();
 				} catch (err) {

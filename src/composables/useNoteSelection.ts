@@ -1,39 +1,47 @@
-import { createSignal, createMemo } from "solid-js";
+import { createMemo } from "solid-js";
+import { createStore } from "solid-js/store";
 import type { UUID } from "crypto";
 
-const [selecting, setSelecting] = createSignal(false);
-const [selectedNoteIds, setSelectedNoteIds] = createSignal<Set<UUID>>(new Set<UUID>());
-export const isSelecting = selecting;
-export const selectedIds = selectedNoteIds;
-export const selectedCount = createMemo(() => selectedNoteIds().size);
+interface SelectionState {
+	isSelecting: boolean;
+	selectedIds: Set<UUID>;
+}
+
+const [state, setState] = createStore<SelectionState>({
+	isSelecting: false,
+	selectedIds: new Set<UUID>()
+});
+export const isSelecting = createMemo(() => state.isSelecting);
+export const selectedIds = createMemo(() => state.selectedIds);
+export const selectedCount = createMemo(() => state.selectedIds.size);
 
 export function enterSelectionMode() {
-	setSelecting(true);
+	setState("isSelecting", true);
 }
 
 export function exitSelectionMode() {
-	setSelectedNoteIds(new Set<UUID>());
-	setSelecting(false);
+	setState("selectedIds", new Set<UUID>());
+	setState("isSelecting", false);
 }
 
 export function toggleSelection(id: UUID) {
-	const next = new Set(selectedNoteIds());
+	const next = new Set(state.selectedIds);
 	if (next.has(id)) {
 		next.delete(id);
 	} else {
 		next.add(id);
 	}
-	setSelectedNoteIds(next);
+	setState("selectedIds", next);
 }
 
 export function isSelected(id: UUID): boolean {
-	return selectedNoteIds().has(id);
+	return state.selectedIds.has(id);
 }
 
 export function selectAll(ids: UUID[]) {
-	setSelectedNoteIds(new Set(ids));
+	setState("selectedIds", new Set(ids));
 }
 
 export function clearSelection() {
-	setSelectedNoteIds(new Set<UUID>());
+	setState("selectedIds", new Set<UUID>());
 }

@@ -1,23 +1,23 @@
+import { emptyString } from "@/constants/common";
+
 let sentenceSegmenterInstance: Intl.Segmenter | undefined;
 let wordSegmenterInstance: Intl.Segmenter | undefined;
 let characterSegmenterInstance: Intl.Segmenter | undefined;
 const summaryLength = 100;
 const wordMatchRegExp = /[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}]+/u;
-
-function sentenceSegmenter(): Intl.Segmenter {
-	return (sentenceSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "sentence" }));
-}
-
-function wordSegmenter(): Intl.Segmenter {
-	return (wordSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "word" }));
-}
-
-function characterSegmenter(): Intl.Segmenter {
-	return (characterSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "grapheme" }));
-}
+const sentenceSegmenter = () => (sentenceSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "sentence" }));
+const wordSegmenter = () => (wordSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "word" }));
+const characterSegmenter = () => (characterSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "grapheme" }));
 
 export const getSummary = (text: string): string => {
-	return text.length > summaryLength ? text.substring(0, summaryLength) + "…" : text;
+	const chars = Array.from(characterSegmenter().segment(text));
+	if (chars.length <= summaryLength) {
+		return text;
+	}
+	return `${chars
+		.toSpliced(summaryLength - 1)
+		.map(x => x.segment)
+		.join(emptyString)}\u2026`;
 };
 
 export const getSentenceCount = (text: string): number => {

@@ -1,5 +1,5 @@
-import * as db from "@/storage/db";
 import { fromJSON, toJSON, toMetaJSON, type Note } from "@/models/Note";
+import * as db from "@/storage/db";
 import type { UUID } from "crypto";
 
 class NotesRepository {

@@ -1,5 +1,5 @@
-import { getAccessToken } from "@/composables/useGoogleAuth";
 import { DRIVE_API, UPLOAD_API } from "@/constants/sync";
+import { getAccessToken } from "@/composables/useGoogleAuth";
 
 interface DriveFile {
 	id: string;

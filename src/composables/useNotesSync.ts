@@ -10,8 +10,8 @@ import { deleteKV, getKV, setKV } from "@/storage/db";
 import * as notesStore from "@/stores/notes";
 import { addNotification } from "@/stores/notifications";
 import { getAppOwner } from "@/composables/useAppOwner";
-import { deleteFile, findFile, listFiles, readJSONById, writeJSON, writeJSONById } from "@/composables/useGoogleDrive";
 import { isSignedIn } from "@/composables/useGoogleAuth";
+import { deleteFile, findFile, listFiles, readJSONById, writeJSON, writeJSONById } from "@/composables/useGoogleDrive";
 import type { UUID } from "crypto";
 
 interface SyncState {

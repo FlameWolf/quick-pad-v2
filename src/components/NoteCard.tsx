@@ -1,8 +1,8 @@
 import { Show } from "solid-js";
 import { A } from "@solidjs/router";
-import { Note } from "@/models/Note";
 import { emptyString } from "@/constants/common";
 import Icon from "@/components/Icon";
+import type { Note } from "@/models/Note";
 import type { UUID } from "node:crypto";
 
 interface Props {

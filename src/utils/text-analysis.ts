@@ -1,37 +1,49 @@
 import { emptyString } from "@/constants/common";
 
-let sentenceSegmenterInstance: Intl.Segmenter | undefined;
-let wordSegmenterInstance: Intl.Segmenter | undefined;
-let characterSegmenterInstance: Intl.Segmenter | undefined;
 const summaryLength = 100;
 const wordMatchRegExp = /[\p{L}\p{M}\p{Nd}\p{Pc}\p{Join_C}]+/u;
-const sentenceSegmenter = () => (sentenceSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "sentence" }));
-const wordSegmenter = () => (wordSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "word" }));
-const characterSegmenter = () => (characterSegmenterInstance ??= new Intl.Segmenter("en", { granularity: "grapheme" }));
+const sentenceSegmenter = new Intl.Segmenter("en", { granularity: "sentence" });
+const wordSegmenter = new Intl.Segmenter("en", { granularity: "word" });
+const characterSegmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 
-export const getSummary = (text: string): string => {
-	const chars = Array.from(characterSegmenter().segment(text));
-	if (chars.length <= summaryLength) {
-		return text;
+function iterableLength(segments: Intl.Segments): number {
+	let count = 0;
+	for (const _ of segments) {
+		count++;
 	}
-	return `${chars
-		.toSpliced(summaryLength - 1)
-		.map(x => x.segment)
-		.join(emptyString)}\u2026`;
-};
+	return count;
+}
 
-export const getSentenceCount = (text: string): number => {
-	return Array.from(sentenceSegmenter().segment(text)).length;
-};
+export function getSummary(text: string): string {
+	const parts: string[] = [];
+	for (const { segment } of characterSegmenter.segment(text)) {
+		parts.push(segment);
+		if (parts.length > summaryLength) {
+			parts.length = summaryLength - 1;
+			return `${parts.join(emptyString)}\u2026`;
+		}
+	}
+	return text;
+}
 
-export const getWordCount = (text: string): number => {
-	return Array.from(wordSegmenter().segment(text)).filter(x => wordMatchRegExp.test(x.segment)).length;
-};
+export function getSentenceCount(text: string): number {
+	return iterableLength(sentenceSegmenter.segment(text));
+}
 
-export const getCharacterCount = (text: string): number => {
-	return Array.from(characterSegmenter().segment(text)).length;
-};
+export function getWordCount(text: string): number {
+	let count = 0;
+	for (const { segment } of wordSegmenter.segment(text)) {
+		if (wordMatchRegExp.test(segment)) {
+			count++;
+		}
+	}
+	return count;
+}
 
-export const contains = (text: string, search: string): boolean => {
+export function getCharacterCount(text: string): number {
+	return iterableLength(characterSegmenter.segment(text));
+}
+
+export function contains(text: string, search: string): boolean {
 	return new RegExp(RegExp.escape(search), "i").test(text);
-};
+}

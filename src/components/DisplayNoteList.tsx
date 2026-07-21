@@ -1,13 +1,13 @@
 import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from "solid-js";
 import { A, useBeforeLeave } from "@solidjs/router";
-import * as notesStore from "@/stores/notes";
+import { bulkActions } from "@/constants/actions";
 import * as appStore from "@/stores/app";
+import * as notesStore from "@/stores/notes";
+import { confirm } from "@/composables/useConfirmDialogue";
 import { exportAllNotes, exportNotes, importFiles } from "@/composables/useFileIO";
 import { clearSelection, enterSelectionMode, exitSelectionMode, isSelected, isSelecting, selectAll, selectedCount, toggleSelection } from "@/composables/useNoteSelection";
 import { getSortedNotes, setSortField, sortField, sortOrder, toggleSortDirection, type SortField } from "@/composables/useNoteSort";
-import { confirm } from "@/composables/useConfirmDialogue";
 import { requestSync } from "@/composables/useNotesSync";
-import { bulkActions } from "@/constants/actions";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";

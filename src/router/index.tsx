@@ -1,5 +1,5 @@
-import { Route, Navigate, useBeforeLeave, useLocation } from "@solidjs/router";
 import { createEffect, createSignal, lazy, on, Show } from "solid-js";
+import { Route, Navigate, useBeforeLeave, useLocation } from "@solidjs/router";
 import { state as confirmState } from "@/composables/useConfirmDialogue";
 import DisplayNoteList from "@/components/DisplayNoteList";
 import EditNote from "@/components/EditNote";

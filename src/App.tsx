@@ -1,8 +1,8 @@
 import "@/styles.css";
 import { getOwner, onMount, type JSX } from "solid-js";
 import { A } from "@solidjs/router";
-import { RouteTransition } from "@/router";
 import { hydrateNotes } from "@/stores/notes";
+import { RouteTransition } from "@/router";
 import { setAppOwner } from "@/composables/useAppOwner";
 import { purgeStaleDrafts } from "@/composables/useNoteDraft";
 import Icon from "@/components/Icon";

@@ -1,18 +1,18 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
-import { listViewRoutes } from "@/router";
+import { emptyString } from "@/constants/common";
+import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
+import { debounce } from "@/utils/timing";
+import { create } from "@/models/Note";
 import * as notesStore from "@/stores/notes";
 import * as appStore from "@/stores/app";
 import { addNotification } from "@/stores/notifications";
-import { exportNote } from "@/composables/useFileIO";
+import { listViewRoutes } from "@/router";
 import { confirm } from "@/composables/useConfirmDialogue";
-import { requestSync } from "@/composables/useNotesSync";
+import { exportNote } from "@/composables/useFileIO";
 import { clearDraft, loadDraft, saveDraft } from "@/composables/useNoteDraft";
+import { requestSync } from "@/composables/useNotesSync";
 import { useUndoRedo } from "@/composables/useUndoRedo";
-import { emptyString } from "@/constants/common";
-import { create } from "@/models/Note";
-import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
-import { debounce } from "@/utils/timing";
 import Icon from "@/components/Icon";
 import type { UUID } from "crypto";
 

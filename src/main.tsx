@@ -1,6 +1,6 @@
 import { ensurePersistentStorage } from "@/storage/persistence";
-import { registerServiceWorker } from "@/registerServiceWorker";
 import { runMigration } from "@/storage/migrate";
+import { registerServiceWorker } from "@/registerServiceWorker";
 import { render } from "solid-js/web";
 import { Router } from "@solidjs/router";
 import { Routes } from "@/router";

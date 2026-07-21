@@ -1,8 +1,8 @@
-import { activeNotes, addNote, getNoteContent } from "@/stores/notes";
-import { addNotification } from "@/stores/notifications";
-import { create, type Note } from "@/models/Note";
 import { emptyString } from "@/constants/common";
 import { isTextFile } from "@/utils/file-detection";
+import { create, type Note } from "@/models/Note";
+import * as notesStore from "@/stores/notes";
+import { addNotification } from "@/stores/notifications";
 
 interface ImportError {
 	fileName: string;
@@ -56,7 +56,7 @@ export function importFiles(): Promise<number> {
 				try {
 					const content = await file.text();
 					const title = file.name.replace(/\.txt$/i, emptyString) || "Untitled";
-					await addNote(create(title, content));
+					await notesStore.addNote(create(title, content));
 					count++;
 				} catch {
 					errors.push({
@@ -75,7 +75,7 @@ export function importFiles(): Promise<number> {
 }
 
 export async function exportNote(note: Note) {
-	const content = (await getNoteContent(note.id)) ?? emptyString;
+	const content = (await notesStore.getNoteContent(note.id)) ?? emptyString;
 	const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
 	triggerDownload(blob, `${sanitizeFilename(note.title)}.txt`);
 }
@@ -94,7 +94,7 @@ export async function exportNotes(notes: Note[]) {
 			uniqueName = `${name} (${counter++})`;
 		}
 		usedNames.add(uniqueName);
-		const content = (await getNoteContent(note.id)) ?? emptyString;
+		const content = (await notesStore.getNoteContent(note.id)) ?? emptyString;
 		zip.file(`${uniqueName}.txt`, content);
 	}
 	const blob = await zip.generateAsync({ type: "blob" });
@@ -102,5 +102,5 @@ export async function exportNotes(notes: Note[]) {
 }
 
 export async function exportAllNotes() {
-	await exportNotes(activeNotes());
+	await exportNotes(notesStore.activeNotes());
 }

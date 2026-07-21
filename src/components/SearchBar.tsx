@@ -1,9 +1,9 @@
 import { createMemo, Show } from "solid-js";
 import { useLocation } from "@solidjs/router";
-import { listViewRoutes } from "@/router";
-import * as notesStore from "@/stores/notes";
-import { debounce } from "@/utils/timing";
 import { emptyString } from "@/constants/common";
+import { debounce } from "@/utils/timing";
+import * as notesStore from "@/stores/notes";
+import { listViewRoutes } from "@/router";
 
 export default function SearchBar() {
 	let searchInput!: HTMLInputElement;

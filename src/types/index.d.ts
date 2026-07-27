@@ -35,7 +35,7 @@ type View = "active" | "favourited" | "archived" | "trash";
 interface SelectionAction {
 	key: "export" | "fave" | "unfave" | "archive" | "unarchive" | "trash" | "restore" | "permanent";
 	label: string;
-	variant: "primary" | "danger" | "outline-primary" | "outline-secondary" | "outline-danger";
+	variant: "primary" | "secondary" | "danger" | "outline-primary" | "outline-secondary" | "outline-danger";
 }
 
 type LegalBlock = { type: "paragraph"; text: string } | { type: "list"; items: string[] };

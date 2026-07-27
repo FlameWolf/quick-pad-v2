@@ -1,15 +1,18 @@
 import { createMemo, createSignal } from "solid-js";
-import { createStore, produce } from "solid-js/store";
+import { createStore, produce, unwrap } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
 import { contains } from "@/utils/text-analysis";
-import { archive, fave, pin, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
+import { applyTags, archive, fave, pin, clearTags, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
+import { tagsRepository } from "@/storage/TagsRepository";
 import type { UUID } from "crypto";
 
 interface NotesState {
 	notes: Note[];
+	tags: string[];
 	searchText: string;
+	searchTags: Set<string>;
 	isLoading: boolean;
 	isSearching: boolean;
 }
@@ -17,21 +20,26 @@ interface NotesState {
 let hydrated = false;
 const [store, setStore] = createStore<NotesState>({
 	notes: [],
+	tags: [],
 	searchText: emptyString,
+	searchTags: new Set<string>(),
 	isLoading: true,
 	isSearching: false
 });
+const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
 export const notes = () => store.notes;
+export const tags = () => store.tags;
 export const searchText = createMemo(() => store.searchText);
+export const searchTags = createMemo(() => store.searchTags);
 export const isLoading = createMemo(() => store.isLoading);
 export const isSearching = createMemo(() => store.isSearching);
-export const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
 export const searchResults = createMemo(() => {
 	const trimmed = store.searchText.trim();
-	if (!trimmed) {
-		return store.notes;
+	const initial = trimmed ? store.notes.filter(note => contains(note.title, trimmed) || contentMatchedIds()?.has(note.id)) : store.notes;
+	if (store.searchTags.size === 0) {
+		return initial;
 	}
-	return store.notes.filter(note => contains(note.title, trimmed) || contentMatchedIds()?.has(note.id));
+	return initial.filter(note => note.tags?.some(tag => store.searchTags.has(tag)));
 });
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
 export const favedNotes = createMemo(() => searchResults().filter(note => note.favedAt && !note.deletedAt));
@@ -45,6 +53,18 @@ export async function hydrateNotes(): Promise<void> {
 	hydrated = true;
 	try {
 		setStore("notes", await notesRepository.loadAll());
+		setStore(
+			"tags",
+			Array.from(
+				new Set(
+					store.notes
+						.map(note => note.tags)
+						.filter(Boolean)
+						.flat()
+						.concat(await tagsRepository.loadAll()) as string[]
+				)
+			)
+		);
 	} catch (err) {
 		setStore("notes", []);
 		console.error("Failed to load notes from storage", err);
@@ -72,9 +92,13 @@ export function setSearchText(query: string) {
 		});
 }
 
+export function setSearchTags(tags: string[]) {
+	setStore("searchTags", new Set(tags));
+}
+
 export async function addNote(note: Note) {
 	setStore("notes", items => items.concat(note));
-	await notesRepository.saveFull(note);
+	await notesRepository.saveFull(unwrap(note));
 }
 
 export function updateNote(id: UUID, title: string, content: string) {
@@ -83,7 +107,7 @@ export function updateNote(id: UUID, title: string, content: string) {
 		note => note.id === id,
 		produce(async note => {
 			update(note, title, content);
-			await notesRepository.saveFull(note);
+			await notesRepository.saveFull(unwrap(note));
 		})
 	);
 }
@@ -102,7 +126,7 @@ async function applyToNote(id: UUID, mutator: (note: Note) => void) {
 		note => note.id === id,
 		produce(async note => {
 			mutator(note);
-			await notesRepository.saveMeta(note);
+			await notesRepository.saveMeta(unwrap(note));
 		})
 	);
 }
@@ -114,7 +138,7 @@ async function applyToMany(ids: ReadonlyArray<UUID>, mutator: (note: Note) => vo
 		produce(async notes => {
 			const targetNotes = notes.filter(note => idSet.has(note.id));
 			targetNotes.forEach(mutator);
-			await notesRepository.saveManyMeta(targetNotes);
+			await notesRepository.saveManyMeta(unwrap(targetNotes));
 		})
 	);
 }
@@ -175,6 +199,22 @@ export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 	applyToMany(ids, restore);
 }
 
+export async function addTags(id: UUID, tags: string[]) {
+	await applyToNote(id, note => applyTags(note, tags));
+}
+
+export async function addTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
+	await applyToMany(ids, note => applyTags(note, tags));
+}
+
+export async function removeTags(id: UUID, tags: string[]) {
+	await applyToNote(id, note => clearTags(note, tags));
+}
+
+export async function removeTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
+	await applyToMany(ids, note => clearTags(note, tags));
+}
+
 export async function permanentlyDelete(id: UUID) {
 	const index = store.notes.findIndex(note => note.id === id);
 	if (index === -1) {
@@ -218,10 +258,36 @@ function addOrUpdate(note: Note) {
 
 export async function replaceNote(updatedNote: Note) {
 	addOrUpdate(updatedNote);
-	await notesRepository.saveFull(updatedNote);
+	await notesRepository.saveFull(unwrap(updatedNote));
 }
 
 export async function replaceMultiple(updatedNotes: Note[]) {
 	updatedNotes.forEach(addOrUpdate);
-	await notesRepository.saveManyFull(updatedNotes);
+	await notesRepository.saveManyFull(unwrap(updatedNotes));
+}
+
+export async function createTag(tag: string) {
+	if (!store.tags.includes(tag)) {
+		store.tags.push(tag);
+	}
+	await tagsRepository.save(tag);
+}
+
+export async function createTags(tags: string[]) {
+	tags.filter(tag => !store.tags.includes(tag)).forEach(tag => store.tags.push(tag));
+	await tagsRepository.saveMany(tags);
+}
+
+export async function deleteTags(tags: string[]) {
+	const tagSet = new Set(tags);
+	const affectedIds = store.notes.reduce((ids, note) => {
+		if (note.tags?.some(tag => tagSet.has(tag))) {
+			ids.push(note.id);
+		}
+		return ids;
+	}, [] as UUID[]);
+	await applyToMany(affectedIds, note => clearTags(note, tags));
+	store.tags = store.tags.filter(tag => !tagSet.has(tag));
+	await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
+	return affectedIds.length;
 }

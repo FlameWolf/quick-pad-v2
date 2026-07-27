@@ -125,7 +125,7 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
-export function addTags(note: Note, tags: string[]) {
+export function applyTags(note: Note, tags: string[]) {
 	tags.forEach(tag => {
 		if (!tag) {
 			return;
@@ -139,7 +139,7 @@ export function addTags(note: Note, tags: string[]) {
 	note.stateChangedAt = new Date();
 }
 
-export function removeTags(note: Note, tags: string[]) {
+export function clearTags(note: Note, tags: string[]) {
 	tags.forEach(tag => {
 		if (!note.tags) {
 			return;

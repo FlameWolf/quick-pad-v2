@@ -1,7 +1,7 @@
 import { emptyString } from "@/constants/common";
 import { parseValidDate } from "@/utils/dates";
 import { isValidCount } from "@/utils/numbers";
-import { getSummary, getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
+import { equals, getCharacterCount, getSentenceCount, getSummary, getWordCount } from "@/utils/text-analysis";
 import type { UUID } from "crypto";
 
 export interface NoteMetaJSON {
@@ -14,6 +14,7 @@ export interface NoteMetaJSON {
 	archivedAt?: string;
 	deletedAt?: string;
 	stateChangedAt?: string;
+	tags?: string[];
 	summary?: string;
 	sentenceCount?: number;
 	wordCount?: number;
@@ -35,6 +36,7 @@ export interface Note {
 	archivedAt?: Date;
 	deletedAt?: Date;
 	stateChangedAt?: Date;
+	tags?: string[];
 	summary?: string;
 	sentenceCount?: number;
 	wordCount?: number;
@@ -123,6 +125,33 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
+export function addTags(note: Note, tags: string[]) {
+	tags.forEach(tag => {
+		if (!tag) {
+			return;
+		}
+		note.tags ??= [];
+		if (note.tags.some(x => equals(x, tag))) {
+			return;
+		}
+		note.tags.push(tag);
+	});
+	note.stateChangedAt = new Date();
+}
+
+export function removeTags(note: Note, tags: string[]) {
+	tags.forEach(tag => {
+		if (!note.tags) {
+			return;
+		}
+		const index = note.tags.findIndex(x => equals(x, tag));
+		if (index !== -1) {
+			note.tags.splice(index, 1);
+		}
+	});
+	note.stateChangedAt = new Date();
+}
+
 export function toMetaJSON(note: Note): NoteMetaJSON {
 	return {
 		id: note.id,
@@ -134,6 +163,7 @@ export function toMetaJSON(note: Note): NoteMetaJSON {
 		archivedAt: note.archivedAt?.toISOString(),
 		deletedAt: note.deletedAt?.toISOString(),
 		stateChangedAt: note.stateChangedAt?.toISOString(),
+		tags: note.tags,
 		summary: note.summary,
 		sentenceCount: note.sentenceCount,
 		wordCount: note.wordCount,
@@ -158,7 +188,8 @@ export function fromJSON(data: NoteJSON): Note {
 		pinnedAt: parseValidDate(data.pinnedAt),
 		archivedAt: parseValidDate(data.archivedAt),
 		deletedAt: parseValidDate(data.deletedAt),
-		stateChangedAt: parseValidDate(data.stateChangedAt)
+		stateChangedAt: parseValidDate(data.stateChangedAt),
+		tags: data.tags
 	};
 	if (typeof data.summary === "string" && isValidCount(data.sentenceCount) && isValidCount(data.wordCount) && isValidCount(data.characterCount)) {
 		note.summary = data.summary;

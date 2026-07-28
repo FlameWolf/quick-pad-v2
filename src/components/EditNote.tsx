@@ -1,6 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
+import { haveSameItems } from "@/utils/common";
 import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
 import { debounce } from "@/utils/timing";
 import { create } from "@/models/Note";
@@ -14,6 +15,7 @@ import { clearDraft, loadDraft, saveDraft } from "@/composables/useNoteDraft";
 import { requestSync } from "@/composables/useNotesSync";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import Icon from "@/components/Icon";
+import DisplayTagList from "@/components/DisplayTagList";
 import type { UUID } from "crypto";
 
 interface Props {
@@ -31,6 +33,7 @@ export default function EditNote(props: Props) {
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());
 	const [editTitle, setEditTitle] = createSignal(existingNote()?.title ?? emptyString);
 	const [editContent, setEditContent] = createSignal(emptyString);
+	const [editTags, setEditTags] = createSignal<string[] | undefined>();
 	const [loadedContent, setLoadedContent] = createSignal(emptyString);
 	const [isContentLoaded, setIsContentLoaded] = createSignal(false);
 	const undoRedo = useUndoRedo<string>(editContent());
@@ -48,19 +51,19 @@ export default function EditNote(props: Props) {
 			return false;
 		}
 		if (isCreateMode()) {
-			return editTitle().trim().length > 0 || editContent().length > 0;
+			return editTitle().trim().length > 0 || editContent().length > 0 || !!editTags()?.length;
 		}
 		const note = existingNote();
 		if (!note) {
 			return false;
 		}
-		return editTitle() !== note.title || editContent() !== loadedContent();
+		return editTitle() !== note.title || editContent() !== loadedContent() || !haveSameItems(editTags(), existingNote()?.tags);
 	});
 	const draftId = createMemo(() => (isCreateMode() ? "new" : params.id!));
 	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
 	const persistDraft = debounce(() => {
 		if (hasUnsavedChanges()) {
-			saveDraft(draftId(), editTitle(), editContent());
+			saveDraft(draftId(), editTitle(), editContent(), editTags());
 		} else {
 			clearDraft(draftId());
 		}
@@ -153,24 +156,24 @@ export default function EditNote(props: Props) {
 			setIsEditing(false);
 			setEditTitle(note?.title ?? emptyString);
 			setEditContent(loadedContent());
+			setEditTags(existingNote()?.tags);
 		}
 	}
 
 	async function saveNote() {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
+		const tags = editTags();
+		const note = isCreateMode() ? create(title, content) : existingNote()!;
 		setIsEditing(false);
+		note.tags = tags?.length ? tags : undefined;
 		clearDraft(draftId());
 		if (isCreateMode()) {
-			const note = create(title, content);
 			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else {
-			const note = existingNote();
-			if (note) {
-				notesStore.updateNote(note.id, title, content);
-				setLoadedContent(content);
-			}
+			notesStore.updateNote(note.id, title, content);
+			setLoadedContent(content);
 		}
 		clearDraft(draftId());
 		requestSync();
@@ -301,6 +304,7 @@ export default function EditNote(props: Props) {
 				setIsEditing(true);
 				setEditTitle(draft.title);
 				setEditContent(draft.content);
+				setEditTags(draft.tags);
 				undoRedo.push(editContent());
 			} else {
 				clearDraft(draftId());
@@ -311,7 +315,7 @@ export default function EditNote(props: Props) {
 	function flushDraft() {
 		persistDraft.cancel();
 		if (hasUnsavedChanges()) {
-			saveDraft(draftId(), editTitle(), editContent());
+			saveDraft(draftId(), editTitle(), editContent(), editTags());
 		}
 	}
 
@@ -388,7 +392,7 @@ export default function EditNote(props: Props) {
 
 	createEffect(
 		on(
-			[editTitle, editContent],
+			[editTitle, editContent, editTags],
 			() => {
 				adjustTextAreaHeight();
 				persistDraft();
@@ -405,6 +409,14 @@ export default function EditNote(props: Props) {
 				return;
 			}
 			rootElement.style.setProperty("--font-scale-factor", factor.toString());
+		})
+	);
+
+	createEffect(
+		on(existingNote, note => {
+			if (note) {
+				setEditTags(note.tags);
+			}
 		})
 	);
 
@@ -547,7 +559,9 @@ export default function EditNote(props: Props) {
 					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
 				</Show>
 			</div>
-			<hr classList={{ [`mt-1`]: isEditing() }}/>
+			<Show when={!!editTags()?.length || isEditing()} fallback={<hr/>}>
+				<DisplayTagList class="my-3" activeTags={editTags()} allowEdit={isEditing()} allowCreate={true} onSelectionChanged={setEditTags}/>
+			</Show>
 			<Show when={hasContent()}>
 				<div class="d-flex flex-wrap gap-2 mt-3">
 					<Show when={sentenceCount()}>

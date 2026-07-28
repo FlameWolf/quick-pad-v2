@@ -13,12 +13,16 @@ export function normaliseTag(raw: string): string {
 	return raw.trim().replace(/\s+/g, " ").normalize("NFC");
 }
 
-export function haveSameItems<T>(a: readonly T[] = [], b: readonly T[] | undefined = []): boolean {
+export function areArraysEqual<T>(a: readonly T[] = [], b: readonly T[] | undefined = []): boolean {
 	if (a.length !== b.length) {
 		return false;
 	}
 	const set = new Set(a);
 	return b.every(x => set.has(x));
+}
+
+export function areSetsEqual(setA: Set<unknown>, setB: Set<unknown>) {
+	return setA.symmetricDifference(setB).size === 0;
 }
 
 export function copyNullableArray<T>(arr: T[] | undefined): T[] | undefined {

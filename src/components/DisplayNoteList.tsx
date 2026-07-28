@@ -11,6 +11,7 @@ import { requestSync } from "@/composables/useNotesSync";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";
+import DisplayTagList from "@/components/DisplayTagList";
 import NoteCard from "@/components/NoteCard";
 import SelectionActionBar from "@/components/SelectionActionBar";
 import type { Note } from "@/models/Note";
@@ -157,12 +158,13 @@ export default function DisplayNoteList(props: Props) {
 
 	async function handleSelectionAction(key: SelectionAction["key"]) {
 		const ids = getSelectedIds();
-		if (ids.length === 0) {
+		const idCount = ids.length;
+		if (idCount === 0) {
 			return;
 		}
 		let syncNotes = true;
 		let purgeNotes = false;
-		const noun = ids.length === 1 ? "note" : "notes";
+		const noun = idCount === 1 ? "note" : "notes";
 		switch (key) {
 			case "export": {
 				await exportNotes(getSelectedNotes());
@@ -187,8 +189,8 @@ export default function DisplayNoteList(props: Props) {
 			}
 			case "trash": {
 				const ok = await confirm({
-					title: `Move ${ids.length} ${noun} to Trash?`,
-					message: `${ids.length === 1 ? "This note" : "These notes"} can be restored from Trash within 30 days.`,
+					title: `Move ${idCount} ${noun} to Trash?`,
+					message: `${idCount === 1 ? "This note" : "These notes"} can be restored from Trash within 30 days.`,
 					confirmText: "Move to Trash",
 					cancelText: "Cancel",
 					variant: "danger"
@@ -205,7 +207,7 @@ export default function DisplayNoteList(props: Props) {
 			}
 			case "permanent": {
 				const ok = await confirm({
-					title: `Permanently delete ${ids.length} ${noun}?`,
+					title: `Permanently delete ${idCount} ${noun}?`,
 					message: "This action cannot be undone.",
 					confirmText: "Delete Permanently",
 					cancelText: "Cancel",
@@ -246,6 +248,12 @@ export default function DisplayNoteList(props: Props) {
 		requestSync(trashedNoteIds);
 	}
 
+	async function updateTagFilter(tags: string[]) {
+		if (!isSelecting()) {
+			notesStore.setSearchTags(tags);
+		}
+	}
+
 	onMount(() => {
 		exitSelectionMode();
 	});
@@ -274,7 +282,7 @@ export default function DisplayNoteList(props: Props) {
 						<div class="mt-3" role="status">{notesStore.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
-				<Match when={!hasNotes()}>
+				<Match when={!hasNotes() && !notesStore.searchTags().size}>
 					<EmptyState message={emptyMessage()} showActions={view() === "active" && !isSearchMode()} importAction={handleImport}/>
 				</Match>
 				<Match when={hasNotes()}>
@@ -329,6 +337,7 @@ export default function DisplayNoteList(props: Props) {
 								</button>
 							</Show>
 						</div>
+						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={true} onSelectionChanged={updateTagFilter}/>
 						<For each={noteSections()}>
 							{section => (
 								<>

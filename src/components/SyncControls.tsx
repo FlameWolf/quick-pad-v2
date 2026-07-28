@@ -128,8 +128,8 @@ export default function SyncControls() {
 							<Icon type="google"/>
 						</button>
 					}>
-					<div class="position-relative">
-						<button ref={setSyncMenuTrigger} class="d-flex flex-nowrap btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+					<div class="dropdown">
+						<button ref={setSyncMenuTrigger} class="btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
 							<Show
 								when={!isSyncing()}
 								fallback={
@@ -160,31 +160,39 @@ export default function SyncControls() {
 							<span class="d-none d-md-inline ms-2">{user()?.name ?? "Sync"}</span>
 						</button>
 						<Show when={showSyncMenu()}>
-							<div class="dropdown-menu show sync-dropdown">
-								<div class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</div>
-								<div class="dropdown-divider"></div>
-								<label class="dropdown-item sync-dropdown-item d-flex align-items-center gap-2 mb-0">
-									<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input m-0" on:click={handleToggleAutoSync}/>
-									<span>Auto-sync</span>
-								</label>
-								<div class="dropdown-divider"></div>
-								<button class="dropdown-item sync-dropdown-item" onClick={() => handleSync(false)} disabled={isSyncing()}>
-									<Icon type="arrowRepeat"/>
-									<span class="ms-2">Sync</span>
-								</button>
-								<button class="dropdown-item sync-dropdown-item" onClick={() => handleSync(true)} disabled={isSyncing()}>
-									<Icon type="lightningCharge"/>
-									<span class="ms-2">Force Sync</span>
-								</button>
+							<ul class="dropdown-menu show end-0 mt-1">
+								<li class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</li>
+								<li class="dropdown-divider"></li>
+								<li>
+									<label class="dropdown-item">
+										<input type="checkbox" checked={autoSyncEnabled()} class="form-check-input" on:click={handleToggleAutoSync}/>
+										<span class="ms-2">Auto-sync</span>
+									</label>
+								</li>
+								<li class="dropdown-divider"></li>
+								<li>
+									<button class="dropdown-item" onClick={() => handleSync(false)} disabled={isSyncing()}>
+										<Icon type="arrowRepeat"/>
+										<span class="ms-2">Sync</span>
+									</button>
+								</li>
+								<li>
+									<button class="dropdown-item" onClick={() => handleSync(true)} disabled={isSyncing()}>
+										<Icon type="lightningCharge"/>
+										<span class="ms-2">Force Sync</span>
+									</button>
+								</li>
 								<Show when={lastSyncedLabel()}>
-									<div class="dropdown-header text-muted small px-3 py-1">Last synced: {lastSyncedLabel()}</div>
+									<li class="dropdown-header text-muted small px-3 py-1">Last synced: {lastSyncedLabel()}</li>
 								</Show>
-								<div class="dropdown-divider"></div>
-								<button class="dropdown-item sync-dropdown-item text-danger" onClick={handleSignOut}>
-									<Icon type="boxArrowRight"/>
-									<span class="ms-2">Sign out</span>
-								</button>
-							</div>
+								<li class="dropdown-divider"></li>
+								<li>
+									<button class="dropdown-item text-danger" onClick={handleSignOut}>
+										<Icon type="boxArrowRight"/>
+										<span class="ms-2">Sign out</span>
+									</button>
+								</li>
+							</ul>
 						</Show>
 					</div>
 				</Show>

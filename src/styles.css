@@ -24,73 +24,8 @@ body {
 	max-height: 0.875rem;
 }
 
-.sync-dropdown {
-	position: absolute;
-	top: calc(100% + 0.25rem);
-	right: 0;
-}
-
-.sync-dropdown-item {
-	min-height: 2.5rem;
-	display: flex;
-	align-items: center;
-	white-space: normal;
-}
-
-.sync-dropdown-item:disabled {
-	opacity: 0.6;
-}
-
-.confirm-overlay {
-	position: fixed;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 1rem;
-	background-color: color-mix(in srgb, var(--bs-body-color) 50%, transparent);
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity 0.15s ease;
-}
-
-.confirm-overlay[data-visible="true"] {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.confirm-dialog {
-	background-color: var(--bs-body-bg);
-	color: var(--bs-body-color);
-	border-radius: 0.75rem;
-	padding: 1.25rem;
-	width: 100%;
-	max-width: 28rem;
-	filter: drop-shadow(0 0 0.75rem var(--bs-body-color));
-	transform: scale(0.96);
-	transition: transform 0.15s ease;
-}
-
-.confirm-overlay[data-visible="true"] .confirm-dialog {
-	transform: scale(1);
-}
-
-.confirm-title {
-	margin: 0 0 0.75rem 0;
-	font-weight: 600;
-}
-
-.confirm-message {
-	margin: 0 0 1.25rem 0;
-	color: var(--bs-secondary-color);
-	white-space: pre-wrap;
-}
-
-.confirm-actions {
-	display: flex;
-	justify-content: flex-end;
-	gap: 0.5rem;
-	flex-wrap: wrap;
+.dropdown-item:disabled {
+	opacity: 0.5;
 }
 
 .notes-grid {
@@ -241,4 +176,56 @@ textarea.form-control {
 	width: 100vw;
 	height: 100vh;
 	cursor: wait;
+}
+
+.confirm-overlay {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	background-color: color-mix(in srgb, var(--bs-body-color) 50%, transparent);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s ease;
+}
+
+.confirm-overlay[data-visible="true"] {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.confirm-dialog {
+	background-color: var(--bs-body-bg);
+	color: var(--bs-body-color);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	width: 100%;
+	max-width: 28rem;
+	filter: drop-shadow(0 0 0.75rem var(--bs-body-color));
+	transform: scale(0.96);
+	transition: transform 0.15s ease;
+}
+
+.confirm-overlay[data-visible="true"] .confirm-dialog {
+	transform: scale(1);
+}
+
+.confirm-title {
+	margin: 0 0 0.75rem 0;
+	font-weight: 600;
+}
+
+.confirm-message {
+	margin: 0 0 1.25rem 0;
+	color: var(--bs-secondary-color);
+	white-space: pre-wrap;
+}
+
+.confirm-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	flex-wrap: wrap;
 }

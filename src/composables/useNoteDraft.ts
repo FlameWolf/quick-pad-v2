@@ -3,6 +3,7 @@ import { DRAFT_EXPIRY, DRAFT_PREFIX } from "@/constants/storage";
 interface NoteDraft {
 	title: string;
 	content: string;
+	tags?: string[];
 	savedAt: number;
 }
 
@@ -10,10 +11,10 @@ function draftKey(id: string) {
 	return `${DRAFT_PREFIX}${id}`;
 }
 
-export function saveDraft(id: string, title: string, content: string): void {
+export function saveDraft(id: string, title: string, content: string, tags?: string[]): void {
 	const key = draftKey(id);
 	try {
-		localStorage.setItem(key, JSON.stringify({ title, content, savedAt: Date.now() } satisfies NoteDraft));
+		localStorage.setItem(key, JSON.stringify({ title, content, tags, savedAt: Date.now() } satisfies NoteDraft));
 	} catch {
 		console.warn(`Failed to save draft for note ${id}`);
 	}

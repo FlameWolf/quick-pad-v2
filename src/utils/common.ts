@@ -4,3 +4,26 @@ export function camelToKebab(input: string) {
 		.replace(/([A-Z])([A-Z][a-z])/g, "$1-$2")
 		.toLowerCase();
 }
+
+export function titleCase(input: string) {
+	return input.toLowerCase().replace(/\b\w/g, match => match.toUpperCase());
+}
+
+export function normaliseTag(raw: string): string {
+	return raw.trim().replace(/\s+/g, " ").normalize("NFC");
+}
+
+export function haveSameItems<T>(a: readonly T[] = [], b: readonly T[] | undefined = []): boolean {
+	if (a.length !== b.length) {
+		return false;
+	}
+	const set = new Set(a);
+	return b.every(x => set.has(x));
+}
+
+export function copyNullableArray<T>(arr: T[] | undefined): T[] | undefined {
+	if (arr) {
+		return Array.from(arr);
+	}
+	return undefined;
+}

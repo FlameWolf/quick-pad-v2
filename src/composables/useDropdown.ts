@@ -1,6 +1,12 @@
 import { createSignal, onCleanup, onMount, type Accessor } from "solid-js";
 
-export function useDropdown(trigger: Accessor<HTMLElement | undefined>, initialState: boolean = false) {
+type DropdownOptions = {
+	initialState?: boolean;
+	autoClose?: boolean;
+	dropdown?: Accessor<HTMLElement | undefined>;
+};
+
+export function useDropdown(trigger: Accessor<HTMLElement | undefined>, { initialState = false, autoClose = true, dropdown }: DropdownOptions = {}) {
 	const [show, setShow] = createSignal(initialState);
 
 	function toggle() {
@@ -13,8 +19,14 @@ export function useDropdown(trigger: Accessor<HTMLElement | undefined>, initialS
 			return;
 		}
 		const target = event.target as Node;
-		if (triggerElement === target || triggerElement.contains(target)) {
+		if (triggerElement.contains(target)) {
 			return;
+		}
+		if (!autoClose) {
+			const protectedElement = dropdown?.();
+			if (protectedElement?.contains(target)) {
+				return;
+			}
 		}
 		setShow(false);
 	}

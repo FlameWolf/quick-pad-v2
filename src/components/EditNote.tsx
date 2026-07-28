@@ -380,8 +380,10 @@ export default function EditNote(props: Props) {
 				setIsEditing(isCreateMode());
 				if (id && !isCreateMode()) {
 					setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
+					setEditTags(existingNote()?.tags ?? []);
 				} else {
 					setLoadedContent(emptyString);
+					setEditTags(Array.from(notesStore.searchTags()));
 				}
 				setIsContentLoaded(true);
 				undoRedo.reset(loadedContent());
@@ -409,18 +411,6 @@ export default function EditNote(props: Props) {
 				return;
 			}
 			rootElement.style.setProperty("--font-scale-factor", factor.toString());
-		})
-	);
-
-	createEffect(
-		on(existingNote, note => {
-			if (isCreateMode()) {
-				setEditTags(Array.from(notesStore.searchTags()));
-				return;
-			}
-			if (note) {
-				setEditTags(note.tags);
-			}
 		})
 	);
 

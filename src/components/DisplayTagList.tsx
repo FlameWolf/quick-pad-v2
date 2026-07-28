@@ -140,10 +140,10 @@ export default function DisplayTagList(props: Props) {
 			isSelecting,
 			(curr, prev) => {
 				if (!prev) {
-					lastSelected = Array.from(selectedTags());
+					lastSelected = selectedTags();
 				}
 				if (!curr) {
-					setSelectedTags(Array.from(lastSelected));
+					setSelectedTags(lastSelected);
 				}
 				props.onSelectionChanged?.(selectedTags());
 			},

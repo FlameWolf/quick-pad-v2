@@ -2,6 +2,7 @@ import { createMemo, createSignal } from "solid-js";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
+import { mergeArrays } from "@/utils/common";
 import { contains } from "@/utils/text-analysis";
 import { applyTags, archive, fave, pin, clearTags, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
@@ -55,14 +56,12 @@ export async function hydrateNotes(): Promise<void> {
 		setStore("notes", await notesRepository.loadAll());
 		setStore(
 			"tags",
-			Array.from(
-				new Set(
-					store.notes
-						.map(note => note.tags)
-						.filter(Boolean)
-						.flat()
-						.concat(await tagsRepository.loadAll()) as string[]
-				)
+			mergeArrays(
+				store.notes
+					.map(note => note.tags)
+					.filter(Boolean)
+					.flat() as string[],
+				await tagsRepository.loadAll()
 			)
 		);
 	} catch (err) {
@@ -98,6 +97,7 @@ export function setSearchTags(tags: string[]) {
 
 export async function addNote(note: Note) {
 	setStore("notes", items => items.concat(note));
+	setStore("tags", mergeArrays(store.tags, note.tags));
 	await notesRepository.saveFull(unwrap(note));
 }
 
@@ -107,6 +107,7 @@ export function updateNote(id: UUID, title: string, content: string) {
 		note => note.id === id,
 		produce(async note => {
 			update(note, title, content);
+			setStore("tags", mergeArrays(store.tags, note.tags));
 			await notesRepository.saveFull(unwrap(note));
 		})
 	);
@@ -201,10 +202,12 @@ export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 
 export async function addTags(id: UUID, tags: string[]) {
 	await applyToNote(id, note => applyTags(note, tags));
+	setStore("tags", mergeArrays(store.tags, tags));
 }
 
 export async function addTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
 	await applyToMany(ids, note => applyTags(note, tags));
+	setStore("tags", mergeArrays(store.tags, tags));
 }
 
 export async function removeTags(id: UUID, tags: string[]) {
@@ -247,13 +250,14 @@ export async function purgeExpiredTrash() {
 	return expiredIds;
 }
 
-function addOrUpdate(note: Note) {
-	const index = store.notes.findIndex(n => n.id === note.id);
+function addOrUpdate(updatedNote: Note) {
+	const index = store.notes.findIndex(note => note.id === updatedNote.id);
 	if (index === -1) {
-		setStore("notes", items => items.concat(note));
+		setStore("notes", items => items.concat(updatedNote));
 	} else {
-		setStore("notes", index, note);
+		setStore("notes", index, updatedNote);
 	}
+	setStore("tags", mergeArrays(store.tags, updatedNote.tags));
 }
 
 export async function replaceNote(updatedNote: Note) {

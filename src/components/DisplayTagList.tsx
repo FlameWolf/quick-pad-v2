@@ -16,6 +16,7 @@ interface Props {
 	allowDelete?: boolean;
 	allowEdit?: boolean;
 	allowManage?: boolean;
+	class?: string;
 	onSelectionChanged?: (tags: string[]) => void;
 }
 
@@ -151,7 +152,7 @@ export default function DisplayTagList(props: Props) {
 	);
 
 	return (
-		<div class="d-flex flex-wrap gap-2 p-1 border rounded">
+		<div class="d-flex flex-wrap gap-2 p-1 border rounded" classList={{ [props.class as string]: !!props.class }}>
 			<div class="dropdown">
 				<Show when={props.allowEdit} fallback={<label class="small border border-primary rounded px-2 py-1">Tags</label>}>
 					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-primary dropdown-toggle" onClick={toggle}>Tags</button>

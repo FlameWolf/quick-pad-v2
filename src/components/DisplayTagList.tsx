@@ -139,13 +139,25 @@ export default function DisplayTagList(props: Props) {
 		on(
 			isSelecting,
 			(curr, prev) => {
-				if (prev === false) {
+				if (!prev) {
 					lastSelected = Array.from(selectedTags());
 				}
-				if (curr === false) {
+				if (!curr) {
 					setSelectedTags(Array.from(lastSelected));
 				}
 				props.onSelectionChanged?.(selectedTags());
+			},
+			{ defer: true }
+		)
+	);
+
+	createEffect(
+		on(
+			() => props.allowEdit,
+			value => {
+				if (!value) {
+					setSelectedTags(props.activeTags ?? []);
+				}
 			},
 			{ defer: true }
 		)

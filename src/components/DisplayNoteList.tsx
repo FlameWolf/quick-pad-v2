@@ -275,17 +275,14 @@ export default function DisplayNoteList(props: Props) {
 					</A>
 				</div>
 			</Show>
-			<Switch>
+			<Switch fallback={<EmptyState message={emptyMessage()} showActions={view() === "active" && !isSearchMode()} importAction={handleImport}/>}>
 				<Match when={notesStore.isLoading() || notesStore.isSearching()}>
 					<div class="d-flex flex-column justify-content-center align-items-center">
 						<div class="spinner-border" aria-hidden="true"></div>
 						<div class="mt-3" role="status">{notesStore.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
-				<Match when={!hasNotes() && !notesStore.searchTags().size}>
-					<EmptyState message={emptyMessage()} showActions={view() === "active" && !isSearchMode()} importAction={handleImport}/>
-				</Match>
-				<Match when={hasNotes()}>
+				<Match when={hasNotes() || notesStore.searchTags().size}>
 					<div>
 						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
 							<Show

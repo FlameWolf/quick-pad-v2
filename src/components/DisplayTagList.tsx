@@ -221,7 +221,7 @@ export default function DisplayTagList(props: Props) {
 					</For>
 				</div>
 			</Show>
-			<Show when={props.allowManage && isSelecting()}>
+			<Show when={isSelecting()}>
 				<div class="d-flex gap-2 ms-auto">
 					<button class="btn btn-sm btn-primary" disabled={!enableActions()} onClick={() => updateNoteTags("add")}>Apply</button>
 					<button class="btn btn-sm btn-primary" disabled={!enableActions()} onClick={() => updateNoteTags("remove")}>Remove</button>

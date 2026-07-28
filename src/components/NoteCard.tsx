@@ -1,4 +1,4 @@
-import { Show } from "solid-js";
+import { For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
 import Icon from "@/components/Icon";
@@ -44,16 +44,27 @@ export default function NoteCard(props: Props) {
 				</div>
 				<p class="card-text text-muted small overflow-hidden">{note().summary}</p>
 			</div>
-			<div class="d-flex gap-1 small w-100 position-absolute bottom-0 px-2 py-2 border-top">
-				<Show when={note().sentenceCount}>
-					<div class="badge text-bg-secondary">{note().sentenceCount} sentences</div>
+			<div class="small w-100 position-absolute bottom-0">
+				<Show when={note().tags}>
+					<div class="d-flex gap-1 px-2 py-2">
+						<For each={note().tags}>
+							{tag => (
+								<div class="badge text-bg-secondary" v-for="tag in note.tags">#{tag}</div>
+							)}
+						</For>
+					</div>
 				</Show>
-				<Show when={note().wordCount}>
-					<div class="badge text-bg-secondary">{note().wordCount} words</div>
-				</Show>
-				<Show when={note().characterCount}>
-					<div class="badge text-bg-secondary">{note().characterCount} characters</div>
-				</Show>
+				<div class="d-flex gap-1 small px-2 py-2 border-top">
+					<Show when={note().sentenceCount}>
+						<div class="badge text-bg-secondary">{note().sentenceCount} sentences</div>
+					</Show>
+					<Show when={note().wordCount}>
+						<div class="badge text-bg-secondary">{note().wordCount} words</div>
+					</Show>
+					<Show when={note().characterCount}>
+						<div class="badge text-bg-secondary">{note().characterCount} characters</div>
+					</Show>
+				</div>
 			</div>
 		</A>
 	);

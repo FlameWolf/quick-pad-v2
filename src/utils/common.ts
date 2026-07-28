@@ -13,6 +13,10 @@ export function normaliseTag(raw: string): string {
 	return raw.trim().replace(/\s+/g, " ").normalize("NFC");
 }
 
+export function mergeArrays<T>(a: readonly T[] = [], b: readonly T[] | undefined = []): T[] {
+	return Array.from(new Set(a.concat(b)));
+}
+
 export function areArraysEqual<T>(a: readonly T[] = [], b: readonly T[] | undefined = []): boolean {
 	if (a.length !== b.length) {
 		return false;

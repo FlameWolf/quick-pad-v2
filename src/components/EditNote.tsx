@@ -1,7 +1,7 @@
 import { createSignal, createMemo, createEffect, on, onMount, onCleanup, Show } from "solid-js";
 import { A, useNavigate, useLocation, useParams, useBeforeLeave } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
-import { haveSameItems } from "@/utils/common";
+import { areArraysEqual, areSetsEqual } from "@/utils/common";
 import { getSentenceCount, getWordCount, getCharacterCount } from "@/utils/text-analysis";
 import { debounce } from "@/utils/timing";
 import { create } from "@/models/Note";
@@ -51,13 +51,13 @@ export default function EditNote(props: Props) {
 			return false;
 		}
 		if (isCreateMode()) {
-			return editTitle().trim().length > 0 || editContent().length > 0 || !!editTags()?.length;
+			return editTitle().trim().length > 0 || editContent().length > 0 || !areSetsEqual(new Set(editTags()), notesStore.searchTags());
 		}
 		const note = existingNote();
 		if (!note) {
 			return false;
 		}
-		return editTitle() !== note.title || editContent() !== loadedContent() || !haveSameItems(editTags(), existingNote()?.tags);
+		return editTitle() !== note.title || editContent() !== loadedContent() || !areArraysEqual(editTags(), existingNote()?.tags);
 	});
 	const draftId = createMemo(() => (isCreateMode() ? "new" : params.id!));
 	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
@@ -414,6 +414,10 @@ export default function EditNote(props: Props) {
 
 	createEffect(
 		on(existingNote, note => {
+			if (isCreateMode()) {
+				setEditTags(Array.from(notesStore.searchTags()));
+				return;
+			}
 			if (note) {
 				setEditTags(note.tags);
 			}

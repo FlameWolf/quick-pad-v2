@@ -166,14 +166,14 @@ export default function DisplayTagList(props: Props) {
 	return (
 		<div class="d-flex flex-wrap gap-2 p-1 border rounded" classList={{ [props.class as string]: !!props.class }}>
 			<div class="dropdown">
-				<Show when={props.allowEdit} fallback={<label class="small border border-primary rounded px-2 py-1">Tags</label>}>
-					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-primary dropdown-toggle" onClick={toggle}>Tags</button>
+				<Show when={props.allowEdit} fallback={<label class="small border border-secondary rounded px-2 py-1">Tags</label>}>
+					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary dropdown-toggle" onClick={toggle}>Tags</button>
 				</Show>
 				<Show when={props.allowEdit && show()}>
 					<ul ref={setDropdownMenu} class="dropdown-menu show mt-1 ms-n1">
 						<Show when={props.allowManage}>
 							<li class="dropdown-item">
-								<label class="btn btn-sm btn-outline-primary">
+								<label class="btn btn-sm btn-outline-secondary">
 									<input type="checkbox" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
 									<span class="ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
 								</label>
@@ -187,7 +187,7 @@ export default function DisplayTagList(props: Props) {
 							<div class="flex-nowrap" classList={{ "input-group": props.allowCreate }}>
 								<input value={searchText()} onInput={e => setSearchText(e.currentTarget.value.trim())} type="text" class="form-control form-control-sm" placeholder="Search"/>
 								<Show when={props.allowCreate}>
-									<button class="btn btn-sm btn-outline-primary" disabled={hasExactMatch()} onClick={() => createTag(searchText())}>
+									<button class="btn btn-sm btn-outline-secondary" disabled={hasExactMatch()} onClick={() => createTag(searchText())}>
 										<Icon type="plusLg"/>
 									</button>
 								</Show>
@@ -223,8 +223,8 @@ export default function DisplayTagList(props: Props) {
 			</Show>
 			<Show when={isSelecting()}>
 				<div class="d-flex gap-2 ms-auto">
-					<button class="btn btn-sm btn-primary" disabled={!enableActions()} onClick={() => updateNoteTags("add")}>Apply</button>
-					<button class="btn btn-sm btn-primary" disabled={!enableActions()} onClick={() => updateNoteTags("remove")}>Remove</button>
+					<button class="btn btn-sm btn-outline-primary" disabled={!enableActions()} onClick={() => updateNoteTags("add")}>Apply</button>
+					<button class="btn btn-sm btn-outline-danger" disabled={!enableActions()} onClick={() => updateNoteTags("remove")}>Remove</button>
 				</div>
 			</Show>
 		</div>

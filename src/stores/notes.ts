@@ -91,6 +91,10 @@ export function setSearchText(query: string) {
 		});
 }
 
+export function addSearchTag(tag: string) {
+	setStore("searchTags", tags => tags.add(tag));
+}
+
 export function setSearchTags(tags: string[]) {
 	setStore("searchTags", new Set(tags));
 }

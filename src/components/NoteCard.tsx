@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
+import * as notesStore from "@/stores/notes";
 import Icon from "@/components/Icon";
 import type { Note } from "@/models/Note";
 import type { UUID } from "node:crypto";
@@ -23,6 +24,13 @@ export default function NoteCard(props: Props) {
 	const note = () => props.note;
 	const isSelectionMode = () => props.selectionMode;
 	const isSelected = () => props.selected;
+
+	function addToSearchTags(tag: string) {
+		if (props.selectionMode) {
+			return;
+		}
+		notesStore.addSearchTag(tag);
+	}
 
 	return (
 		<A href={`/notes/${note().id}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected() }} onClick={e => props.clickAction(e, note().id)}>
@@ -49,7 +57,13 @@ export default function NoteCard(props: Props) {
 					<div class="d-flex gap-1 px-2 py-2">
 						<For each={note().tags}>
 							{tag => (
-								<div class="badge text-bg-secondary" v-for="tag in note.tags">#{tag}</div>
+								<a
+									class="badge text-bg-secondary"
+									role="button"
+									onClick={e => {
+										e.preventDefault();
+										addToSearchTags(tag);
+									}}>#{tag}</a>
 							)}
 						</For>
 					</div>

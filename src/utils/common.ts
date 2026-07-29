@@ -28,10 +28,3 @@ export function areArraysEqual<T>(a: readonly T[] = [], b: readonly T[] | undefi
 export function areSetsEqual(setA: Set<unknown>, setB: Set<unknown>) {
 	return setA.symmetricDifference(setB).size === 0;
 }
-
-export function copyNullableArray<T>(arr: T[] | undefined): T[] | undefined {
-	if (arr) {
-		return Array.from(arr);
-	}
-	return undefined;
-}

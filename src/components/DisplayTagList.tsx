@@ -140,9 +140,13 @@ export default function DisplayTagList(props: Props) {
 	onMount(() => {
 		setSelectedTags(props.activeTags ?? []);
 		createEffect(
-			on(selectedTags, tags => {
-				props.onSelectionChanged?.(tags);
-			})
+			on(
+				selectedTags,
+				tags => {
+					props.onSelectionChanged?.(tags);
+				},
+				{ defer: true }
+			)
 		);
 	});
 

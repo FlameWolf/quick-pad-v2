@@ -43,6 +43,7 @@ export default function DisplayNoteList(props: Props) {
 		}
 	});
 	const sortedNotes = createMemo(() => getSortedNotes(sourceNotes()));
+	const searchTags = createMemo(() => Array.from(notesStore.searchTags()));
 	const noteSections = createMemo(() => {
 		if (view() === "favourited") {
 			const sections: NoteSection[] = [
@@ -282,7 +283,7 @@ export default function DisplayNoteList(props: Props) {
 						<div class="mt-3" role="status">{notesStore.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
-				<Match when={hasNotes() || notesStore.searchTags().size}>
+				<Match when={hasNotes() || searchTags().length}>
 					<div>
 						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
 							<Show
@@ -334,7 +335,9 @@ export default function DisplayNoteList(props: Props) {
 								</button>
 							</Show>
 						</div>
-						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} onSelectionChanged={updateTagFilter}/>
+						<Show when={searchTags()} keyed={true}>
+							{tags => <DisplayTagList class="mb-3" activeTags={tags} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} onSelectionChanged={updateTagFilter}/>}
+						</Show>
 						<For each={noteSections()}>
 							{section => (
 								<>

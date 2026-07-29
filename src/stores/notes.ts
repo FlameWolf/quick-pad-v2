@@ -272,13 +272,13 @@ export async function replaceMultiple(updatedNotes: Note[]) {
 
 export async function createTag(tag: string) {
 	if (!store.tags.includes(tag)) {
-		store.tags.push(tag);
+		setStore("tags", tags => tags.concat(tag));
 	}
 	await tagsRepository.save(tag);
 }
 
 export async function createTags(tags: string[]) {
-	tags.filter(tag => !store.tags.includes(tag)).forEach(tag => store.tags.push(tag));
+	setStore("tags", mergeArrays(store.tags, tags));
 	await tagsRepository.saveMany(tags);
 }
 
@@ -291,7 +291,7 @@ export async function deleteTags(tags: string[]) {
 		return ids;
 	}, [] as UUID[]);
 	await applyToMany(affectedIds, note => clearTags(note, tags));
-	store.tags = store.tags.filter(tag => !tagSet.has(tag));
+	setStore("tags", tags => tags.filter(tag => !tagSet.has(tag)));
 	await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
 	return affectedIds.length;
 }

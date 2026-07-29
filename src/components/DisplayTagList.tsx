@@ -1,4 +1,6 @@
 import { createEffect, createMemo, createSignal, For, on, onMount, Show } from "solid-js";
+import { Dynamic } from "solid-js/web";
+import { useNavigate } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
 import { normaliseTag, titleCase } from "@/utils/common";
 import { getTime } from "@/utils/dates";
@@ -22,6 +24,7 @@ interface Props {
 
 export default function DisplayTagList(props: Props) {
 	let lastSelected: string[] = [];
+	const navigate = useNavigate();
 	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement | undefined>();
 	const [dropdownMenu, setDropdownMenu] = createSignal<HTMLElement | undefined>();
 	const [searchText, setSearchText] = createSignal(emptyString);
@@ -126,6 +129,14 @@ export default function DisplayTagList(props: Props) {
 		exitSelectionMode();
 	}
 
+	function addToSearchTags(tag: string) {
+		if (props.allowEdit) {
+			return;
+		}
+		notesStore.addSearchTag(tag);
+		navigate("/");
+	}
+
 	onMount(() => {
 		setSelectedTags(props.activeTags ?? []);
 		createEffect(
@@ -211,12 +222,12 @@ export default function DisplayTagList(props: Props) {
 				<div class="d-flex flex-wrap gap-2">
 					<For each={selectedTags()}>
 						{tag => (
-							<div class="badge align-self-center text-bg-secondary" classList={{ "py-2": !props.allowEdit }}>
+							<Dynamic component={props.allowEdit ? "div" : "a"} class="badge align-self-center text-bg-secondary" classList={{ "py-2": !props.allowEdit }} onClick={() => addToSearchTags(tag)} {...(props.allowEdit ? {} : { role: "button" })}>
 								<span>{tag}</span>
 								<Show when={props.allowEdit}>
 									<button class="small btn-close ms-2" onClick={() => unselectTag(tag)}></button>
 								</Show>
-							</div>
+							</Dynamic>
 						)}
 					</For>
 				</div>

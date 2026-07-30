@@ -194,9 +194,9 @@ export default function DisplayTagList(props: Props) {
 	createEffect(
 		on(
 			selectedTags,
-			() => {
-				props.onSelectionChanged?.(selectedTags());
-				if (!syncingDown) {
+			tags => {
+				props.onSelectionChanged?.(tags);
+				if (!syncingDown && props.allowManage) {
 					syncState("up");
 				}
 				syncingDown = false;

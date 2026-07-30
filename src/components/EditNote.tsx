@@ -164,14 +164,16 @@ export default function EditNote(props: Props) {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
 		const tags = editTags();
-		const note = isCreateMode() ? create(title, content) : existingNote()!;
 		setIsEditing(false);
-		note.tags = tags?.length ? tags : undefined;
 		clearDraft(draftId());
 		if (isCreateMode()) {
+			const note = create(title, content);
+			note.tags = tags?.length ? tags : undefined;
 			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
-		} else {
+		} else if (existingNote()) {
+			const note = existingNote()!;
+			notesStore.setNoteTags(note.id, tags);
 			notesStore.updateNote(note.id, title, content);
 			setLoadedContent(content);
 		}

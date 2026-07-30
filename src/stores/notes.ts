@@ -99,6 +99,16 @@ export function setSearchTags(tags: string[]) {
 	setStore("searchTags", new Set(tags));
 }
 
+export function setNoteTags(id: UUID, tags: string[] | undefined) {
+	setStore(
+		"notes",
+		note => note.id === id,
+		produce(note => {
+			note.tags = tags?.length ? tags : undefined;
+		})
+	);
+}
+
 export async function addNote(note: Note) {
 	setStore("notes", items => items.concat(note));
 	setStore("tags", mergeArrays(store.tags, note.tags));

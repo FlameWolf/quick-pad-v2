@@ -2,7 +2,7 @@ import { createEffect, createMemo, createSignal, For, on, onMount, Show } from "
 import { Dynamic } from "solid-js/web";
 import { useNavigate } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
-import { normaliseTag, titleCase } from "@/utils/common";
+import { areSetsEqual, normaliseTag, titleCase } from "@/utils/common";
 import { getTime } from "@/utils/dates";
 import { contains, equals } from "@/utils/text-analysis";
 import * as notesStore from "@/stores/notes";
@@ -23,6 +23,8 @@ interface Props {
 }
 
 export default function DisplayTagList(props: Props) {
+	let syncingUp = false;
+	let syncingDown = false;
 	let lastSelected: string[] = [];
 	const navigate = useNavigate();
 	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement | undefined>();
@@ -47,6 +49,27 @@ export default function DisplayTagList(props: Props) {
 		return notesStore.tags().some(tag => equals(tag, normaliseTag(searchText())));
 	});
 	const enableActions = createMemo(() => !!(selectedCount() && selectedTags().length));
+
+	function syncState(direction: "up" | "down") {
+		if (!props.allowEdit || isSelecting()) {
+			return;
+		}
+		if (areSetsEqual(new Set(selectedTags()), notesStore.searchTags())) {
+			return;
+		}
+		switch (direction) {
+			case "up": {
+				syncingUp = true;
+				notesStore.setSearchTags(selectedTags());
+				break;
+			}
+			case "down": {
+				syncingDown = true;
+				setSelectedTags(Array.from(notesStore.searchTags()));
+				break;
+			}
+		}
+	}
 
 	function isTagSelected(tag: string) {
 		return selectedTags().includes(tag);
@@ -139,15 +162,6 @@ export default function DisplayTagList(props: Props) {
 
 	onMount(() => {
 		setSelectedTags(props.activeTags ?? []);
-		createEffect(
-			on(
-				selectedTags,
-				tags => {
-					props.onSelectionChanged?.(tags);
-				},
-				{ defer: true }
-			)
-		);
 	});
 
 	createEffect(
@@ -160,7 +174,6 @@ export default function DisplayTagList(props: Props) {
 				if (!curr) {
 					setSelectedTags(lastSelected);
 				}
-				props.onSelectionChanged?.(selectedTags());
 			},
 			{ defer: true }
 		)
@@ -173,6 +186,33 @@ export default function DisplayTagList(props: Props) {
 				if (!value) {
 					setSelectedTags(props.activeTags ?? []);
 				}
+			},
+			{ defer: true }
+		)
+	);
+
+	createEffect(
+		on(
+			selectedTags,
+			() => {
+				props.onSelectionChanged?.(selectedTags());
+				if (!syncingDown) {
+					syncState("up");
+				}
+				syncingDown = false;
+			},
+			{ defer: true }
+		)
+	);
+
+	createEffect(
+		on(
+			notesStore.searchTags,
+			() => {
+				if (!syncingUp) {
+					syncState("down");
+				}
+				syncingUp = false;
 			},
 			{ defer: true }
 		)

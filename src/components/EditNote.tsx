@@ -153,10 +153,10 @@ export default function EditNote(props: Props) {
 			navigate(backRoute());
 		} else {
 			const note = existingNote();
-			setIsEditing(false);
 			setEditTitle(note?.title ?? emptyString);
 			setEditContent(loadedContent());
 			setEditTags(existingNote()?.tags);
+			setIsEditing(false);
 		}
 	}
 
@@ -165,16 +165,15 @@ export default function EditNote(props: Props) {
 		const content = editContent();
 		const tags = editTags();
 		setIsEditing(false);
-		clearDraft(draftId());
 		if (isCreateMode()) {
 			const note = create(title, content);
 			note.tags = tags?.length ? tags : undefined;
 			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else if (existingNote()) {
-			const note = existingNote()!;
-			notesStore.setNoteTags(note.id, tags);
-			notesStore.updateNote(note.id, title, content);
+			const noteId = existingNote()!.id;
+			notesStore.setNoteTags(noteId, tags);
+			notesStore.updateNote(noteId, title, content);
 			setLoadedContent(content);
 		}
 		clearDraft(draftId());

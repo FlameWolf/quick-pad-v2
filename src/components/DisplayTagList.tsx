@@ -31,7 +31,7 @@ export default function DisplayTagList(props: Props) {
 	const [dropdownMenu, setDropdownMenu] = createSignal<HTMLElement | undefined>();
 	const [searchText, setSearchText] = createSignal(emptyString);
 	const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
-	const { show, toggle } = useDropdown(dropdownToggle, {
+	const dropdown = useDropdown(dropdownToggle, {
 		autoClose: false,
 		dropdown: dropdownMenu
 	});
@@ -107,6 +107,7 @@ export default function DisplayTagList(props: Props) {
 	async function deleteTags(tags: string[]) {
 		const hasMany = tags.length > 1;
 		const suffix = hasMany ? "s" : emptyString;
+		dropdown.toggle();
 		const ok = await confirm({
 			title: `Delete selected tag${suffix} permanently?`,
 			message: `The selected tag${suffix} will be deleted permanently. ${hasMany ? "They" : "It"} will also be removed from any notes that use ${hasMany ? "them" : "it"}.`,
@@ -222,18 +223,18 @@ export default function DisplayTagList(props: Props) {
 		<div class="d-flex flex-wrap gap-2 p-1 border rounded" classList={{ [props.class as string]: !!props.class }}>
 			<div class="dropdown">
 				<Show when={props.allowEdit} fallback={<label class="small border border-secondary rounded px-2 py-1">Tags</label>}>
-					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary dropdown-toggle" onClick={toggle}>Tags</button>
+					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary dropdown-toggle" onClick={dropdown.toggle}>Tags</button>
 				</Show>
-				<Show when={props.allowEdit && show()}>
-					<ul ref={setDropdownMenu} class="dropdown-menu show mt-1 ms-n1">
+				<Show when={props.allowEdit && dropdown.show()}>
+					<ul ref={setDropdownMenu} class="dropdown-menu show tag-list mt-1 ms-n1">
 						<Show when={props.allowManage}>
-							<li class="dropdown-item">
-								<label class="btn btn-sm btn-outline-secondary">
+							<li class="dropdown-item d-flex flex-wrap gap-2">
+								<label class="btn btn-sm btn-outline-secondary flex-grow-1">
 									<input type="checkbox" class="form-check-input" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
 									<span class="ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
 								</label>
 								<Show when={props.allowDelete}>
-									<button class="btn btn-sm btn-outline-danger ms-2" disabled={!selectedTags().length} onClick={() => deleteTags(selectedTags())}>Delete Selected</button>
+									<button class="btn btn-sm btn-outline-danger flex-grow-1" disabled={!selectedTags().length} onClick={() => deleteTags(selectedTags())}>Delete Selected</button>
 								</Show>
 							</li>
 							<li class="dropdown-divider"></li>

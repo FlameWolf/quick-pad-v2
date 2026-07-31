@@ -15,16 +15,19 @@ function iterableLength(segments: Intl.Segments): number {
 	return count;
 }
 
-export function getSummary(text: string): string {
+export function truncate(text: string, limit: number): string {
 	const parts: string[] = [];
 	for (const { segment } of characterSegmenter.segment(text)) {
 		parts.push(segment);
-		if (parts.length > summaryLength) {
-			parts.length = summaryLength - 1;
-			return `${parts.join(emptyString)}\u2026`;
+		if (parts.length >= limit) {
+			return parts.join(emptyString);
 		}
 	}
 	return text;
+}
+
+export function getSummary(text: string): string {
+	return `${truncate(text, summaryLength - 1)}\u2026`;
 }
 
 export function getSentenceCount(text: string): number {
@@ -51,4 +54,20 @@ export function contains(text: string, search: string): boolean {
 
 export function equals(first: string, second: string): boolean {
 	return searchCollator.compare(first, second) === 0;
+}
+
+export function isTextWithin(text: string, limit: number): boolean {
+	if (!text || !limit) {
+		return true;
+	}
+	if (text.length > limit * 16) {
+		return false;
+	}
+	let count = 0;
+	for (const _ of characterSegmenter.segment(text)) {
+		if (++count > limit) {
+			return false;
+		}
+	}
+	return true;
 }

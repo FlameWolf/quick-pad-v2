@@ -13,6 +13,7 @@ import { confirm } from "@/composables/useConfirmDialogue";
 import { exportNote } from "@/composables/useFileIO";
 import { clearDraft, loadDraft, saveDraft } from "@/composables/useNoteDraft";
 import { requestSync } from "@/composables/useNotesSync";
+import { useTruncate } from "@/composables/useTruncate";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import Icon from "@/components/Icon";
 import DisplayTagList from "@/components/DisplayTagList";
@@ -36,6 +37,7 @@ export default function EditNote(props: Props) {
 	const [editTags, setEditTags] = createSignal<string[] | undefined>();
 	const [loadedContent, setLoadedContent] = createSignal(emptyString);
 	const [isContentLoaded, setIsContentLoaded] = createSignal(false);
+	const titleInputRef = useTruncate(editTitle, setEditTitle, 1024);
 	const undoRedo = useUndoRedo<string>(editContent());
 	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)));
 	const wordCount = createMemo(() => (isEditing() ? getWordCount(editContent()) : (existingNote()?.wordCount ?? 0)));
@@ -549,7 +551,7 @@ export default function EditNote(props: Props) {
 			</Show>
 			<div class="edit-note">
 				<Show when={isEditing()}>
-					<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg" placeholder="Title"/>
+					<input ref={titleInputRef} value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value.trim())} type="text" class="form-control form-control-lg" placeholder="Title"/>
 					<hr class="my-1"/>
 					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
 				</Show>

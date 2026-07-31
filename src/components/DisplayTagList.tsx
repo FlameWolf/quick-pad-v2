@@ -229,7 +229,7 @@ export default function DisplayTagList(props: Props) {
 						<Show when={props.allowManage}>
 							<li class="dropdown-item">
 								<label class="btn btn-sm btn-outline-secondary">
-									<input type="checkbox" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
+									<input type="checkbox" class="form-check-input" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
 									<span class="ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
 								</label>
 								<Show when={props.allowDelete}>
@@ -253,7 +253,7 @@ export default function DisplayTagList(props: Props) {
 							{tag => (
 								<li>
 									<label class="dropdown-item">
-										<input type="checkbox" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
+										<input type="checkbox" class="form-check-input" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
 										<span class="text-wrap text-break ms-2">{tag}</span>
 									</label>
 								</li>

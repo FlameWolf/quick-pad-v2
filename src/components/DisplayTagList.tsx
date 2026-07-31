@@ -10,6 +10,7 @@ import { confirm } from "@/composables/useConfirmDialogue";
 import { useDropdown } from "@/composables/useDropdown";
 import { exitSelectionMode, isSelecting, selectedCount, selectedIds } from "@/composables/useNoteSelection";
 import { requestSync } from "@/composables/useNotesSync";
+import { useTruncate } from "@/composables/useTruncate";
 import Icon from "@/components/Icon";
 
 interface Props {
@@ -241,7 +242,7 @@ export default function DisplayTagList(props: Props) {
 						</Show>
 						<li class="dropdown-item">
 							<div class="flex-nowrap" classList={{ "input-group": props.allowCreate }}>
-								<input value={searchText()} onInput={e => setSearchText(e.currentTarget.value.trim())} type="text" class="form-control form-control-sm" placeholder="Search"/>
+								<input value={searchText()} onInput={useTruncate(setSearchText, 256)} type="text" class="form-control form-control-sm" placeholder="Search"/>
 								<Show when={props.allowCreate}>
 									<button class="btn btn-sm btn-outline-secondary" disabled={hasExactMatch()} onClick={() => createTag(searchText())}>
 										<Icon type="plusLg"/>

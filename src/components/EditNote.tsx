@@ -13,6 +13,7 @@ import { confirm } from "@/composables/useConfirmDialogue";
 import { exportNote } from "@/composables/useFileIO";
 import { clearDraft, loadDraft, saveDraft } from "@/composables/useNoteDraft";
 import { requestSync } from "@/composables/useNotesSync";
+import { useTruncate } from "@/composables/useTruncate";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import Icon from "@/components/Icon";
 import DisplayTagList from "@/components/DisplayTagList";
@@ -549,7 +550,7 @@ export default function EditNote(props: Props) {
 			</Show>
 			<div class="edit-note">
 				<Show when={isEditing()}>
-					<input value={editTitle()} onInput={e => setEditTitle(e.currentTarget.value)} type="text" class="form-control form-control-lg" placeholder="Title"/>
+					<input value={editTitle()} onInput={useTruncate(setEditTitle, 1024)} type="text" class="form-control form-control-lg" placeholder="Title"/>
 					<hr class="my-1"/>
 					<textarea ref={editTextArea} value={editContent()} onInput={onContentInput} class="form-control note-textarea" placeholder="Start writing..." rows="12"></textarea>
 				</Show>

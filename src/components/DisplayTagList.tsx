@@ -20,6 +20,7 @@ interface Props {
 	allowEdit?: boolean;
 	allowManage?: boolean;
 	class?: string;
+	showFilterType?: boolean;
 	onSelectionChanged?: (tags: string[]) => void;
 }
 
@@ -277,6 +278,19 @@ export default function DisplayTagList(props: Props) {
 							</Dynamic>
 						)}
 					</For>
+				</div>
+			</Show>
+			<Show when={props.showFilterType && selectedTags.length}>
+				<div class="input-group input-group-sm flex-nowrap w-auto ms-auto">
+					<span class="input-group-text">Match:</span>
+					<label class="btn btn-outline-secondary" classList={{ [`active`]: notesStore.tagFilter() === `any` }}>
+						<input type="radio" class="btn-check" name="filter-type" onChange={() => notesStore.setFilterType(`any`)}/>
+						<span>Any</span>
+					</label>
+					<label class="btn btn-outline-secondary" classList={{ [`active`]: notesStore.tagFilter() === `all` }}>
+						<input type="radio" class="btn-check" name="filter-type" onChange={() => notesStore.setFilterType(`all`)}/>
+						<span>All</span>
+					</label>
 				</div>
 			</Show>
 			<Show when={isSelecting()}>

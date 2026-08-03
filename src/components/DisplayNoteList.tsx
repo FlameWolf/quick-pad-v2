@@ -328,7 +328,7 @@ export default function DisplayNoteList(props: Props) {
 								</button>
 							</Show>
 						</div>
-						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()}/>
+						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} showFilterType={!isSelecting()}/>
 						<For each={noteSections()}>
 							{section => (
 								<>

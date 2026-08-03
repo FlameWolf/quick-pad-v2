@@ -28,3 +28,15 @@ export function areArraysEqual<T>(a: readonly T[] = [], b: readonly T[] | undefi
 export function areSetsEqual(setA: Set<unknown>, setB: Set<unknown>) {
 	return setA.symmetricDifference(setB).size === 0;
 }
+
+export function arrayContainsSet<T>(array: T[], set: Set<T>) {
+	if (array.length < set.size) {
+		return false;
+	}
+	for (const element of set) {
+		if (!array.includes(element)) {
+			return false;
+		}
+	}
+	return true;
+}

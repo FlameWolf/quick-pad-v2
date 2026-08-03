@@ -2,18 +2,21 @@ import { createMemo, createSignal } from "solid-js";
 import { createStore, produce, unwrap } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
-import { mergeArrays } from "@/utils/common";
+import { arrayContainsSet, mergeArrays } from "@/utils/common";
 import { contains } from "@/utils/text-analysis";
 import { applyTags, archive, fave, pin, clearTags, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
 import { tagsRepository } from "@/storage/TagsRepository";
 import type { UUID } from "crypto";
 
+type FilterType = "any" | "all";
+
 interface NotesState {
 	notes: Note[];
 	tags: string[];
 	searchText: string;
 	searchTags: Set<string>;
+	tagFilter: FilterType;
 	isLoading: boolean;
 	isSearching: boolean;
 }
@@ -24,6 +27,7 @@ const [store, setStore] = createStore<NotesState>({
 	tags: [],
 	searchText: emptyString,
 	searchTags: new Set<string>(),
+	tagFilter: "any",
 	isLoading: true,
 	isSearching: false
 });
@@ -32,6 +36,7 @@ export const notes = () => store.notes;
 export const tags = () => store.tags;
 export const searchText = createMemo(() => store.searchText);
 export const searchTags = createMemo(() => store.searchTags);
+export const tagFilter = createMemo(() => store.tagFilter);
 export const isLoading = createMemo(() => store.isLoading);
 export const isSearching = createMemo(() => store.isSearching);
 export const searchResults = createMemo(() => {
@@ -40,7 +45,19 @@ export const searchResults = createMemo(() => {
 	if (store.searchTags.size === 0) {
 		return initial;
 	}
-	return initial.filter(note => note.tags?.some(tag => store.searchTags.has(tag)));
+	return initial.filter(note => {
+		switch (store.tagFilter) {
+			case "any": {
+				return note.tags?.some(tag => store.searchTags.has(tag));
+			}
+			case "all": {
+				if (!note.tags) {
+					return false;
+				}
+				return arrayContainsSet(note.tags, store.searchTags);
+			}
+		}
+	});
 });
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
 export const favedNotes = createMemo(() => searchResults().filter(note => note.favedAt && !note.deletedAt));
@@ -97,6 +114,10 @@ export function addSearchTag(tag: string) {
 
 export function setSearchTags(tags: string[]) {
 	setStore("searchTags", new Set(tags));
+}
+
+export function setFilterType(type: FilterType) {
+	setStore("tagFilter", type);
 }
 
 export function setNoteTags(id: UUID, tags: string[] | undefined) {

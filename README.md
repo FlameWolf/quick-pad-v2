@@ -30,9 +30,9 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Organise notes with **tags**. The tag catalogue is seeded with three defaults (**Ideas**, **Personal**, **Work**) on first launch and grows as you create more.
 - Tags are stored case-insensitively but keep their original casing for display; names are normalised (trimmed, internal whitespace collapsed, Unicode NFC) and capped at 256 characters.
 - Assign or remove tags on a single note while editing, or on many notes at once in multi-select mode (with a confirmation prompt).
-- **Filter by tags**: tap a `#tag` badge on any note tile (or a tag chip in the tag bar) to add it to the active tag filter; the note list then shows only notes carrying at least one of the selected tags, combinable with a text search.
+- **Filter by tags**: tap a `#tag` badge on any note tile (or tick the checkbox next to a tag in the tag list) to add it to the active tag filter; the note list then shows only notes having the selected tags — either all of them or at least one based on a toggle. The tag filter can be combined with a text search.
 - Manage the catalogue from the tag bar's dropdown: search, create, select-all / deselect-all, and delete tags globally. Deleting a tag also strips it from every note that used it.
-- The tag bar (`DisplayTagList`) adapts to context via `allowCreate` / `allowDelete` / `allowEdit` / `allowManage` props — a read-only chip row on cards, an editable selector inside a note, and a full manager on the dashboard.
+- The tag bar (`DisplayTagList`) adapts to context via `allowCreate` / `allowDelete` / `allowEdit` / `allowManage` props — an editable selector inside a note or a full manager on the dashboard.
 
 ### Favourites and pinning
 

@@ -4,7 +4,7 @@ import { useNavigate } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
 import { areSetsEqual, normaliseTag, titleCase } from "@/utils/common";
 import { getTime } from "@/utils/dates";
-import { contains, equals } from "@/utils/text-analysis";
+import { contains, equals, sort } from "@/utils/text-analysis";
 import * as notesStore from "@/stores/notes";
 import { confirm } from "@/composables/useConfirmDialogue";
 import { useDropdown } from "@/composables/useDropdown";
@@ -38,19 +38,9 @@ export default function DisplayTagList(props: Props) {
 		dropdown: dropdownMenu
 	});
 	const searchInputRef = useTruncate(searchText, setSearchText, 256);
-	const filteredTags = createMemo(() => {
-		if (!searchText()) {
-			return notesStore.tags();
-		}
-		return notesStore.tags().filter(tag => contains(tag, searchText()));
-	});
+	const filteredTags = createMemo(() => sort(!searchText() ? notesStore.tags() : notesStore.tags().filter(tag => contains(tag, searchText()))));
 	const allSelected = createMemo(() => filteredTags().every(tag => selectedTags().includes(tag)));
-	const hasExactMatch = createMemo(() => {
-		if (!searchText()) {
-			return true;
-		}
-		return notesStore.tags().some(tag => equals(tag, normaliseTag(searchText())));
-	});
+	const hasExactMatch = createMemo(() => !searchText() || notesStore.tags().some(tag => equals(tag, normaliseTag(searchText()))));
 	const enableActions = createMemo(() => !!(selectedCount() && selectedTags().length));
 
 	function syncState(direction: "up" | "down") {

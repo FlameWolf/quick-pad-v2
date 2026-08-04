@@ -6,6 +6,7 @@ const sentenceSegmenter = new Intl.Segmenter("en", { granularity: "sentence" });
 const wordSegmenter = new Intl.Segmenter("en", { granularity: "word" });
 const characterSegmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
 const searchCollator = new Intl.Collator("en", { sensitivity: "accent", usage: "search" });
+const sortCollator = new Intl.Collator("en", { numeric: true, usage: "sort" });
 
 function iterableLength(segments: Intl.Segments): number {
 	let count = 0;
@@ -70,4 +71,8 @@ export function isTextWithin(text: string, limit: number): boolean {
 		}
 	}
 	return true;
+}
+
+export function sort(array: ReadonlyArray<string>): string[] {
+	return array.toSorted(sortCollator.compare);
 }

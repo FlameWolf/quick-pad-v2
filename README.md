@@ -27,7 +27,7 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 ### Tags
 
-- Organise notes with **tags**. The tag catalogue is seeded with three defaults (**Ideas**, **Personal**, **Work**) on first launch and grows as you create more.
+- Organise notes with **tags**. The tag catalogue is seeded with three defaults (**Ideas**, **Personal**, **Work**) on first launch and grows as you create more. Tags are displayed sorted in alphanumeric order.
 - Tags are stored case-insensitively but keep their original casing for display; names are normalised (trimmed, internal whitespace collapsed, Unicode NFC) and capped at 256 characters.
 - Assign or remove tags on a single note while editing, or on many notes at once in multi-select mode (with a confirmation prompt).
 - **Filter by tags**: tap a `#tag` badge on any note tile (or tick the checkbox next to a tag in the tag list) to add it to the active tag filter; the note list then shows only notes having the selected tags — either all of them or at least one based on a toggle. The tag filter can be combined with a text search.

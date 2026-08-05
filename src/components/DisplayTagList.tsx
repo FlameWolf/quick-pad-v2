@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, on, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { useNavigate } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
@@ -29,10 +29,11 @@ export default function DisplayTagList(props: Props) {
 	let syncingDown = false;
 	let lastSelected: string[] = [];
 	const navigate = useNavigate();
-	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement | undefined>();
-	const [dropdownMenu, setDropdownMenu] = createSignal<HTMLElement | undefined>();
+	const appElem = document.getElementById("app")!;
 	const [searchText, setSearchText] = createSignal(emptyString);
 	const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
+	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement | undefined>();
+	const [dropdownMenu, setDropdownMenu] = createSignal<HTMLElement | undefined>();
 	const dropdown = useDropdown(dropdownToggle, {
 		autoClose: false,
 		dropdown: dropdownMenu
@@ -61,6 +62,18 @@ export default function DisplayTagList(props: Props) {
 				setSelectedTags(Array.from(notesStore.searchTags()));
 				break;
 			}
+		}
+	}
+
+	function adjustAppHeight() {
+		appElem.removeAttribute("style");
+		const menuElem = dropdownMenu();
+		if (!menuElem) {
+			return;
+		}
+		const bottom = menuElem.getBoundingClientRect().bottom + window.scrollY;
+		if (bottom > appElem.offsetHeight) {
+			appElem.style.minHeight = `${bottom + 16}px`;
 		}
 	}
 
@@ -156,7 +169,14 @@ export default function DisplayTagList(props: Props) {
 
 	onMount(() => {
 		setSelectedTags(props.activeTags ?? []);
+		window.addEventListener("resize", adjustAppHeight);
 	});
+
+	onCleanup(() => {
+		window.removeEventListener("resize", adjustAppHeight);
+	});
+
+	createEffect(on([dropdown.show, filteredTags], () => setTimeout(adjustAppHeight), { defer: true }));
 
 	createEffect(
 		on(
@@ -194,6 +214,7 @@ export default function DisplayTagList(props: Props) {
 					syncState("up");
 				}
 				syncingDown = false;
+				setTimeout(adjustAppHeight);
 			},
 			{ defer: true }
 		)

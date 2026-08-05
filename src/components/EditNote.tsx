@@ -545,7 +545,7 @@ export default function EditNote(props: Props) {
 				<hr/>
 				<Show when={!isContentLoaded()} fallback={<div class="note-content">{loadedContent()}</div>}>
 					<div class="d-flex justify-content-center py-3">
-						<div class="spinner-border" role="status" aria-label="Loading note"></div>
+						<div class="spinner-border" role="status" aria-label="Loading note..."></div>
 					</div>
 				</Show>
 			</Show>

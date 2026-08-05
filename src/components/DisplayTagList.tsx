@@ -235,7 +235,7 @@ export default function DisplayTagList(props: Props) {
 	);
 
 	return (
-		<div class="d-flex flex-wrap gap-2 p-1 border rounded" classList={{ [props.class as string]: !!props.class }}>
+		<div class="d-flex flex-wrap gap-2 p-1 border rounded inline-container" classList={{ [props.class as string]: !!props.class }}>
 			<div class="dropdown">
 				<Show when={props.allowEdit} fallback={<label class="small border border-secondary rounded px-2 py-1">Tags</label>}>
 					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary dropdown-toggle" onClick={dropdown.toggle}>Tags</button>
@@ -265,16 +265,16 @@ export default function DisplayTagList(props: Props) {
 							</div>
 						</li>
 						<li class="dropdown-divider"></li>
-						<For each={filteredTags()}>
-							{tag => (
-								<li>
-									<label class="dropdown-item">
+						<li class="d-flex flex-wrap gap-4 px-3">
+							<For each={filteredTags()}>
+								{tag => (
+									<label>
 										<input type="checkbox" class="form-check-input" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
 										<span class="text-wrap text-break ms-2">{tag}</span>
 									</label>
-								</li>
-							)}
-						</For>
+								)}
+							</For>
+						</li>
 					</ul>
 				</Show>
 			</div>

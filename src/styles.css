@@ -29,9 +29,12 @@ body {
 	opacity: 0.5;
 }
 
+.inline-container {
+	container-type: inline-size;
+}
+
 .tag-list {
-	width: 17.5rem;
-	max-width: 75vw;
+	width: calc(100cqw + 0.5rem);
 }
 
 .notes-grid {

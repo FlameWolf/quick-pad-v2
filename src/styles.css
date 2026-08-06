@@ -29,6 +29,10 @@ body {
 	opacity: 0.5;
 }
 
+.tag-list {
+	z-index: unset;
+}
+
 .notes-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));

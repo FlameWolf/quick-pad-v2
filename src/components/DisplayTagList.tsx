@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, on, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Match, on, onMount, Show, Switch } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { useNavigate } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
@@ -29,7 +29,6 @@ export default function DisplayTagList(props: Props) {
 	let syncingDown = false;
 	let lastSelected: string[] = [];
 	const navigate = useNavigate();
-	const appElem = document.getElementById("app")!;
 	const [searchText, setSearchText] = createSignal(emptyString);
 	const [selectedTags, setSelectedTags] = createSignal<string[]>([]);
 	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement | undefined>();
@@ -62,18 +61,6 @@ export default function DisplayTagList(props: Props) {
 				setSelectedTags(Array.from(notesStore.searchTags()));
 				break;
 			}
-		}
-	}
-
-	function adjustAppHeight() {
-		appElem.removeAttribute("style");
-		const menuElem = dropdownMenu();
-		if (!menuElem) {
-			return;
-		}
-		const bottom = menuElem.getBoundingClientRect().bottom + window.scrollY;
-		if (bottom > appElem.offsetHeight) {
-			appElem.style.minHeight = `${bottom + 16}px`;
 		}
 	}
 
@@ -113,7 +100,7 @@ export default function DisplayTagList(props: Props) {
 	async function deleteTags(tags: string[]) {
 		const hasMany = tags.length > 1;
 		const suffix = hasMany ? "s" : emptyString;
-		dropdown.toggle();
+		dropdown.toggle(false);
 		const ok = await confirm({
 			title: `Delete selected tag${suffix} permanently?`,
 			message: `The selected tag${suffix} will be deleted permanently. ${hasMany ? "They" : "It"} will also be removed from any notes that use ${hasMany ? "them" : "it"}.`,
@@ -133,6 +120,7 @@ export default function DisplayTagList(props: Props) {
 	async function updateNoteTags(action: "add" | "remove") {
 		const now = Date.now();
 		const isAdding = action === "add";
+		dropdown.toggle(false);
 		const ok = await confirm({
 			title: `${titleCase(action)} tags`,
 			message: `The selected tags will be ${isAdding ? "added" : "removed"} ${isAdding ? "to" : "from"} the selected notes. Do you want to proceed?`,
@@ -169,15 +157,7 @@ export default function DisplayTagList(props: Props) {
 
 	onMount(() => {
 		setSelectedTags(props.activeTags ?? []);
-		window.addEventListener("resize", adjustAppHeight);
 	});
-
-	onCleanup(() => {
-		window.removeEventListener("resize", adjustAppHeight);
-		setTimeout(adjustAppHeight);
-	});
-
-	createEffect(on([dropdown.show, filteredTags], () => setTimeout(adjustAppHeight), { defer: true }));
 
 	createEffect(
 		on(
@@ -215,7 +195,6 @@ export default function DisplayTagList(props: Props) {
 					syncState("up");
 				}
 				syncingDown = false;
-				setTimeout(adjustAppHeight);
 			},
 			{ defer: true }
 		)
@@ -235,82 +214,88 @@ export default function DisplayTagList(props: Props) {
 	);
 
 	return (
-		<div class="d-flex flex-wrap gap-2 p-1 border rounded inline-container" classList={{ [props.class as string]: !!props.class }}>
-			<div class="dropdown">
-				<Show when={props.allowEdit} fallback={<label class="small border border-secondary rounded px-2 py-1">Tags</label>}>
-					<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary dropdown-toggle" onClick={dropdown.toggle}>Tags</button>
-				</Show>
-				<Show when={props.allowEdit && dropdown.show()}>
-					<ul ref={setDropdownMenu} class="dropdown-menu show tag-list mt-1 ms-n1">
-						<Show when={props.allowManage}>
-							<li class="dropdown-item d-flex flex-wrap gap-2">
-								<label class="btn btn-sm btn-outline-secondary flex-grow-1">
-									<input type="checkbox" class="form-check-input" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
-									<span class="ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
-								</label>
-								<Show when={props.allowDelete}>
-									<button class="btn btn-sm btn-outline-danger flex-grow-1" disabled={!selectedTags().length} onClick={() => deleteTags(selectedTags())}>Delete Selected</button>
+		<div class="d-flex gap-1 p-1 border rounded" classList={{ [dropdown.show() ? `flex-column` : `flex-wrap`]: true, [props.class as string]: !!props.class }}>
+			<div class="dropdown w-100">
+				<div ref={setDropdownMenu} class="d-flex gap-1 align-items-center" classList={{ [dropdown.show() ? `flex-column` : `flex-wrap`]: true }}>
+					<Show when={props.allowEdit} fallback={<label class="small align-self-start border border-secondary rounded px-2 py-1">Tags</label>}>
+						<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary align-self-start dropdown-toggle" onClick={() => dropdown.toggle()}>Tags</button>
+					</Show>
+					<Switch>
+						<Match when={props.allowEdit && dropdown.show()}>
+							<div class="dropdown-menu show w-100 position-relative">
+								<Show when={props.allowManage}>
+									<div class="dropdown-item d-flex gap-2">
+										<label class="btn btn-sm btn-outline-secondary flex-grow-1">
+											<input type="checkbox" class="form-check-input" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
+											<span class="ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
+										</label>
+										<Show when={props.allowDelete}>
+											<button class="btn btn-sm btn-outline-danger flex-grow-1" disabled={!selectedTags().length} onClick={() => deleteTags(selectedTags())}>Delete Selected</button>
+										</Show>
+									</div>
+									<div class="dropdown-divider"></div>
 								</Show>
-							</li>
-							<li class="dropdown-divider"></li>
-						</Show>
-						<li class="dropdown-item">
-							<div class="flex-nowrap" classList={{ "input-group": props.allowCreate }}>
-								<input ref={searchInputRef} value={searchText()} onInput={e => setSearchText(e.currentTarget.value.trim())} type="text" class="form-control form-control-sm" placeholder="Search"/>
-								<Show when={props.allowCreate}>
-									<button class="btn btn-sm btn-outline-secondary" disabled={hasExactMatch()} onClick={() => createTag(searchText())}>
-										<Icon type="plusLg"/>
-									</button>
-								</Show>
+								<div class="dropdown-item">
+									<div class="flex-nowrap" classList={{ "input-group": props.allowCreate }}>
+										<input ref={searchInputRef} value={searchText()} onInput={e => setSearchText(e.currentTarget.value.trim())} type="text" class="form-control form-control-sm" placeholder="Search"/>
+										<Show when={props.allowCreate}>
+											<button class="btn btn-sm btn-outline-secondary" disabled={hasExactMatch()} onClick={() => createTag(searchText())}>
+												<Icon type="plusLg"/>
+											</button>
+										</Show>
+									</div>
+								</div>
+								<div class="dropdown-divider"></div>
+								<div class="d-flex flex-wrap gap-4 px-3">
+									<For each={filteredTags()}>
+										{tag => (
+											<label>
+												<input type="checkbox" class="form-check-input" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
+												<span class="text-wrap text-break ms-2">{tag}</span>
+											</label>
+										)}
+									</For>
+								</div>
 							</div>
-						</li>
-						<li class="dropdown-divider"></li>
-						<li class="d-flex flex-wrap gap-4 px-3">
-							<For each={filteredTags()}>
+						</Match>
+						<Match when={selectedTags().length}>
+							<For each={selectedTags()}>
 								{tag => (
-									<label>
-										<input type="checkbox" class="form-check-input" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
-										<span class="text-wrap text-break ms-2">{tag}</span>
-									</label>
+									<Dynamic component={props.allowEdit ? "div" : "a"} class="badge text-bg-secondary" classList={{ "py-2": !props.allowEdit }} onClick={() => addToSearchTags(tag)} {...(props.allowEdit ? {} : { role: "button" })}>
+										<span>{tag}</span>
+										<Show when={props.allowEdit}>
+											<button class="small btn-close ms-2" onClick={() => unselectTag(tag)}></button>
+										</Show>
+									</Dynamic>
 								)}
 							</For>
-						</li>
-					</ul>
-				</Show>
+						</Match>
+					</Switch>
+					<Show when={selectedTags().length}>
+						<Switch>
+							<Match when={props.showFilterType}>
+								<div class="input-group input-group-sm flex-nowrap w-auto ms-auto">
+									<span class="input-group-text">Match:</span>
+									<label class="btn btn-outline-secondary" classList={{ [`active`]: notesStore.tagFilter() === `any` }}>
+										<input type="radio" class="btn-check" name="filter-type" onChange={() => notesStore.setFilterType(`any`)}/>
+										<span>Any</span>
+									</label>
+									<label class="btn btn-outline-secondary" classList={{ [`active`]: notesStore.tagFilter() === `all` }}>
+										<input type="radio" class="btn-check" name="filter-type" onChange={() => notesStore.setFilterType(`all`)}/>
+										<span>All</span>
+									</label>
+								</div>
+							</Match>
+							<Match when={isSelecting()}>
+								<div class="d-flex gap-1 ms-auto">
+									<button class="btn btn-sm btn-outline-primary" disabled={!enableActions()} onClick={() => updateNoteTags("add")}>Apply</button>
+									<button class="btn btn-sm btn-outline-danger" disabled={!enableActions()} onClick={() => updateNoteTags("remove")}>Remove</button>
+								</div>
+							</Match>
+						</Switch>
+					</Show>
+				</div>
 			</div>
-			<Show when={selectedTags().length}>
-				<div class="d-flex flex-wrap gap-2">
-					<For each={selectedTags()}>
-						{tag => (
-							<Dynamic component={props.allowEdit ? "div" : "a"} class="badge align-self-center text-bg-secondary" classList={{ "py-2": !props.allowEdit }} onClick={() => addToSearchTags(tag)} {...(props.allowEdit ? {} : { role: "button" })}>
-								<span>{tag}</span>
-								<Show when={props.allowEdit}>
-									<button class="small btn-close ms-2" onClick={() => unselectTag(tag)}></button>
-								</Show>
-							</Dynamic>
-						)}
-					</For>
-				</div>
-			</Show>
-			<Show when={props.showFilterType && selectedTags().length}>
-				<div class="input-group input-group-sm flex-nowrap w-auto ms-auto">
-					<span class="input-group-text">Match:</span>
-					<label class="btn btn-outline-secondary" classList={{ [`active`]: notesStore.tagFilter() === `any` }}>
-						<input type="radio" class="btn-check" name="filter-type" onChange={() => notesStore.setFilterType(`any`)}/>
-						<span>Any</span>
-					</label>
-					<label class="btn btn-outline-secondary" classList={{ [`active`]: notesStore.tagFilter() === `all` }}>
-						<input type="radio" class="btn-check" name="filter-type" onChange={() => notesStore.setFilterType(`all`)}/>
-						<span>All</span>
-					</label>
-				</div>
-			</Show>
-			<Show when={isSelecting()}>
-				<div class="d-flex gap-2 ms-auto">
-					<button class="btn btn-sm btn-outline-primary" disabled={!enableActions()} onClick={() => updateNoteTags("add")}>Apply</button>
-					<button class="btn btn-sm btn-outline-danger" disabled={!enableActions()} onClick={() => updateNoteTags("remove")}>Remove</button>
-				</div>
-			</Show>
 		</div>
 	);
 }

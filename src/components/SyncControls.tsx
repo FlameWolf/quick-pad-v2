@@ -129,7 +129,7 @@ export default function SyncControls() {
 						</button>
 					}>
 					<div class="dropdown">
-						<button ref={setSyncMenuTrigger} class="btn btn-outline-secondary btn-sm" onClick={toggleSyncMenu} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+						<button ref={setSyncMenuTrigger} class="btn btn-outline-secondary btn-sm" onClick={() => toggleSyncMenu()} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
 							<Show
 								when={!isSyncing()}
 								fallback={

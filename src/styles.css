@@ -29,14 +29,6 @@ body {
 	opacity: 0.5;
 }
 
-.inline-container {
-	container-type: inline-size;
-}
-
-.tag-list {
-	width: calc(100cqw + 0.5rem);
-}
-
 .notes-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));

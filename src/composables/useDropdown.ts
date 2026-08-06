@@ -9,8 +9,8 @@ type DropdownOptions = {
 export function useDropdown(trigger: Accessor<HTMLElement | undefined>, { initialState = false, autoClose = true, dropdown }: DropdownOptions = {}) {
 	const [show, setShow] = createSignal(initialState);
 
-	function toggle() {
-		setShow(!show());
+	function toggle(force?: boolean) {
+		setShow(force ?? !show());
 	}
 
 	function clickedOutside(event: MouseEvent) {

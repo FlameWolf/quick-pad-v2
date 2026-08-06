@@ -224,7 +224,7 @@ export default function DisplayTagList(props: Props) {
 						<Match when={props.allowEdit && dropdown.show()}>
 							<div class="dropdown-menu show w-100 position-relative">
 								<Show when={props.allowManage}>
-									<div class="dropdown-item d-flex gap-2">
+									<div class="d-flex gap-2 px-3 py-1">
 										<label class="btn btn-sm btn-outline-secondary flex-grow-1">
 											<input type="checkbox" class="form-check-input" checked={allSelected()} disabled={!filteredTags().length} onChange={toggleSelectAll}/>
 											<span class="ms-2">{allSelected() ? "Deselect All" : "Select All"}</span>
@@ -235,8 +235,8 @@ export default function DisplayTagList(props: Props) {
 									</div>
 									<div class="dropdown-divider"></div>
 								</Show>
-								<div class="dropdown-item">
-									<div class="flex-nowrap" classList={{ "input-group": props.allowCreate }}>
+								<div class="d-flex gap-2 px-3 py-1">
+									<div class="flex-nowrap w-100" classList={{ "input-group": props.allowCreate }}>
 										<input ref={searchInputRef} value={searchText()} onInput={e => setSearchText(e.currentTarget.value.trim())} type="text" class="form-control form-control-sm" placeholder="Search"/>
 										<Show when={props.allowCreate}>
 											<button class="btn btn-sm btn-outline-secondary" disabled={hasExactMatch()} onClick={() => createTag(searchText())}>

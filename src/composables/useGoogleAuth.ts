@@ -1,5 +1,5 @@
 import { createEffect, createMemo, createSignal, on, runWithOwner } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createStore, unwrap } from "solid-js/store";
 import { TOKEN_KEY, EXPIRY_KEY, USER_KEY, CLIENT_ID, SESSION_KEY, TOKEN_REFRESH_BUFFER_MS, AUTH_TOKEN_URL, AUTH_START_URL, AUTH_SIGNOUT_URL } from "@/constants/auth";
 import { LAST_SYNCED_TO_CLOUD_KEY, LAST_SYNCED_TO_LOCAL_KEY } from "@/constants/sync";
 import { deleteKV, getKV, setKV } from "@/storage/db";
@@ -72,7 +72,7 @@ export async function hydrateAuthState(): Promise<void> {
 						return;
 					}
 					if (info && (info.email !== cachedUser?.email || info.name !== cachedUser?.name)) {
-						await setKV(USER_KEY, info);
+						await setKV(USER_KEY, unwrap(info));
 					}
 				},
 				{ defer: true }

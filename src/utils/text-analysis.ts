@@ -28,7 +28,9 @@ export function truncate(text: string, limit: number): string {
 }
 
 export function getSummary(text: string): string {
-	return `${truncate(text, summaryLength - 1)}\u2026`;
+	const normalised = text.replace(/\s+/g, " ").trim();
+	const truncated = truncate(normalised, summaryLength);
+	return truncated.length === normalised.length ? truncated : `${truncated}\u2026`;
 }
 
 export function getSentenceCount(text: string): number {

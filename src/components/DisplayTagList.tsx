@@ -38,6 +38,9 @@ export default function DisplayTagList(props: Props) {
 		dropdown: dropdownMenu
 	});
 	const searchInputRef = useTruncate(searchText, setSearchText, 256);
+	const flexModifiers = createMemo(() => ({
+		[props.allowEdit && dropdown.show() ? "flex-column" : "flex-wrap"]: true
+	}));
 	const filteredTags = createMemo(() => sort(!searchText() ? notesStore.tags() : notesStore.tags().filter(tag => contains(tag, searchText()))));
 	const allSelected = createMemo(() => filteredTags().every(tag => selectedTags().includes(tag)));
 	const hasExactMatch = createMemo(() => !searchText() || notesStore.tags().some(tag => equals(tag, normaliseTag(searchText()))));
@@ -214,9 +217,9 @@ export default function DisplayTagList(props: Props) {
 	);
 
 	return (
-		<div class="d-flex gap-1 p-1 border rounded" classList={{ [dropdown.show() ? `flex-column` : `flex-wrap`]: true, [props.class as string]: !!props.class }}>
+		<div class="d-flex gap-1 p-1 border rounded" classList={{ ...flexModifiers(), [props.class as string]: !!props.class }}>
 			<div class="dropdown w-100">
-				<div ref={setDropdownMenu} class="d-flex gap-1 align-items-center" classList={{ [dropdown.show() ? `flex-column` : `flex-wrap`]: true }}>
+				<div ref={setDropdownMenu} class="d-flex gap-1 align-items-center" classList={flexModifiers()}>
 					<Show when={props.allowEdit} fallback={<label class="small align-self-start border border-secondary rounded px-2 py-1">Tags</label>}>
 						<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary align-self-start dropdown-toggle" onClick={() => dropdown.toggle()}>Tags</button>
 					</Show>

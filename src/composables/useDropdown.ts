@@ -14,12 +14,11 @@ export function useDropdown(trigger: Accessor<HTMLElement | undefined>, { initia
 	}
 
 	function clickedOutside(event: MouseEvent) {
-		const triggerElem = trigger();
-		if (!triggerElem || !show()) {
+		if (!show()) {
 			return;
 		}
 		const target = event.target as Node;
-		if (triggerElem.contains(target)) {
+		if (trigger()?.contains(target)) {
 			return;
 		}
 		if (!autoClose && dropdown?.()?.contains(target)) {

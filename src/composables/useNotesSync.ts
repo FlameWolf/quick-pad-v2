@@ -79,15 +79,6 @@ export async function hydrateSyncMetadata(): Promise<void> {
 	runWithOwner(getAppOwner(), () => {
 		createEffect(
 			on(
-				() => state.autoSyncEnabled,
-				async flag => {
-					await setKV(AUTO_SYNC_KEY, flag);
-				},
-				{ defer: true }
-			)
-		);
-		createEffect(
-			on(
 				lastSyncedToLocalAt,
 				async date => {
 					if (date) {
@@ -108,6 +99,15 @@ export async function hydrateSyncMetadata(): Promise<void> {
 					} else {
 						await deleteKV(LAST_SYNCED_TO_CLOUD_KEY);
 					}
+				},
+				{ defer: true }
+			)
+		);
+		createEffect(
+			on(
+				() => state.autoSyncEnabled,
+				async flag => {
+					await setKV(AUTO_SYNC_KEY, flag);
 				},
 				{ defer: true }
 			)

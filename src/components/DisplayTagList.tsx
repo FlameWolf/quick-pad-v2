@@ -39,7 +39,7 @@ export default function DisplayTagList(props: Props) {
 	});
 	const searchInputRef = useTruncate(searchText, setSearchText, 256);
 	const flexModifiers = createMemo(() => ({
-		[props.allowEdit && dropdown.show() ? "flex-column" : "flex-wrap"]: true
+		[dropdown.show() ? "flex-column" : "flex-wrap"]: true
 	}));
 	const filteredTags = createMemo(() => sort(!searchText() ? notesStore.tags() : notesStore.tags().filter(tag => contains(tag, searchText()))));
 	const allSelected = createMemo(() => filteredTags().every(tag => selectedTags().includes(tag)));
@@ -182,6 +182,7 @@ export default function DisplayTagList(props: Props) {
 			() => props.allowEdit,
 			value => {
 				if (!value) {
+					dropdown.toggle(false);
 					setSelectedTags(props.activeTags ?? []);
 				}
 			},
@@ -224,7 +225,7 @@ export default function DisplayTagList(props: Props) {
 						<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary align-self-start dropdown-toggle" onClick={() => dropdown.toggle()}>Tags</button>
 					</Show>
 					<Switch>
-						<Match when={props.allowEdit && dropdown.show()}>
+						<Match when={dropdown.show()}>
 							<div class="dropdown-menu show w-100 position-relative tag-list">
 								<Show when={props.allowManage}>
 									<div class="d-flex gap-2 px-3 py-1">

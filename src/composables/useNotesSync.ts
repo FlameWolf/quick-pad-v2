@@ -230,7 +230,8 @@ async function runPull(force = false) {
 async function runPush(purged: ReadonlyArray<UUID> = [], force = false) {
 	const syncStartedAt = new Date();
 	await purgeRemoteFiles(purged);
-	const candidates = force ? notesStore.notes() : notesStore.notes().filter(n => noteEffectiveTime(n) > getTime(lastSyncedToCloudAt() ?? lastSyncedToLocalAt()));
+	const threshold = getTime(lastSyncedToCloudAt() ?? lastSyncedToLocalAt());
+	const candidates = force ? notesStore.notes() : notesStore.notes().filter(n => noteEffectiveTime(n) > threshold);
 	const results = await Promise.all(candidates.map(uploadNote));
 	setLastSyncedToCloudAt(syncStartedAt);
 	return {

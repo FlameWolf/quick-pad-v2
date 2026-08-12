@@ -48,7 +48,7 @@ export const isSyncing = createMemo(() => state.isSyncing);
 export const autoSyncEnabled = createMemo(() => state.autoSyncEnabled);
 export const syncError = createMemo(() => state.syncError);
 export const lastSyncedAt = createMemo(() => {
-	const max = Math.max(lastSyncedToLocalAt()?.getTime() ?? 0, lastSyncedToCloudAt()?.getTime() ?? 0);
+	const max = Math.max(getTime(lastSyncedToLocalAt()), getTime(lastSyncedToCloudAt()));
 	return max > 0 ? new Date(max) : null;
 });
 export const requestSync = Object.assign(
@@ -230,7 +230,7 @@ async function runPull(force = false) {
 async function runPush(purged: ReadonlyArray<UUID> = [], force = false) {
 	const syncStartedAt = new Date();
 	await purgeRemoteFiles(purged);
-	const candidates = force ? notesStore.notes() : notesStore.notes().filter(n => noteEffectiveTime(n) > (lastSyncedToCloudAt()?.getTime() ?? 0));
+	const candidates = force ? notesStore.notes() : notesStore.notes().filter(n => noteEffectiveTime(n) > getTime(lastSyncedToCloudAt() ?? lastSyncedToLocalAt()));
 	const results = await Promise.all(candidates.map(uploadNote));
 	setLastSyncedToCloudAt(syncStartedAt);
 	return {

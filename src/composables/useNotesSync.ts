@@ -23,6 +23,11 @@ enum NoteUploadResult {
 	Uploaded = "uploaded",
 	Conflict = "conflict"
 }
+enum NoteChangeOrigin {
+	Local = "local",
+	Remote = "remote",
+	Neither = "neither"
+}
 
 let hydrated = false;
 const [state, setState] = createStore<SyncState>({
@@ -123,16 +128,16 @@ function noteEffectiveTime(note: Note): number {
 	return Math.max(note.createdAt.getTime(), getTime(note.modifiedAt), getTime(note.favedAt), getTime(note.pinnedAt), getTime(note.archivedAt), getTime(note.deletedAt), getTime(note.stateChangedAt));
 }
 
-function modifiedAtRemote(remote: Note, local: Note): boolean {
+function revisionSource(remote: Note, local: Note): NoteChangeOrigin {
 	const remoteEffectiveTime = noteEffectiveTime(remote);
 	const localEffectiveTime = noteEffectiveTime(local);
 	if (remoteEffectiveTime > localEffectiveTime) {
-		return true;
+		return NoteChangeOrigin.Remote;
 	}
-	if (remoteEffectiveTime === localEffectiveTime) {
-		return remote.createdAt.getTime() !== local.createdAt.getTime() || getTime(remote.modifiedAt) !== getTime(local.modifiedAt) || getTime(remote.favedAt) !== getTime(local.favedAt) || getTime(remote.pinnedAt) !== getTime(local.pinnedAt) || getTime(remote.archivedAt) !== getTime(local.archivedAt) || getTime(remote.deletedAt) !== getTime(local.deletedAt) || getTime(remote.stateChangedAt) !== getTime(local.stateChangedAt);
+	if (localEffectiveTime > remoteEffectiveTime) {
+		return NoteChangeOrigin.Local;
 	}
-	return false;
+	return NoteChangeOrigin.Neither;
 }
 
 function mergeNotesByModifiedAt(local: ReadonlyArray<Note>, remote: ReadonlyArray<Note>): Note[] {
@@ -140,7 +145,7 @@ function mergeNotesByModifiedAt(local: ReadonlyArray<Note>, remote: ReadonlyArra
 	const changes: Note[] = [];
 	for (const remoteNote of remote) {
 		const localNote = localMap.get(remoteNote.id);
-		if (!localNote || modifiedAtRemote(remoteNote, localNote)) {
+		if (!localNote || revisionSource(remoteNote, localNote) === NoteChangeOrigin.Remote) {
 			changes.push(remoteNote);
 		}
 	}
@@ -188,12 +193,19 @@ async function uploadNote(note: Note): Promise<NoteUploadResult> {
 		const remoteJSON = await readJSONById<NoteJSON>(remoteFile.id);
 		if (remoteJSON) {
 			const remoteNote = fromJSON(remoteJSON);
-			if (modifiedAtRemote(remoteNote, note)) {
-				await notesStore.replaceNote(remoteNote);
-				return NoteUploadResult.Conflict;
+			switch (revisionSource(remoteNote, note)) {
+				case NoteChangeOrigin.Remote: {
+					await notesStore.replaceNote(remoteNote);
+					return NoteUploadResult.Conflict;
+				}
+				case NoteChangeOrigin.Local: {
+					await writeJSONById(remoteFile.id, await buildUploadPayload(note));
+					return NoteUploadResult.Uploaded;
+				}
+				default: {
+					break;
+				}
 			}
-			await writeJSONById(remoteFile.id, await buildUploadPayload(note));
-			return NoteUploadResult.Uploaded;
 		}
 	} else {
 		await writeJSON(fileName, await buildUploadPayload(note));

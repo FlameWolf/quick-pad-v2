@@ -14,6 +14,7 @@ export interface NoteMetaJSON {
 	archivedAt?: string;
 	deletedAt?: string;
 	stateChangedAt?: string;
+	colour?: string;
 	tags?: string[];
 	summary?: string;
 	sentenceCount?: number;
@@ -36,6 +37,7 @@ export interface Note {
 	archivedAt?: Date;
 	deletedAt?: Date;
 	stateChangedAt?: Date;
+	colour?: string;
 	tags?: string[];
 	summary?: string;
 	sentenceCount?: number;
@@ -125,6 +127,16 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
+export function setColour(note: Note, colour: string) {
+	note.colour = colour;
+	note.stateChangedAt = new Date();
+}
+
+export function unsetColour(note: Note) {
+	note.colour = undefined;
+	note.stateChangedAt = new Date();
+}
+
 export function applyTags(note: Note, tags: string[]) {
 	tags.forEach(tag => {
 		if (!tag) {
@@ -163,6 +175,7 @@ export function toMetaJSON(note: Note): NoteMetaJSON {
 		archivedAt: note.archivedAt?.toISOString(),
 		deletedAt: note.deletedAt?.toISOString(),
 		stateChangedAt: note.stateChangedAt?.toISOString(),
+		colour: note.colour,
 		tags: note.tags,
 		summary: note.summary,
 		sentenceCount: note.sentenceCount,
@@ -189,6 +202,7 @@ export function fromJSON(data: NoteJSON): Note {
 		archivedAt: parseValidDate(data.archivedAt),
 		deletedAt: parseValidDate(data.deletedAt),
 		stateChangedAt: parseValidDate(data.stateChangedAt),
+		colour: data.colour,
 		tags: data.tags
 	};
 	if (typeof data.summary === "string" && isValidCount(data.sentenceCount) && isValidCount(data.wordCount) && isValidCount(data.characterCount)) {

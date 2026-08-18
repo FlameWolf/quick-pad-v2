@@ -4,7 +4,7 @@ import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
 import { arrayContainsSet, mergeArrays } from "@/utils/common";
 import { contains } from "@/utils/text-analysis";
-import { applyTags, archive, fave, pin, clearTags, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
+import { applyColour, applyTags, archive, clearColour, clearTags, fave, pin, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
 import { tagsRepository } from "@/storage/TagsRepository";
 import type { UUID } from "crypto";
@@ -15,6 +15,7 @@ interface NotesState {
 	notes: Note[];
 	tags: string[];
 	searchText: string;
+	searchColours: Set<string>;
 	searchTags: Set<string>;
 	tagFilter: FilterType;
 	isLoading: boolean;
@@ -26,38 +27,44 @@ const [store, setStore] = createStore<NotesState>({
 	notes: [],
 	tags: [],
 	searchText: emptyString,
+	searchColours: new Set<string>(),
 	searchTags: new Set<string>(),
 	tagFilter: "any",
 	isLoading: true,
 	isSearching: false
 });
-const [contentMatchedIds, setContentMatchedIds] = createSignal<Set<UUID> | null>(null);
+const [contentMatchedIds, setContentMatchedIds] = createSignal(new Set<UUID>());
 export const notes = () => store.notes;
 export const tags = () => store.tags;
 export const searchText = createMemo(() => store.searchText);
+export const searchColours = createMemo(() => store.searchColours);
 export const searchTags = createMemo(() => store.searchTags);
 export const tagFilter = createMemo(() => store.tagFilter);
 export const isLoading = createMemo(() => store.isLoading);
 export const isSearching = createMemo(() => store.isSearching);
 export const searchResults = createMemo(() => {
 	const trimmed = store.searchText.trim();
-	const initial = trimmed ? store.notes.filter(note => contains(note.title, trimmed) || contentMatchedIds()?.has(note.id)) : store.notes;
-	if (store.searchTags.size === 0) {
-		return initial;
+	const predicates: Array<(note: Note) => boolean> = [];
+	if (trimmed) {
+		predicates.push(note => contains(note.title, trimmed) || contentMatchedIds().has(note.id));
 	}
-	return initial.filter(note => {
-		switch (store.tagFilter) {
-			case "any": {
-				return note.tags?.some(tag => store.searchTags.has(tag));
-			}
-			case "all": {
-				if (!note.tags) {
-					return false;
+	if (store.searchColours.size > 0) {
+		predicates.push(note => !!note.colour && store.searchColours.has(note.colour));
+	}
+	if (store.searchTags.size > 0) {
+		predicates.push(note => {
+			switch (store.tagFilter) {
+				case "any": {
+					return note.tags?.some(tag => store.searchTags.has(tag)) ?? false;
 				}
-				return arrayContainsSet(note.tags, store.searchTags);
+				case "all": {
+					return !!note.tags && arrayContainsSet(note.tags, store.searchTags);
+				}
 			}
-		}
-	});
+		});
+	}
+	const results = store.notes.filter(note => predicates.every(predicate => predicate(note)));
+	return results;
 });
 export const activeNotes = createMemo(() => searchResults().filter(note => !note.archivedAt && !note.deletedAt));
 export const favedNotes = createMemo(() => searchResults().filter(note => note.favedAt && !note.deletedAt));
@@ -94,7 +101,7 @@ export function setSearchText(query: string) {
 	setStore("searchText", trimmed);
 	if (!trimmed) {
 		setStore("isSearching", false);
-		setContentMatchedIds(null);
+		setContentMatchedIds(new Set<UUID>());
 		return;
 	}
 	setStore("isSearching", true);
@@ -108,8 +115,26 @@ export function setSearchText(query: string) {
 		});
 }
 
+export function toggleSearchColour(colour: string) {
+	setStore("searchColours", prev => {
+		const next = new Set(prev);
+		if (!next.delete(colour)) {
+			next.add(colour);
+		}
+		return next;
+	});
+}
+
+export function setSearchColours(colours: string[]) {
+	setStore("searchColours", new Set(colours));
+}
+
 export function addSearchTag(tag: string) {
-	setStore("searchTags", tags => new Set(Array.from(tags).concat(tag)));
+	setStore("searchTags", prev => {
+		const next = new Set(prev);
+		next.add(tag);
+		return next;
+	});
 }
 
 export function setSearchTags(tags: string[]) {
@@ -233,6 +258,22 @@ export function restoreFromTrash(id: UUID) {
 
 export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 	applyToMany(ids, restore);
+}
+
+export async function setColour(id: UUID, colour: string) {
+	await applyToNote(id, note => applyColour(note, colour));
+}
+
+export async function setColourMultiple(ids: ReadonlyArray<UUID>, colour: string) {
+	await applyToMany(ids, note => applyColour(note, colour));
+}
+
+export async function unsetColour(id: UUID) {
+	await applyToNote(id, note => clearColour(note));
+}
+
+export async function unsetColourMultiple(ids: ReadonlyArray<UUID>) {
+	await applyToMany(ids, note => clearColour(note));
 }
 
 export async function addTags(id: UUID, tags: string[]) {

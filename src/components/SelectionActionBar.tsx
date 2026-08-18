@@ -21,7 +21,7 @@ export default function SelectionActionBar(props: Props) {
 	return (
 		<div class="selection-action-bar">
 			<span class="fw-medium">{props.selectedCount} selected</span>
-			<Show when={dropdown.show}>
+			<Show when={dropdown.show()}>
 				<DisplayColourList onSelectionChanged={colourSelected}/>
 			</Show>
 			<div class="d-flex gap-2 flex-wrap justify-content-end w-100">

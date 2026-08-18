@@ -353,7 +353,7 @@ export default function DisplayNoteList(props: Props) {
 							)}
 						</For>
 						<Show when={isSelecting() && selectedCount() > 0}>
-							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
+							<SelectionActionBar showColours={true} selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
 						</Show>
 					</div>
 				</Match>

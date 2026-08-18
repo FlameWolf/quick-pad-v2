@@ -1,6 +1,7 @@
 import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from "solid-js";
 import { A, useBeforeLeave } from "@solidjs/router";
 import { bulkActions } from "@/constants/actions";
+import { colours } from "@/constants/colours";
 import * as appStore from "@/stores/app";
 import * as notesStore from "@/stores/notes";
 import { confirm } from "@/composables/useConfirmDialogue";
@@ -156,6 +157,23 @@ export default function DisplayNoteList(props: Props) {
 		}
 	}
 
+	function isValidColour(input: string): boolean {
+		return colours.includes(input as Colour);
+	}
+
+	function updateSearchColours(colour: Colour) {
+		switch (colour) {
+			case "none": {
+				notesStore.setSearchColours([]);
+				break;
+			}
+			default: {
+				notesStore.toggleSearchColour(colour);
+				break;
+			}
+		}
+	}
+
 	async function handleSelectionAction(key: SelectionAction["key"]) {
 		const ids = getSelectedIds();
 		const idCount = ids.length;
@@ -218,6 +236,16 @@ export default function DisplayNoteList(props: Props) {
 				}
 				await notesStore.permanentlyDeleteMultiple(ids);
 				purgeNotes = true;
+				break;
+			}
+			default: {
+				if (isValidColour(key)) {
+					if (key === "none") {
+						await notesStore.unsetColourMultiple(ids);
+						break;
+					}
+					await notesStore.setColourMultiple(ids, key);
+				}
 				break;
 			}
 		}

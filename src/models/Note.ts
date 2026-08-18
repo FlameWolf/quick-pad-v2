@@ -127,12 +127,12 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
-export function setColour(note: Note, colour: string) {
+export function applyColour(note: Note, colour: string) {
 	note.colour = colour;
 	note.stateChangedAt = new Date();
 }
 
-export function unsetColour(note: Note) {
+export function clearColour(note: Note) {
 	note.colour = undefined;
 	note.stateChangedAt = new Date();
 }

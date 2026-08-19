@@ -194,7 +194,7 @@ export default function EditNote(props: Props) {
 		requestSync();
 	}
 
-	async function setColour(colour: Colour) {
+	async function updateColour(colour: Colour) {
 		if (colour === "none") {
 			setEditColour(undefined);
 			return;
@@ -576,7 +576,7 @@ export default function EditNote(props: Props) {
 			</div>
 			<Show when={dropdown.show()}>
 				<div class="d-flex justify-content-end mb-3">
-					<DisplayColourList mode="edit" current={editColour()} onSelectionChanged={setColour}/>
+					<DisplayColourList selected={editColour()} onSelectionChanged={updateColour}/>
 				</div>
 			</Show>
 			<Show when={!isEditing() && existingNote()}>

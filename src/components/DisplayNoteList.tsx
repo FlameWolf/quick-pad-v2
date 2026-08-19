@@ -367,7 +367,7 @@ export default function DisplayNoteList(props: Props) {
 						</div>
 						<Show when={dropdown.show()}>
 							<div ref={setDropdownMenu} class="d-flex justify-content-end mb-3">
-								<DisplayColourList onSelectionChanged={updateSearchColours}/>
+								<DisplayColourList filterMode={true} onSelectionChanged={updateSearchColours}/>
 							</div>
 						</Show>
 						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} showFilterType={!isSelecting()}/>

@@ -221,7 +221,7 @@ export default function DisplayTagList(props: Props) {
 		<div class="d-flex gap-1 p-1 border rounded" classList={{ ...flexModifiers(), [props.class as string]: !!props.class }}>
 			<div class="dropdown w-100">
 				<div ref={setDropdownMenu} class="d-flex gap-1 align-items-center" classList={flexModifiers()}>
-					<Show when={props.allowEdit} fallback={<label class="small align-self-start border border-secondary rounded px-2 py-1">Tags</label>}>
+					<Show when={props.allowEdit} fallback={<label class="small align-self-start border rounded px-2 py-1">Tags</label>}>
 						<button ref={setDropdownToggle} class="btn btn-sm btn-outline-secondary align-self-start dropdown-toggle" onClick={() => dropdown.toggle()}>Tags</button>
 					</Show>
 					<Switch>
@@ -249,17 +249,19 @@ export default function DisplayTagList(props: Props) {
 										</Show>
 									</div>
 								</div>
-								<div class="dropdown-divider"></div>
-								<div class="d-flex flex-wrap gap-4 px-3">
-									<For each={filteredTags()}>
-										{tag => (
-											<label>
-												<input type="checkbox" class="form-check-input" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
-												<span class="text-wrap text-break ms-2">{tag}</span>
-											</label>
-										)}
-									</For>
-								</div>
+								<Show when={filteredTags().length}>
+									<div class="dropdown-divider"></div>
+									<div class="d-flex flex-wrap gap-4 px-3">
+										<For each={filteredTags()}>
+											{tag => (
+												<label>
+													<input type="checkbox" class="form-check-input" checked={isTagSelected(tag)} onChange={() => toggleTagSelection(tag)}/>
+													<span class="text-wrap text-break ms-2">{tag}</span>
+												</label>
+											)}
+										</For>
+									</div>
+								</Show>
 							</div>
 						</Match>
 						<Match when={selectedTags().length}>

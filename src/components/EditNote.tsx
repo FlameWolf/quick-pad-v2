@@ -10,12 +10,14 @@ import * as appStore from "@/stores/app";
 import { addNotification } from "@/stores/notifications";
 import { listViewRoutes } from "@/router";
 import { confirm } from "@/composables/useConfirmDialogue";
+import { useDropdown } from "@/composables/useDropdown";
 import { exportNote } from "@/composables/useFileIO";
 import { clearDraft, loadDraft, saveDraft } from "@/composables/useNoteDraft";
 import { requestSync } from "@/composables/useNotesSync";
 import { useTruncate } from "@/composables/useTruncate";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import Icon from "@/components/Icon";
+import DisplayColourList from "@/components/DisplayColourList";
 import DisplayTagList from "@/components/DisplayTagList";
 import type { UUID } from "crypto";
 
@@ -34,9 +36,12 @@ export default function EditNote(props: Props) {
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());
 	const [editTitle, setEditTitle] = createSignal(existingNote()?.title ?? emptyString);
 	const [editContent, setEditContent] = createSignal(emptyString);
+	const [editColour, setEditColour] = createSignal<Colour | undefined>();
 	const [editTags, setEditTags] = createSignal<string[] | undefined>();
 	const [loadedContent, setLoadedContent] = createSignal(emptyString);
 	const [isContentLoaded, setIsContentLoaded] = createSignal(false);
+	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement>();
+	const dropdown = useDropdown(dropdownToggle);
 	const titleInputRef = useTruncate(editTitle, setEditTitle, 1024);
 	const undoRedo = useUndoRedo<string>(editContent());
 	const sentenceCount = createMemo(() => (isEditing() ? getSentenceCount(editContent()) : (existingNote()?.sentenceCount ?? 0)));
@@ -59,7 +64,7 @@ export default function EditNote(props: Props) {
 		if (!note) {
 			return false;
 		}
-		return editTitle() !== note.title || editContent() !== loadedContent() || !areArraysEqual(editTags(), existingNote()?.tags);
+		return editTitle() !== note.title || editContent() !== loadedContent() || editColour() !== note.colour || !areArraysEqual(editTags(), note.tags);
 	});
 	const draftId = createMemo(() => (isCreateMode() ? "new" : params.id!));
 	const debouncedPushUndo = debounce((value: string) => undoRedo.push(value), 300);
@@ -165,21 +170,36 @@ export default function EditNote(props: Props) {
 	async function saveNote() {
 		const title = editTitle().trim() || "Untitled";
 		const content = editContent();
+		const colour = editColour();
 		const tags = editTags();
 		setIsEditing(false);
 		if (isCreateMode()) {
 			const note = create(title, content);
+			note.colour = colour;
 			note.tags = tags?.length ? tags : undefined;
 			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else if (existingNote()) {
 			const noteId = existingNote()!.id;
+			if (colour) {
+				notesStore.setNoteColour(noteId, colour);
+			} else {
+				notesStore.unsetNoteColour(noteId);
+			}
 			notesStore.setNoteTags(noteId, tags);
 			notesStore.updateNote(noteId, title, content);
 			setLoadedContent(content);
 		}
 		clearDraft(draftId());
 		requestSync();
+	}
+
+	async function setColour(colour: Colour) {
+		if (colour === "none") {
+			setEditColour(undefined);
+			return;
+		}
+		setEditColour(colour);
 	}
 
 	async function deleteNote() {
@@ -353,6 +373,7 @@ export default function EditNote(props: Props) {
 	onCleanup(() => {
 		persistDraft.cancel();
 		debouncedPushUndo.cancel();
+		appStore.setCurrentColour(undefined);
 		window.removeEventListener("pagehide", flushDraft);
 		window.removeEventListener("resize", adjustTextAreaHeight);
 		window.removeEventListener("beforeunload", onBeforeUnload);
@@ -380,10 +401,13 @@ export default function EditNote(props: Props) {
 				setIsContentLoaded(isCreateMode());
 				setLoadedContent(emptyString);
 				setEditContent(emptyString);
+				setEditColour(undefined);
 				setIsEditing(isCreateMode());
 				if (id && !isCreateMode()) {
+					const note = existingNote();
 					setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
-					setEditTags(existingNote()?.tags ?? []);
+					setEditColour(note?.colour as Colour);
+					setEditTags(note?.tags ?? []);
 				} else {
 					setLoadedContent(emptyString);
 					setEditTags(Array.from(notesStore.searchTags()));
@@ -407,13 +431,28 @@ export default function EditNote(props: Props) {
 	);
 
 	createEffect(
-		on(appStore.fontScaleFactor, factor => {
+		on(
+			editColour,
+			colour => {
+				appStore.setCurrentColour(colour);
+			},
+			{ defer: true }
+		)
+	);
+
+	createEffect(
+		on([appStore.fontScaleFactor, appStore.currentColour], ([factor, colour]) => {
 			const rootElement = document.documentElement;
 			if (factor === 0) {
 				rootElement.style.removeProperty("--font-scale-factor");
-				return;
+			} else {
+				rootElement.style.setProperty("--font-scale-factor", factor.toString());
 			}
-			rootElement.style.setProperty("--font-scale-factor", factor.toString());
+			if (colour === undefined) {
+				rootElement.style.removeProperty("--editor-bg-colour");
+			} else {
+				rootElement.style.setProperty("--editor-bg-colour", colour);
+			}
 		})
 	);
 
@@ -515,6 +554,7 @@ export default function EditNote(props: Props) {
 				</Show>
 				<Show when={isEditing()}>
 					<div class="d-flex flex-wrap gap-2">
+						<div ref={setDropdownToggle} class="colour-circle toolbar-icon rounded-circle" classList={{ [!!editColour() ? `bg-${editColour()}` : `vibgyor`]: true }} onClick={() => dropdown.toggle()} role="button" aria-label="Apply Colour"></div>
 						<button class="btn btn-outline-secondary btn-sm" disabled={!undoRedo.canUndo()} onClick={doUndo} title="Undo" aria-label="Undo">
 							<Icon type="arrowCounterclockwise"/>
 							<span class="d-none d-sm-inline ms-2">Undo</span>
@@ -534,6 +574,11 @@ export default function EditNote(props: Props) {
 					</div>
 				</Show>
 			</div>
+			<Show when={dropdown.show()}>
+				<div class="d-flex justify-content-end mb-3">
+					<DisplayColourList mode="edit" current={editColour()} onSelectionChanged={setColour}/>
+				</div>
+			</Show>
 			<Show when={!isEditing() && existingNote()}>
 				<h2 class="note-title mb-3">{existingNote()!.title}</h2>
 				<div class="d-flex flex-wrap gap-2">

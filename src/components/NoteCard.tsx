@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import { emptyString } from "@/constants/common";
 import * as notesStore from "@/stores/notes";
@@ -21,9 +21,10 @@ function formatDate(date?: Date): string {
 }
 
 export default function NoteCard(props: Props) {
-	const note = () => props.note;
-	const isSelectionMode = () => props.selectionMode;
-	const isSelected = () => props.selected;
+	const note = createMemo(() => props.note);
+	const colourClass = createMemo(() => note().colour ? { [`bg-${note().colour}`]: true } : {});
+	const isSelectionMode = createMemo(() => props.selectionMode);
+	const isSelected = createMemo(() => props.selected);
 
 	function addToSearchTags(tag: string) {
 		if (props.selectionMode) {
@@ -33,26 +34,28 @@ export default function NoteCard(props: Props) {
 	}
 
 	return (
-		<A href={`/notes/${note().id}`} class="card note-card text-decoration-none position-relative" classList={{ selected: isSelectionMode() && isSelected() }} onClick={e => props.clickAction(e, note().id)}>
-			<div class="d-flex gap-2 small position-absolute top-0 p-2 status-badge">
-				<Show when={note().pinnedAt}>
-					<Icon type="pinAngleFill"/>
-				</Show>
-				<Show when={note().favedAt}>
-					<Icon type="starFill"/>
-				</Show>
-			</div>
+		<A href={`/notes/${note().id}`} class="card note-card text-decoration-none position-relative" classList={{ ...colourClass(), selected: isSelectionMode() && isSelected() }} onClick={e => props.clickAction(e, note().id)}>
+			<Show when={note().pinnedAt || note().favedAt}>
+				<div class="d-flex gap-2 small position-absolute top-0 p-2 status-badge">
+					<Show when={note().pinnedAt}>
+						<Icon type="pinAngleFill"/>
+					</Show>
+					<Show when={note().favedAt}>
+						<Icon type="starFill"/>
+					</Show>
+				</div>
+			</Show>
 			<div class="card-body d-flex flex-column">
 				<Show when={props.selectionMode}>
 					<input type="checkbox" class="form-check-input selection-checkbox rounded-circle" checked={isSelected()}/>
 				</Show>
 				<div class="d-flex gap-1 mb-2">
 					<div class="text-truncate">{note().title}</div>
-					<div class="badge align-self-center text-muted border ms-auto">{formatDate(note().modifiedAt ?? note().createdAt)}</div>
+					<div class="badge align-self-center border ms-auto">{formatDate(note().modifiedAt ?? note().createdAt)}</div>
 				</div>
-				<p class="card-text text-muted small overflow-hidden">{note().summary}</p>
+				<p class="card-text small overflow-hidden">{note().summary}</p>
 			</div>
-			<div class="bg-body small w-100 position-absolute bottom-0">
+			<div class="bg-body small w-100 position-absolute bottom-0 opacity-75">
 				<Show when={note().tags}>
 					<div class="d-flex gap-1 px-2 py-2">
 						<For each={note().tags}>

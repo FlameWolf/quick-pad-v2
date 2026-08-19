@@ -1,9 +1,11 @@
-import { createMemo, createEffect, on, onMount, Show, For, Switch, Match } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Match, on, onMount, Show, Switch } from "solid-js";
 import { A, useBeforeLeave } from "@solidjs/router";
 import { bulkActions } from "@/constants/actions";
+import { colours } from "@/constants/colours";
 import * as appStore from "@/stores/app";
 import * as notesStore from "@/stores/notes";
 import { confirm } from "@/composables/useConfirmDialogue";
+import { useDropdown } from "@/composables/useDropdown";
 import { exportAllNotes, exportNotes, importFiles } from "@/composables/useFileIO";
 import { clearSelection, enterSelectionMode, exitSelectionMode, isSelected, isSelecting, selectAll, selectedCount, toggleSelection } from "@/composables/useNoteSelection";
 import { getSortedNotes, setSortField, sortField, sortOrder, toggleSortDirection, type SortField } from "@/composables/useNoteSort";
@@ -11,6 +13,7 @@ import { requestSync } from "@/composables/useNotesSync";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
 import SortControls from "@/components/SortControls";
+import DisplayColourList from "@/components/DisplayColourList";
 import DisplayTagList from "@/components/DisplayTagList";
 import NoteCard from "@/components/NoteCard";
 import SelectionActionBar from "@/components/SelectionActionBar";
@@ -28,6 +31,12 @@ type NoteSection = {
 };
 
 export default function DisplayNoteList(props: Props) {
+	const [dropdownToggle, setDropdownToggle] = createSignal<HTMLElement>();
+	const [dropdownMenu, setDropdownMenu] = createSignal<HTMLElement>();
+	const dropdown = useDropdown(dropdownToggle, {
+		autoClose: false,
+		dropdown: dropdownMenu
+	});
 	const view = createMemo<View>(() => props.view ?? "active");
 	const isSearchMode = createMemo(() => !!notesStore.searchText());
 	const sourceNotes = createMemo<Note[]>(() => {
@@ -156,6 +165,23 @@ export default function DisplayNoteList(props: Props) {
 		}
 	}
 
+	function isValidColour(input: string): boolean {
+		return colours.includes(input as Colour);
+	}
+
+	function updateSearchColours(colour: Colour) {
+		switch (colour) {
+			case "none": {
+				notesStore.setSearchColours([]);
+				break;
+			}
+			default: {
+				notesStore.toggleSearchColour(colour);
+				break;
+			}
+		}
+	}
+
 	async function handleSelectionAction(key: SelectionAction["key"]) {
 		const ids = getSelectedIds();
 		const idCount = ids.length;
@@ -220,6 +246,16 @@ export default function DisplayNoteList(props: Props) {
 				purgeNotes = true;
 				break;
 			}
+			default: {
+				if (isValidColour(key)) {
+					if (key === "none") {
+						await notesStore.unsetColourMultiple(ids);
+						break;
+					}
+					await notesStore.setColourMultiple(ids, key);
+				}
+				break;
+			}
 		}
 		if (syncNotes) {
 			requestSync(purgeNotes ? ids : undefined);
@@ -276,7 +312,7 @@ export default function DisplayNoteList(props: Props) {
 						<div class="mt-3" role="status">{notesStore.isSearching() ? "Searching..." : "Loading notes..."}</div>
 					</div>
 				</Match>
-				<Match when={hasNotes() || notesStore.searchTags().size}>
+				<Match when={hasNotes() || notesStore.searchTags().size || notesStore.searchColours().size}>
 					<div>
 						<div class="d-flex gap-2 mb-3 justify-content-end flex-wrap">
 							<Show
@@ -284,6 +320,7 @@ export default function DisplayNoteList(props: Props) {
 								fallback={
 									<>
 										<SortControls sortField={sortField()} sortOrder={sortOrder()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
+										<div ref={setDropdownToggle} class="colour-circle vibgyor toolbar-icon rounded-circle" classList={{ active: !!notesStore.searchColours().size }} onClick={() => dropdown.toggle()} role="button" aria-label="Colour Filters"></div>
 										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode} title="Select" aria-label="Select">
 											<Icon type="check2Square"/>
 											<span class="d-none d-sm-inline ms-2">Select</span>
@@ -328,6 +365,11 @@ export default function DisplayNoteList(props: Props) {
 								</button>
 							</Show>
 						</div>
+						<Show when={dropdown.show()}>
+							<div ref={setDropdownMenu} class="d-flex justify-content-end mb-3">
+								<DisplayColourList onSelectionChanged={updateSearchColours}/>
+							</div>
+						</Show>
 						<DisplayTagList class="mb-3" activeTags={Array.from(notesStore.searchTags())} allowCreate={isSelecting()} allowDelete={true} allowEdit={true} allowManage={!isSelecting()} showFilterType={!isSelecting()}/>
 						<For each={noteSections()}>
 							{section => (
@@ -353,7 +395,7 @@ export default function DisplayNoteList(props: Props) {
 							)}
 						</For>
 						<Show when={isSelecting() && selectedCount() > 0}>
-							<SelectionActionBar selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
+							<SelectionActionBar showColours={true} selectedCount={selectedCount()} actions={selectionActions()} onAction={handleSelectionAction} onCancel={exitSelectionMode}/>
 						</Show>
 					</div>
 				</Match>

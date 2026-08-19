@@ -1,6 +1,7 @@
 import "@/styles.css";
 import { getOwner, onMount, type JSX } from "solid-js";
 import { A } from "@solidjs/router";
+import { currentColour } from "@/stores/app";
 import { hydrateNotes } from "@/stores/notes";
 import { RouteTransition } from "@/router";
 import { setAppOwner } from "@/composables/useAppOwner";
@@ -27,7 +28,7 @@ export default function App(props: AppProps) {
 
 	return (
 		<>
-			<nav class="navbar navbar-expand bg-body-tertiary border-bottom px-2 mb-4">
+			<nav class="navbar navbar-expand bg-body-tertiary border-bottom px-2">
 				<div class="container gap-2">
 					<A href="/notes" class="navbar-brand">
 						<img class="logo" src="/logo.svg" alt="QuickPad Logo"/>
@@ -39,8 +40,8 @@ export default function App(props: AppProps) {
 					</div>
 				</div>
 			</nav>
-			<main class="flex-grow-1 container px-2 pb-4">{props.children}</main>
-			<footer class="bg-body-tertiary border-top mt-4">
+			<main class="flex-grow-1 container px-2 py-4" classList={{ [`bg-${currentColour()}`]: !!currentColour() }}>{props.children}</main>
+			<footer class="bg-body-tertiary border-top">
 				<div class="d-flex flex-wrap justify-content-center align-items-center gap-3 small text-muted px-2 py-3">
 					<span>QuickPad</span>
 					<A href="/privacy" class="link-secondary text-decoration-none">Privacy Policy</A>

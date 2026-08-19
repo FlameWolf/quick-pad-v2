@@ -320,7 +320,11 @@ export default function DisplayNoteList(props: Props) {
 								fallback={
 									<>
 										<SortControls sortField={sortField()} sortOrder={sortOrder()} sortAction={onSortFieldChange} toggleAction={toggleSortDirection}/>
-										<div ref={setDropdownToggle} class="colour-circle vibgyor toolbar-icon rounded-circle" classList={{ active: !!notesStore.searchColours().size }} onClick={() => dropdown.toggle()} role="button" aria-label="Colour Filters"></div>
+										<div ref={setDropdownToggle} class="colour-circle vibgyor toolbar-icon rounded-circle" onClick={() => dropdown.toggle()} role="button" aria-label="Colour Filters">
+											<Show when={notesStore.searchColours().size}>
+												<Icon type="check2"/>
+											</Show>
+										</div>
 										<button class="btn btn-outline-secondary btn-sm" onClick={enterSelectionMode} title="Select" aria-label="Select">
 											<Icon type="check2Square"/>
 											<span class="d-none d-sm-inline ms-2">Select</span>

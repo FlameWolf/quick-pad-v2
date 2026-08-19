@@ -3,21 +3,17 @@ import { colours } from "@/constants/colours";
 import * as notesStore from "@/stores/notes";
 
 type Props = {
-	mode?: "filter" | "edit";
-	current?: Colour;
+	filterMode?: boolean;
+	selected?: Colour;
 	onSelectionChanged?: (colour: Colour) => void;
 };
 
 export default function DisplayColourList(props: Props) {
 	function isActive(colour: Colour) {
-		switch (props.mode) {
-			case "edit": {
-				return props.current === colour;
-			}
-			default: {
-				return notesStore.searchColours().has(colour);
-			}
+		if (props.filterMode) {
+			return notesStore.searchColours().has(colour);
 		}
+		return props.selected === colour;
 	}
 
 	return (

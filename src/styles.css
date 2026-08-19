@@ -59,10 +59,18 @@ body {
 }
 
 .colour-circle {
+	display: flex;
+	place-items: center;
+	place-content: center;
 	text-decoration: none;
 	width: 2.5rem;
 	height: 2.5rem;
 	border: var(--bs-border-width) var(--bs-border-style) var(--editor-highlight-colour);
+
+	&>svg {
+		transform: scale(2) translateY(2.5%);
+		stroke: currentColor;
+	}
 
 	&.vibgyor {
 		background: linear-gradient(135deg, violet, indigo, blue, green, yellow, orange, red);
@@ -74,15 +82,11 @@ body {
 		align-self: center;
 		width: 1.75rem;
 		height: 1.75rem;
-	}
 
-	&.active::after {
-		content: "\2714";
-		font-variant-emoji: text;
-		display: flex;
-		place-content: center;
-		place-items: center;
-		height: 100%;
+		&>svg {
+			transform: scale(1.5) translateY(2.5%);
+			filter: drop-shadow(0.5px 0 0 black) drop-shadow(-0.5px 0 0 black) drop-shadow(0 0.5px 0 black) drop-shadow(0 -0.5px 0 black);
+		}
 	}
 }
 

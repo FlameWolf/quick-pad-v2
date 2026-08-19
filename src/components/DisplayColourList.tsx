@@ -1,6 +1,7 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import { colours } from "@/constants/colours";
 import * as notesStore from "@/stores/notes";
+import Icon from "@/components/Icon";
 
 type Props = {
 	filterMode?: boolean;
@@ -18,7 +19,23 @@ export default function DisplayColourList(props: Props) {
 
 	return (
 		<div class="d-flex flex-wrap gap-2 p-2 border rounded">
-			<For each={colours}>{colour => <a class="colour-circle rounded-circle" classList={{ [`bg-${colour}`]: true, active: isActive(colour) }} onClick={() => props.onSelectionChanged?.(colour)} role="button" aria-label={colour}></a>}</For>
+			<For each={colours}>
+				{colour => (
+					<a
+						class="colour-circle rounded-circle"
+						classList={{ [`bg-${colour}`]: true }}
+						on:click={e => {
+							e.stopPropagation();
+							props.onSelectionChanged?.(colour);
+						}}
+						role="button"
+						aria-label={colour}>
+						<Show when={isActive(colour)}>
+							<Icon type="check2"/>
+						</Show>
+					</a>
+				)}
+			</For>
 		</div>
 	);
 }

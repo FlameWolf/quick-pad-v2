@@ -127,17 +127,17 @@ export function restore(note: Note): void {
 	note.stateChangedAt = new Date();
 }
 
-export function applyColour(note: Note, colour: string) {
+export function setColour(note: Note, colour: string) {
 	note.colour = colour;
 	note.stateChangedAt = new Date();
 }
 
-export function clearColour(note: Note) {
+export function unsetColour(note: Note) {
 	note.colour = undefined;
 	note.stateChangedAt = new Date();
 }
 
-export function applyTags(note: Note, tags: string[]) {
+export function addTags(note: Note, tags: string[]) {
 	tags.forEach(tag => {
 		if (!tag) {
 			return;
@@ -151,7 +151,7 @@ export function applyTags(note: Note, tags: string[]) {
 	note.stateChangedAt = new Date();
 }
 
-export function clearTags(note: Note, tags: string[]) {
+export function removeTags(note: Note, tags: string[]) {
 	tags.forEach(tag => {
 		if (!note.tags) {
 			return;

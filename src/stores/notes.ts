@@ -4,7 +4,7 @@ import { emptyString } from "@/constants/common";
 import { TRASH_RETENTION_MS } from "@/constants/notes";
 import { arrayContainsSet, mergeArrays } from "@/utils/common";
 import { contains } from "@/utils/text-analysis";
-import { applyColour, applyTags, archive, clearColour, clearTags, fave, pin, restore, trash, unarchive, unfave, unpin, update, type Note } from "@/models/Note";
+import { addTags, archive, fave, pin, removeTags, restore, setColour, trash, unarchive, unfave, unpin, unsetColour, update, type Note } from "@/models/Note";
 import { notesRepository } from "@/storage/NotesRepository";
 import { tagsRepository } from "@/storage/TagsRepository";
 import type { UUID } from "crypto";
@@ -260,38 +260,38 @@ export function restoreFromTrashMultiple(ids: ReadonlyArray<UUID>) {
 	applyToMany(ids, restore);
 }
 
-export async function setColour(id: UUID, colour: string) {
-	await applyToNote(id, note => applyColour(note, colour));
+export async function setNoteColour(id: UUID, colour: string) {
+	await applyToNote(id, note => setColour(note, colour));
 }
 
 export async function setColourMultiple(ids: ReadonlyArray<UUID>, colour: string) {
-	await applyToMany(ids, note => applyColour(note, colour));
+	await applyToMany(ids, note => setColour(note, colour));
 }
 
-export async function unsetColour(id: UUID) {
-	await applyToNote(id, clearColour);
+export async function unsetNoteColour(id: UUID) {
+	await applyToNote(id, unsetColour);
 }
 
 export async function unsetColourMultiple(ids: ReadonlyArray<UUID>) {
-	await applyToMany(ids, clearColour);
+	await applyToMany(ids, unsetColour);
 }
 
-export async function addTags(id: UUID, tags: string[]) {
-	await applyToNote(id, note => applyTags(note, tags));
+export async function addNoteTags(id: UUID, tags: string[]) {
+	await applyToNote(id, note => addTags(note, tags));
 	setStore("tags", mergeArrays(store.tags, tags));
 }
 
 export async function addTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
-	await applyToMany(ids, note => applyTags(note, tags));
+	await applyToMany(ids, note => addTags(note, tags));
 	setStore("tags", mergeArrays(store.tags, tags));
 }
 
-export async function removeTags(id: UUID, tags: string[]) {
-	await applyToNote(id, note => clearTags(note, tags));
+export async function removeNoteTags(id: UUID, tags: string[]) {
+	await applyToNote(id, note => removeTags(note, tags));
 }
 
 export async function removeTagsMultiple(ids: ReadonlyArray<UUID>, tags: string[]) {
-	await applyToMany(ids, note => clearTags(note, tags));
+	await applyToMany(ids, note => removeTags(note, tags));
 }
 
 export async function permanentlyDelete(id: UUID) {
@@ -366,7 +366,7 @@ export async function deleteTags(tags: string[]) {
 		}
 		return ids;
 	}, [] as UUID[]);
-	await applyToMany(affectedIds, note => clearTags(note, tags));
+	await applyToMany(affectedIds, note => removeTags(note, tags));
 	setStore("tags", tags => tags.filter(tag => !tagSet.has(tag)));
 	await Promise.all(tags.map(tag => tagsRepository.remove(tag)));
 	return affectedIds.length;

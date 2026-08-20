@@ -162,7 +162,8 @@ export default function EditNote(props: Props) {
 			const note = existingNote();
 			setEditTitle(note?.title ?? emptyString);
 			setEditContent(loadedContent());
-			setEditTags(existingNote()?.tags);
+			setEditColour(note?.colour as Colour);
+			setEditTags(note?.tags);
 			setIsEditing(false);
 		}
 	}

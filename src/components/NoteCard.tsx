@@ -55,7 +55,7 @@ export default function NoteCard(props: Props) {
 				</div>
 				<p class="card-text small overflow-hidden">{note().summary}</p>
 			</div>
-			<div class="bg-body small w-100 position-absolute bottom-0 opacity-75">
+			<div class="bg-body small w-100 position-absolute bottom-0">
 				<Show when={note().tags}>
 					<div class="d-flex gap-1 px-2 py-2">
 						<For each={note().tags}>

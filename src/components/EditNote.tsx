@@ -161,10 +161,12 @@ export default function EditNote(props: Props) {
 			navigate(backRoute());
 		} else {
 			const note = existingNote();
-			setEditTitle(note?.title ?? emptyString);
-			setEditContent(loadedContent());
-			setEditColour(note?.colour as Colour);
-			setEditTags(note?.tags);
+			if (note) {
+				setEditTitle(note.title ?? emptyString);
+				setEditContent(loadedContent());
+				setEditColour(note.colour as Colour);
+				setEditTags(note.tags);
+			}
 			setIsEditing(false);
 		}
 	}
@@ -404,12 +406,15 @@ export default function EditNote(props: Props) {
 				setLoadedContent(emptyString);
 				setEditContent(emptyString);
 				setEditColour(undefined);
+				setEditTags(undefined);
 				setIsEditing(isCreateMode());
 				if (id && !isCreateMode()) {
 					const note = existingNote();
-					setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
-					setEditColour(note?.colour as Colour);
-					setEditTags(note?.tags ?? []);
+					if (note) {
+						setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
+						setEditColour(note?.colour as Colour);
+						setEditTags(note?.tags ?? []);
+					}
 				} else {
 					setLoadedContent(emptyString);
 					setEditTags(Array.from(notesStore.searchTags()));

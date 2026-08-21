@@ -18,6 +18,7 @@ import { useTruncate } from "@/composables/useTruncate";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import Icon from "@/components/Icon";
 import DisplayColourList from "@/components/DisplayColourList";
+import Spinner from "@/components/Spinner";
 import DisplayTagList from "@/components/DisplayTagList";
 import type { UUID } from "crypto";
 
@@ -590,9 +591,7 @@ export default function EditNote(props: Props) {
 				</div>
 				<hr/>
 				<Show when={!isContentLoaded()} fallback={<div class="note-content">{loadedContent()}</div>}>
-					<div class="d-flex justify-content-center py-3">
-						<div class="spinner-border" role="status" aria-label="Loading note..."></div>
-					</div>
+					<Spinner message="Loading note..." showMessage={false}/>
 				</Show>
 			</Show>
 			<div class="edit-note">

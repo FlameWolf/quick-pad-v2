@@ -4,6 +4,7 @@ import { confirm } from "@/composables/useConfirmDialogue";
 import { useDropdown } from "@/composables/useDropdown";
 import { hydrateAuthState, isConfigured, isReady, isSignedIn, signIn, signOut, tryRestoreSession, user } from "@/composables/useGoogleAuth";
 import { autoSyncEnabled, doPullAndPush, hydrateSyncMetadata, isSyncing, lastSyncedAt, requestSync, setAutoSync, syncError } from "@/composables/useNotesSync";
+import Spinner from "@/components/Spinner";
 import Icon from "@/components/Icon";
 
 export default function SyncControls() {
@@ -112,7 +113,7 @@ export default function SyncControls() {
 						when={authTimedOut()}
 						fallback={
 							<button class="btn btn-outline-secondary btn-sm" disabled aria-label="Initialising Google Sign-In">
-								<span class="spinner-border spinner-border-sm" role="status"></span>
+								<Spinner minimal={true} tag="span"/>
 							</button>
 						}>
 						<button class="btn btn-outline-secondary btn-sm" disabled title="Google Sign-In library could not be loaded" aria-label="Sign-in unavailable">
@@ -134,7 +135,7 @@ export default function SyncControls() {
 								when={!isSyncing()}
 								fallback={
 									<span>
-										<div class="spinner-border spinner-border-sm" role="status"></div>
+										<Spinner minimal={true}/>
 									</span>
 								}>
 								<Show

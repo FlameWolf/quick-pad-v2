@@ -1,14 +1,15 @@
 import "@/styles.css";
-import { getOwner, onMount, type JSX } from "solid-js";
+import { getOwner, onMount, Show, type JSX } from "solid-js";
 import { A } from "@solidjs/router";
 import { currentColour } from "@/stores/app";
-import { hydrateNotes } from "@/stores/notes";
+import { isLoading, hydrateNotes } from "@/stores/notes";
 import { RouteTransition } from "@/router";
 import { setAppOwner } from "@/composables/useAppOwner";
 import { purgeStaleDrafts } from "@/composables/useNoteDraft";
 import Icon from "@/components/Icon";
 import SearchBar from "@/components/SearchBar";
 import ThemeToggle from "@/components/ThemeToggle";
+import Spinner from "@/components/Spinner";
 import SyncControls from "@/components/SyncControls";
 import ScrollButtons from "@/components/ScrollButtons";
 import NotificationList from "@/components/NotificationList";
@@ -40,7 +41,11 @@ export default function App(props: AppProps) {
 					</div>
 				</div>
 			</nav>
-			<main class="flex-grow-1 container px-2 py-4" classList={{ [`bg-${currentColour()}`]: !!currentColour() }}>{props.children}</main>
+			<main class="flex-grow-1 container px-2 py-4" classList={{ [`bg-${currentColour()}`]: !!currentColour() }}>
+				<Show when={isLoading()} fallback={props.children}>
+					<Spinner message="Loading notes..."/>
+				</Show>
+			</main>
 			<footer class="bg-body-tertiary border-top">
 				<div class="d-flex flex-wrap justify-content-center align-items-center gap-3 small text-muted px-2 py-3">
 					<span>QuickPad</span>

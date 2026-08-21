@@ -442,22 +442,6 @@ export default function EditNote(props: Props) {
 		)
 	);
 
-	createEffect(
-		on([appStore.fontScaleFactor, appStore.currentColour], ([factor, colour]) => {
-			const rootElement = document.documentElement;
-			if (factor === 0) {
-				rootElement.style.removeProperty("--font-scale-factor");
-			} else {
-				rootElement.style.setProperty("--font-scale-factor", factor.toString());
-			}
-			if (colour === undefined) {
-				rootElement.style.removeProperty("--editor-bg-colour");
-			} else {
-				rootElement.style.setProperty("--editor-bg-colour", colour);
-			}
-		})
-	);
-
 	return (
 		<>
 			<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">

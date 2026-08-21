@@ -1,7 +1,8 @@
-import { createMemo } from "solid-js";
+import { createEffect, createMemo, on, runWithOwner } from "solid-js";
 import { createStore } from "solid-js/store";
 import { emptyString } from "@/constants/common";
 import { FONT_SCALE_FACTOR } from "@/constants/ui";
+import { getAppOwner } from "@/composables/useAppOwner";
 
 interface AppState {
 	lastView: View | null | undefined;
@@ -45,3 +46,21 @@ export function setFontScaleFactor(factor: number) {
 	}
 	localStorage.setItem(FONT_SCALE_FACTOR, factor.toString());
 }
+
+runWithOwner(getAppOwner(), () => {
+	createEffect(
+		on([fontScaleFactor, currentColour], ([factor, colour]) => {
+			const rootElement = document.documentElement;
+			if (factor === 0) {
+				rootElement.style.removeProperty("--font-scale-factor");
+			} else {
+				rootElement.style.setProperty("--font-scale-factor", factor.toString());
+			}
+			if (colour === undefined) {
+				rootElement.style.removeProperty("--editor-bg-colour");
+			} else {
+				rootElement.style.setProperty("--editor-bg-colour", colour);
+			}
+		})
+	);
+});

@@ -2,10 +2,10 @@
 
 :root {
 	--font-scale-factor: 0;
-	--editor-bg-colour: var(--bs-body-bg);
-	--editor-text-colour: oklch(from var(--editor-bg-colour) round(1.21 - L) 0 0);
-	--editor-highlight-colour: color-mix(in oklab, var(--editor-text-colour) 80%, hsl(from aqua calc(h + 180) s l));
-	--editor-border-colour: color-mix(in srgb, var(--editor-highlight-colour) 75%, transparent);
+	--bg-colour-base: var(--bs-body-bg);
+	--editor-text-colour: oklch(from var(--bg-colour-base) round(1.21 - L) 0 0);
+	--editor-highlight-colour: color-mix(in oklab, var(--editor-text-colour) 87.5%, hsl(from var(--bg-colour-base) calc(h + 180) s l));
+	--editor-border-colour: color-mix(in srgb, var(--editor-highlight-colour) 87.5%, var(--bs-border-color));
 }
 
 body {
@@ -99,83 +99,67 @@ body {
 }
 
 .bg-black {
-	background-color: black;
-	color: color-mix(in oklab, oklch(from black round(1.21 - L) 0 0) 80%, hsl(from black calc(h + 180) s l));
+	--bg-colour-base: black;
 }
 
 .bg-silver {
-	background-color: silver;
-	color: color-mix(in oklab, oklch(from silver round(1.21 - L) 0 0) 80%, hsl(from silver calc(h + 180) s l));
+	--bg-colour-base: silver;
 }
 
 .bg-grey {
-	background-color: grey;
-	color: color-mix(in oklab, oklch(from grey round(1.21 - L) 0 0) 80%, hsl(from grey calc(h + 180) s l));
+	--bg-colour-base: grey;
 }
 
 .bg-white {
-	background-color: white;
-	color: color-mix(in oklab, oklch(from white round(1.21 - L) 0 0) 80%, hsl(from white calc(h + 180) s l));
+	--bg-colour-base: white;
 }
 
 .bg-maroon {
-	background-color: maroon;
-	color: color-mix(in oklab, oklch(from maroon round(1.21 - L) 0 0) 80%, hsl(from maroon calc(h + 180) s l));
+	--bg-colour-base: maroon;
 }
 
 .bg-red {
-	background-color: red;
-	color: color-mix(in oklab, oklch(from red round(1.21 - L) 0 0) 80%, hsl(from red calc(h + 180) s l));
+	--bg-colour-base: red;
 }
 
 .bg-purple {
-	background-color: purple;
-	color: color-mix(in oklab, oklch(from purple round(1.21 - L) 0 0) 80%, hsl(from purple calc(h + 180) s l));
+	--bg-colour-base: purple;
 }
 
 .bg-fuchsia {
-	background-color: fuchsia;
-	color: color-mix(in oklab, oklch(from fuchsia round(1.21 - L) 0 0) 80%, hsl(from fuchsia calc(h + 180) s l));
+	--bg-colour-base: fuchsia;
 }
 
 .bg-green {
-	background-color: green;
-	color: color-mix(in oklab, oklch(from green round(1.21 - L) 0 0) 80%, hsl(from green calc(h + 180) s l));
+	--bg-colour-base: green;
 }
 
 .bg-lime {
-	background-color: lime;
-	color: color-mix(in oklab, oklch(from lime round(1.21 - L) 0 0) 80%, hsl(from lime calc(h + 180) s l));
+	--bg-colour-base: lime;
 }
 
 .bg-olive {
-	background-color: olive;
-	color: color-mix(in oklab, oklch(from olive round(1.21 - L) 0 0) 80%, hsl(from olive calc(h + 180) s l));
+	--bg-colour-base: olive;
 }
 
 .bg-yellow {
-	background-color: yellow;
-	color: color-mix(in oklab, oklch(from yellow round(1.21 - L) 0 0) 80%, hsl(from yellow calc(h + 180) s l));
+	--bg-colour-base: yellow;
 }
 
 .bg-navy {
-	background-color: navy;
-	color: color-mix(in oklab, oklch(from navy round(1.21 - L) 0 0) 80%, hsl(from navy calc(h + 180) s l));
+	--bg-colour-base: navy;
 }
 
 .bg-blue {
-	background-color: blue;
-	color: color-mix(in oklab, oklch(from blue round(1.21 - L) 0 0) 80%, hsl(from blue calc(h + 180) s l));
+	--bg-colour-base: blue;
 }
 
 .bg-teal {
-	background-color: teal;
-	color: color-mix(in oklab, oklch(from teal round(1.21 - L) 0 0) 80%, hsl(from teal calc(h + 180) s l));
+	--bg-colour-base: teal;
 }
 
 .bg-aqua {
-	background-color: aqua;
-	color: color-mix(in oklab, oklch(from aqua round(1.21 - L) 0 0) 80%, hsl(from aqua calc(h + 180) s l));
+	--bg-colour-base: aqua;
 }
 
 .bg-black,
@@ -194,7 +178,17 @@ body {
 .bg-blue,
 .bg-teal,
 .bg-aqua {
-	--bs-border-color: var(--editor-border-colour);
+	--bs-border-color: color-mix(in oklab, var(--editor-text-colour) 87.5%, var(--bs-body-color));
+	--bs-card-border-color: var(--bs-border-color);
+	--current-bg-colour: color-mix(in oklab, var(--bg-colour-base) 75%, var(--bs-body-bg));
+	--current-text-colour: oklch(from var(--current-bg-colour) round(1.21 - L) 0 0);
+	background-color: color-mix(in oklab, var(--bg-colour-base) 75%, var(--bs-body-bg));
+	color: color-mix(in oklab, var(--current-text-colour) 87.5%, hsl(from var(--current-bg-colour) calc(h + 180) s l));
+
+	hr {
+		border-color: var(--editor-border-colour);
+		opacity: 0.75;
+	}
 
 	.dropdown-menu {
 		--bs-dropdown-border-color: var(--editor-border-colour);
@@ -205,6 +199,11 @@ body {
 		--bs-btn-border-color: var(--editor-border-colour);
 		--bs-btn-color: var(--editor-highlight-colour);
 	}
+
+	&.card.note-card {
+		--bs-border-color: color-mix(in oklab, var(--editor-border-colour) 87.5%, var(--bg-colour-base));
+		--bs-card-border-color: var(--bs-border-color);
+	}
 }
 
 .ms-n1 {
@@ -212,7 +211,8 @@ body {
 }
 
 .card.note-card {
-	--bs-card-border-color: color-mix(in oklab, var(--editor-border-colour) 50%, var(--bs-border-color));
+	--bs-border-color: color-mix(in oklab, var(--editor-border-colour) 50%, var(--bg-colour-base));
+	--bs-card-border-color: var(--bs-border-color);
 	height: 12rem;
 }
 
@@ -275,14 +275,14 @@ body {
 
 .edit-note .form-control,
 .edit-note .form-control-lg {
-	background-color: color-mix(in oklab, var(--editor-bg-colour) 75%, var(--bs-body-color) 6.25%, var(--editor-text-colour));
+	background-color: color-mix(in oklab, var(--bg-colour-base) 75%, var(--bs-body-color) 6.25%, var(--editor-text-colour));
 	color: unset;
 	padding: 0.5rem;
 	border: none;
 
 	/*! purgecss start ignore */
 	&:focus {
-		background-color: color-mix(in oklab, var(--editor-bg-colour) 87.5%, var(--editor-text-colour) 6.25%, var(--bs-body-color));
+		background-color: color-mix(in oklab, var(--bg-colour-base) 87.5%, var(--editor-text-colour) 6.25%, var(--bs-body-color));
 	}
 
 	/*! purgecss end ignore */

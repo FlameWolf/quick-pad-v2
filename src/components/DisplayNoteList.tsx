@@ -12,6 +12,7 @@ import { getSortedNotes, setSortField, sortField, sortOrder, toggleSortDirection
 import { requestSync } from "@/composables/useNotesSync";
 import Icon from "@/components/Icon";
 import EmptyState from "@/components/EmptyState";
+import Spinner from "@/components/Spinner";
 import SortControls from "@/components/SortControls";
 import DisplayColourList from "@/components/DisplayColourList";
 import DisplayTagList from "@/components/DisplayTagList";
@@ -307,10 +308,7 @@ export default function DisplayNoteList(props: Props) {
 			</Show>
 			<Switch fallback={<EmptyState message={emptyMessage()} showActions={view() === "active" && !isSearchMode()} importAction={handleImport}/>}>
 				<Match when={notesStore.isLoading() || notesStore.isSearching()}>
-					<div class="d-flex flex-column justify-content-center align-items-center">
-						<div class="spinner-border" aria-hidden="true"></div>
-						<div class="mt-3" role="status">{notesStore.isSearching() ? "Searching..." : "Loading notes..."}</div>
-					</div>
+					<Spinner message={notesStore.isSearching() ? "Searching..." : "Loading notes..."}/>
 				</Match>
 				<Match when={hasNotes() || notesStore.searchTags().size || notesStore.searchColours().size}>
 					<div>

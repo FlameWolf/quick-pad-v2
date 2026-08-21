@@ -18,6 +18,7 @@ import { useTruncate } from "@/composables/useTruncate";
 import { useUndoRedo } from "@/composables/useUndoRedo";
 import Icon from "@/components/Icon";
 import DisplayColourList from "@/components/DisplayColourList";
+import Spinner from "@/components/Spinner";
 import DisplayTagList from "@/components/DisplayTagList";
 import type { UUID } from "crypto";
 
@@ -160,10 +161,12 @@ export default function EditNote(props: Props) {
 			navigate(backRoute());
 		} else {
 			const note = existingNote();
-			setEditTitle(note?.title ?? emptyString);
-			setEditContent(loadedContent());
-			setEditColour(note?.colour as Colour);
-			setEditTags(note?.tags);
+			if (note) {
+				setEditTitle(note.title ?? emptyString);
+				setEditContent(loadedContent());
+				setEditColour(note.colour as Colour);
+				setEditTags(note.tags);
+			}
 			setIsEditing(false);
 		}
 	}
@@ -403,12 +406,15 @@ export default function EditNote(props: Props) {
 				setLoadedContent(emptyString);
 				setEditContent(emptyString);
 				setEditColour(undefined);
+				setEditTags(undefined);
 				setIsEditing(isCreateMode());
 				if (id && !isCreateMode()) {
 					const note = existingNote();
-					setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
-					setEditColour(note?.colour as Colour);
-					setEditTags(note?.tags ?? []);
+					if (note) {
+						setLoadedContent((await notesStore.getNoteContent(id)) ?? emptyString);
+						setEditColour(note?.colour as Colour);
+						setEditTags(note?.tags ?? []);
+					}
 				} else {
 					setLoadedContent(emptyString);
 					setEditTags(Array.from(notesStore.searchTags()));
@@ -439,22 +445,6 @@ export default function EditNote(props: Props) {
 			},
 			{ defer: true }
 		)
-	);
-
-	createEffect(
-		on([appStore.fontScaleFactor, appStore.currentColour], ([factor, colour]) => {
-			const rootElement = document.documentElement;
-			if (factor === 0) {
-				rootElement.style.removeProperty("--font-scale-factor");
-			} else {
-				rootElement.style.setProperty("--font-scale-factor", factor.toString());
-			}
-			if (colour === undefined) {
-				rootElement.style.removeProperty("--editor-bg-colour");
-			} else {
-				rootElement.style.setProperty("--editor-bg-colour", colour);
-			}
-		})
 	);
 
 	return (
@@ -590,9 +580,7 @@ export default function EditNote(props: Props) {
 				</div>
 				<hr/>
 				<Show when={!isContentLoaded()} fallback={<div class="note-content">{loadedContent()}</div>}>
-					<div class="d-flex justify-content-center py-3">
-						<div class="spinner-border" role="status" aria-label="Loading note..."></div>
-					</div>
+					<Spinner message="Loading note..." showMessage={false}/>
 				</Show>
 			</Show>
 			<div class="edit-note">

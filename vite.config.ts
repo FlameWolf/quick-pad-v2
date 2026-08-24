@@ -57,7 +57,8 @@ export default defineConfig(({ command }) => ({
 				command === "build"
 					? [
 							purgeCSSPlugin({
-								content: ["./index.html", "./src/**/*.{ts,tsx}"],
+								content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+								defaultExtractor: content => content.match(/[\w-/:]+(?<!:)/g) || [],
 								safelist: {
 									standard: [/^btn-(outline-)?(primary|secondary|success|danger|warning|info|light|dark|link)$/, /^alert-(primary|secondary|success|danger|warning|info|light|dark)$/, /^bg-(none|black|silver|grey|white|maroon|red|purple|fuchsia|green|lime|olive|yellow|navy|blue|teal|aqua)$/, "d-hidden"]
 								}

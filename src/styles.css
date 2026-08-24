@@ -74,7 +74,6 @@ body {
 
 	&.vibgyor {
 		background: linear-gradient(135deg, violet, indigo, blue, green, yellow, orange, red);
-		text-shadow: 0 0 1pt black;
 		border-color: var(--bs-border-color);
 	}
 
@@ -180,9 +179,9 @@ body {
 .bg-aqua {
 	--bs-border-color: color-mix(in oklab, var(--editor-text-colour) 87.5%, var(--bs-body-color));
 	--bs-card-border-color: var(--bs-border-color);
-	--current-bg-colour: color-mix(in oklab, var(--bg-colour-base) 75%, var(--bs-body-bg));
+	--current-bg-colour: color-mix(in oklab, var(--bg-colour-base) 75%, black);
 	--current-text-colour: oklch(from var(--current-bg-colour) round(1.21 - L) 0 0);
-	background-color: color-mix(in oklab, var(--bg-colour-base) 75%, var(--bs-body-bg));
+	background-color: var(--current-bg-colour);
 	color: color-mix(in oklab, var(--current-text-colour) 87.5%, hsl(from var(--current-bg-colour) calc(h + 180) s l));
 
 	hr {
@@ -250,7 +249,6 @@ body {
 
 .note-card.selected {
 	border-color: var(--bs-primary);
-	background-color: var(--bs-primary-bg-subtle);
 }
 
 .status-badge {
@@ -275,14 +273,15 @@ body {
 
 .edit-note .form-control,
 .edit-note .form-control-lg {
-	background-color: color-mix(in oklab, var(--bg-colour-base) 75%, var(--bs-body-color) 6.25%, var(--editor-text-colour));
-	color: unset;
+	--bs-secondary-color: color-mix(in oklab, var(--current-bg-colour) 50%, var(--editor-text-colour));
+	background-color: color-mix(in oklab, var(--current-bg-colour) 87.5%, hsl(from var(--editor-text-colour) calc(h + 180) s l));
+	color: var(--editor-text-colour);
 	padding: 0.5rem;
 	border: none;
 
 	/*! purgecss start ignore */
 	&:focus {
-		background-color: color-mix(in oklab, var(--bg-colour-base) 87.5%, var(--editor-text-colour) 6.25%, var(--bs-body-color));
+		background-color: var(--current-bg-colour);
 	}
 
 	/*! purgecss end ignore */

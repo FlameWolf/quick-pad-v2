@@ -112,11 +112,11 @@ export default function SyncControls() {
 					<Show
 						when={authTimedOut()}
 						fallback={
-							<button class="btn btn-outline-secondary btn-sm" disabled aria-label="Initialising Google Sign-In">
+							<button class="btn btn-outline-secondary btn-sm" disabled={true} aria-label="Initialising Google Sign-In">
 								<Spinner minimal={true} tag="span"/>
 							</button>
 						}>
-						<button class="btn btn-outline-secondary btn-sm" disabled title="Google Sign-In library could not be loaded" aria-label="Sign-in unavailable">
+						<button class="btn btn-outline-secondary btn-sm" disabled={true} title="Google Sign-In library could not be loaded" aria-label="Sign-in unavailable">
 							<Icon type="cloudSlash"/>
 							<span class="d-none d-sm-inline ms-2">Sign-in unavailable</span>
 						</button>

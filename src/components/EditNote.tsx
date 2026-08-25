@@ -29,9 +29,9 @@ interface Props {
 export default function EditNote(props: Props) {
 	let editTextArea!: HTMLTextAreaElement;
 	let bypassGuard = false;
-	const navigate = useNavigate();
 	const location = useLocation();
 	const params = useParams<{ id?: UUID }>();
+	const navigate = useNavigate();
 	const isCreateMode = createMemo(() => location.pathname === "/notes/new");
 	const existingNote = createMemo(() => (params.id && !isCreateMode() ? notesStore.getNote(params.id) : undefined));
 	const [isEditing, setIsEditing] = createSignal(isCreateMode());

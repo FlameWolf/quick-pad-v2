@@ -273,7 +273,7 @@ body {
 
 .edit-note .form-control,
 .edit-note .form-control-lg {
-	--bs-secondary-color: color-mix(in oklab, var(--current-bg-colour) 50%, var(--editor-text-colour));
+	--bs-secondary-color: color-mix(in oklab, var(--current-bg-colour, grey) 50%, var(--editor-text-colour, transparent));
 	background-color: color-mix(in oklab, var(--current-bg-colour) 87.5%, hsl(from var(--editor-text-colour) calc(h + 180) s l));
 	color: var(--editor-text-colour);
 	padding: 0.5rem;

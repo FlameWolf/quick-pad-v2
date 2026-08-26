@@ -73,7 +73,14 @@ body {
 	}
 
 	&.vibgyor {
-		background: linear-gradient(135deg, violet, indigo, blue, green, yellow, orange, red);
+		background: linear-gradient(45deg,
+				violet 0 calc(100% / 7),
+				indigo calc(100% / 7) calc(200% / 7),
+				blue calc(200% / 7) calc(300% / 7),
+				green calc(300% / 7) calc(400% / 7),
+				yellow calc(400% / 7) calc(500% / 7),
+				orange calc(500% / 7) calc(600% / 7),
+				red calc(600% / 7));
 		border-color: var(--bs-border-color);
 	}
 

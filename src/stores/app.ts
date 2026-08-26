@@ -57,9 +57,9 @@ runWithOwner(getAppOwner(), () => {
 				rootElement.style.setProperty("--font-scale-factor", factor.toString());
 			}
 			if (colour === undefined) {
-				rootElement.style.removeProperty("--editor-bg-colour");
+				rootElement.style.removeProperty("--bg-colour-base");
 			} else {
-				rootElement.style.setProperty("--editor-bg-colour", colour);
+				rootElement.style.setProperty("--bg-colour-base", colour);
 			}
 		})
 	);

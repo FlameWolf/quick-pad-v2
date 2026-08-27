@@ -9,8 +9,8 @@ import Icon from "@/components/Icon";
 
 export default function SyncControls() {
 	let readyTimeout: ReturnType<typeof setTimeout> | null = null;
-	const [syncMenuTrigger, setSyncMenuTrigger] = createSignal<HTMLButtonElement | undefined>();
-	const { show: showSyncMenu, toggle: toggleSyncMenu } = useDropdown(syncMenuTrigger);
+	const [dropdownTrigger, setDropdownTrigger] = createSignal<HTMLButtonElement | undefined>();
+	const dropdown = useDropdown(dropdownTrigger);
 	const [authTimedOut, setAuthTimedOut] = createSignal(false);
 
 	async function handleSync(force = false) {
@@ -130,7 +130,7 @@ export default function SyncControls() {
 						</button>
 					}>
 					<div class="dropdown">
-						<button ref={setSyncMenuTrigger} class="btn btn-outline-secondary btn-sm" onClick={() => toggleSyncMenu()} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
+						<button ref={setDropdownTrigger} class="btn btn-outline-secondary btn-sm" onClick={() => dropdown.toggle()} disabled={isSyncing()} title={syncError() ? `Sync error: ${syncError()}` : "Google Drive Sync"} aria-label="Google Drive Sync">
 							<Show
 								when={!isSyncing()}
 								fallback={
@@ -160,7 +160,7 @@ export default function SyncControls() {
 							</Show>
 							<span class="d-none d-md-inline ms-2">{user()?.name ?? "Sync"}</span>
 						</button>
-						<Show when={showSyncMenu()}>
+						<Show when={dropdown.show()}>
 							<ul class="dropdown-menu show end-0 mt-1">
 								<li class="dropdown-header text-muted small px-3 py-1 text-truncate">{user()?.email}</li>
 								<li class="dropdown-divider"></li>

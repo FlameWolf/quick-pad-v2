@@ -38,7 +38,7 @@ export default function ConfirmDialogue() {
 					<p class="confirm-message">{state.message}</p>
 					<div class="confirm-actions">
 						<button type="button" class="btn btn-outline-secondary" onClick={onCancel}>{state.cancelText}</button>
-						<button type="button" class={`btn btn-${state.variant}`} onClick={onConfirm} autofocus>{state.confirmText}</button>
+						<button type="button" class="btn" classList={{ [`btn-${state.variant}`]: true }} onClick={onConfirm} autofocus>{state.confirmText}</button>
 					</div>
 				</div>
 			</Show>

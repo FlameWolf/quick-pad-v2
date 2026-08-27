@@ -30,7 +30,7 @@ export default function SelectionActionBar(props: Props) {
 				</Show>
 				<For each={props.actions}>
 					{action => (
-						<button type="button" class={`btn btn-sm btn-${action.variant}`} onClick={() => props.onAction(action.key)}>{action.label}</button>
+						<button type="button" class="btn" classList={{ [`btn-sm btn-${action.variant}`]: true }} onClick={() => props.onAction(action.key)}>{action.label}</button>
 					)}
 				</For>
 				<button type="button" class="btn btn-outline-secondary btn-sm" onClick={props.onCancel}>Cancel</button>

@@ -1,5 +1,6 @@
 import { createEffect, createMemo, on, runWithOwner } from "solid-js";
 import { createStore } from "solid-js/store";
+import { colours } from "@/constants/colours";
 import { SORT_FIELDS, SORT_DIRECTIONS, SORT_BY_KEY, SORT_DIRECTION_KEY } from "@/constants/sort";
 import { getKV, setKV } from "@/storage/db";
 import { getAppOwner } from "@/composables/useAppOwner";
@@ -55,6 +56,13 @@ export async function hydrateSortPrefs(): Promise<void> {
 	});
 }
 
+function getColourValue(name: string | undefined): number {
+	if (!name) {
+		return 0;
+	}
+	return colours.indexOf(name as Colour);
+}
+
 function compareNotes(a: Note, b: Note, field: SortField): number {
 	switch (field) {
 		case "title":
@@ -65,6 +73,11 @@ function compareNotes(a: Note, b: Note, field: SortField): number {
 			const aTime = (a.modifiedAt ?? a.createdAt).getTime();
 			const bTime = (b.modifiedAt ?? b.createdAt).getTime();
 			return aTime - bTime;
+		}
+		case "colour": {
+			const aColour = getColourValue(a.colour);
+			const bcolour = getColourValue(b.colour);
+			return aColour - bcolour;
 		}
 		case "sentenceCount":
 			return (a.sentenceCount ?? 0) - (b.sentenceCount ?? 0);

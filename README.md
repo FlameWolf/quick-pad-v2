@@ -34,6 +34,14 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 - Manage the catalogue from the tag bar's dropdown: search, create, select-all / deselect-all, and delete tags globally. Deleting a tag also strips it from every note that used it.
 - The tag bar (`DisplayTagList`) adapts to context via `allowCreate` / `allowDelete` / `allowEdit` / `allowManage` props — an editable selector inside a note or a full manager on the dashboard.
 
+### Colours
+
+- Colour-code notes for quick visual organisation. A palette of 16 colours is available (**black**, **silver**, **grey**, **white**, **maroon**, **red**, **purple**, **fuchsia**, **green**, **lime**, **olive**, **yellow**, **navy**, **blue**, **teal**, **aqua**).
+- Apply or remove colours when creating or editing a single note via a colour picker.
+- Apply or remove colours on many notes at once in multi-select mode via the **Apply Colour** button.
+- **Filter by colours**: tap the colour-wheel icon in the toolbar to show only notes of selected colours. The colour filter can be combined with tag filters and text search.
+- Colours travel to Drive with each note on sync, persisted in each note's JSON file.
+
 ### Favourites and pinning
 
 - **Favourite** any note (individually or in bulk) to collect it in a dedicated **Favourited** view (`/notes/favourite`) without moving it out of the main dashboard.
@@ -42,10 +50,10 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 ### Organisation
 
-- Sort notes by **Updated**, **Created**, **Title**, or **Sentence / Word / Character Count**, ascending or descending. Pinned notes always sort to the top, ahead of the chosen ordering.
+- Sort notes by **Updated**, **Created**, **Colour**, **Title**, or **Sentence / Word / Character Count**, ascending or descending. Pinned notes always sort to the top, ahead of the chosen ordering.
 - Sort field and direction are remembered between sessions (persisted in IndexedDB).
 - Multi-select mode: tap **Select**, pick notes (or **Select All** / **Deselect All**), then run a bulk action.
-- The available bulk actions are view-specific — e.g. export, favourite, archive, and trash on the dashboard; export, unfavourite, and trash in Favourited; export, unarchive, and trash in Archive; restore and permanently delete in Trash. Tags can also be applied or removed in bulk from the tag bar.
+- The available bulk actions are view-specific — e.g. export, favourite, archive, and trash on the dashboard; export, unfavourite, and trash in Favourited; export, unarchive, and trash in Archive; restore and permanently delete in Trash. Tags and colours can also be applied or removed in bulk: tags via the tag bar, and colours via the **Apply Colour** button in the selection action bar.
 - Selected count and per-view actions are shown in a sticky selection action bar.
 - Scroll position is preserved per list view (active, favourited, archived, trash), with quick scroll-to-top / scroll-to-bottom buttons.
 
@@ -95,17 +103,15 @@ QuickPad keeps your notes in your browser, works without an Internet connection,
 
 ## Tech stack
 
-- [Solis](https://www.solidjs.com/)
+- [Solid](https://www.solidjs.com/)
 - [TypeScript](https://www.typescriptlang.org/)
-- [SOlid Router](https://docs.solidjs.com/solid-router/)
+- [Solid Router](https://docs.solidjs.com/solid-router/)
 - [Bootstrap](https://getbootstrap.com/) for styling (icons are inline SVGs — no icon-font dependency)
 - [idb](https://github.com/jakearchibald/idb/) for IndexedDB storage
 - [JSZip](https://stuk.github.io/jszip/) for archive export (dynamically imported)
 - [Vite](https://vitejs.dev/) build tooling (with `@vitejs/plugin-solid`)
 - [PurgeCSS](https://purgecss.com/) (via `@fullhuman/postcss-purgecss`) to strip unused Bootstrap CSS from production builds
 - [Vercel](https://vercel.com/docs/cli/) for hosting and the serverless auth functions
-
-> There is **no** third-party state-management library — shared state is hand-rolled with Solid's own reactivity primitives (see [State management](#state-management)). PWA precaching is likewise custom (a small in-repo Vite plugin), not Workbox / `vite-plugin-pwa`.
 
 ## Architecture
 
@@ -119,7 +125,7 @@ The `src/` tree is organised by responsibility:
 | `storage/`     | Persistence: `db` (low-level `idb`), `NotesRepository` + `TagsRepository` (domain APIs), `migrate`, `persistence` |
 | `models/`      | `NoteModel` — the note domain object, its lifecycle methods, and its (de)serialisation                            |
 | `composables/` | Reusable Composition-API units and app-global state singletons                                                    |
-| `stores/`      | The larger app-global reactive singletons (`notes`, `app`, `notifications`)                                       |
+| `stores/`      | The larger app-global reactive singletons (`notes`, `app`, `notifications`) — plain modules                       |
 | `components/`  | Solid components                                                                                                  |
 | `content/`     | Static copy for the Privacy Policy and Terms of Service pages, plus the inline SVG icon set                       |
 | `router/`      | Solid Router route definitions, plus per-view scroll preservation and navigation state                            |
@@ -130,13 +136,13 @@ Components and stores never touch `idb` directly. `storage/db.ts` is the only mo
 
 ### State management
 
-Shared, app-wide state lives in **hand-rolled module-level reactive singletons** built on Solid's standalone reactivity APIs (`createSignal`, `createStore`, `createMemo`). There is genuinely one of each piece of state (one collection of notes, one theme, one selection, one sort preference, one sync session), so each module creates a single module-scoped reactive object and exports read-only views plus mutator functions; every importer shares the same instance by design.
+Shared, app-wide state lives in **module-level reactive singletons** built on Solid's standalone reactivity APIs (`createSignal`, `createStore`, `createMemo`). There is one of each piece of state (one collection of notes, one theme, one selection, one sort preference, one sync session), so each module creates a single module-scoped reactive object and exports read-only views plus mutator functions; every importer shares the same instance by design.
 
 - The `stores/` folder holds the larger domain singletons, consumed via namespace imports (e.g. `import * as notesStore from "@/stores/notes"`):
   - `stores/notes.ts` — the note collection, tag catalogue, search text / tag filter, and the full CRUD + lifecycle + tag action surface; derives `searchResults`, `activeNotes`, `favedNotes`, `archivedNotes`, and `trashedNotes`.
-  - `stores/app.ts` — miscellaneous UI state (`lastView`, `fontScaleFactor`).
+  - `stores/app.ts` — miscellaneous UI state (`lastView`, `currentColour`, `fontScaleFactor`).
   - `stores/notifications.ts` — the toast queue.
-- `composables/` holds the rest of the shared singletons — `useTheme`, `useConfirmDialogue`, `useNoteSelection`, `useNoteSort`, `useNotesSync`, `useGoogleAuth`, `useGoogleDrive`, and `useFileIO` — alongside genuinely per-component composables (`useDropdown`, `useNoteDraft`, `useUndoRedo`, `useTruncate`).
+- `composables/` holds the rest of the shared singletons — `useTheme`, `useConfirmDialogue`, `useNoteSelection`, `useNoteSort`, `useNotesSync`, `useGoogleAuth`, `useGoogleDrive`, and `useFileIO` — alongside per-component composables (`useDropdown`, `useNoteDraft`, `useUndoRedo`, `useTruncate`).
 - Persistence is split by concern: theme and font scale → `localStorage`; sort preferences, sync metadata, and auth cache → the IndexedDB `kv` store; notes and the tag catalogue → IndexedDB via the repositories; selection, notifications, confirm-dialog, and drafts state are transient (drafts live in `localStorage`). Hydration functions (`hydrate*`) load initial values once; persistence watchers are registered once at module scope.
 
 ## Getting started

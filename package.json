@@ -12,18 +12,18 @@
 		"format": "prettier --write --experimental-cli src/"
 	},
 	"dependencies": {
-		"@solidjs/router": "^0.15.3",
+		"@solidjs/router": "^1.0.0",
 		"bootstrap": "^5.3.8",
 		"idb": "^8.0.3",
 		"jszip": "^3.10.1",
-		"solid-js": "^1.9.5"
+		"solid-js": "^1.9.15"
 	},
 	"devDependencies": {
 		"@fullhuman/postcss-purgecss": "^8.0.0",
-		"@types/node": "^25.8.0",
-		"prettier": "3.8.3",
+		"@types/node": "^26.4.1",
+		"prettier": "3.9.6",
 		"typescript": "~6.0.3",
-		"vite": "^8.0.13",
-		"vite-plugin-solid": "^2.11.6"
+		"vite": "^8.2.2",
+		"vite-plugin-solid": "^2.11.14"
 	}
 }

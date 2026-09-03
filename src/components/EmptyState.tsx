@@ -5,6 +5,7 @@ import Icon from "@/components/Icon";
 interface Props {
 	message: string;
 	showActions: boolean;
+	showCreate: boolean;
 	importAction: () => Promise<void>;
 }
 
@@ -17,13 +18,15 @@ export default function EmptyState(props: Props) {
 					<path d="M1 6v-.5a.5.5 0 0 1 1 0V6h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V9h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z"/>
 				</svg>
 			</div>
-			<p class="text-muted mb-3">{props.message}</p>
+			<p class="text-muted mb-3" innerHTML={props.message}></p>
 			<Show when={props.showActions}>
 				<div class="d-flex flex-column gap-2 align-items-center">
-					<div class="d-flex gap-2 justify-content-center flex-wrap">
-						<A href="/notes/new" class="btn btn-primary">Create a note</A>
-						<button class="btn btn-outline-secondary" onClick={props.importAction}>Import from files</button>
-					</div>
+					<Show when={props.showCreate}>
+						<div class="d-flex gap-2 justify-content-center flex-wrap">
+							<A href="/notes/new" class="btn btn-primary">Create a note</A>
+							<button class="btn btn-outline-secondary" onClick={props.importAction}>Import from files</button>
+						</div>
+					</Show>
 					<div class="d-flex gap-3 justify-content-center flex-wrap">
 						<A href="/notes/archive" class="btn btn-link btn-sm text-decoration-none">
 							<Icon type="archive"/>

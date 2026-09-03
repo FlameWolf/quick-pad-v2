@@ -184,14 +184,16 @@ export default function EditNote(props: Props) {
 			await notesStore.addNote(note);
 			navigate(`/notes/${note.id}`);
 		} else if (existingNote()) {
-			const noteId = existingNote()!.id;
+			const { id: noteId, title: noteTitle } = existingNote()!;
 			if (colour) {
 				notesStore.setNoteColour(noteId, colour);
 			} else {
 				notesStore.unsetNoteColour(noteId);
 			}
 			notesStore.setNoteTags(noteId, tags);
-			notesStore.updateNote(noteId, title, content);
+			if (title !== noteTitle || content !== loadedContent()) {
+				notesStore.updateNote(noteId, title, content);
+			}
 			setLoadedContent(content);
 		}
 		clearDraft(draftId());

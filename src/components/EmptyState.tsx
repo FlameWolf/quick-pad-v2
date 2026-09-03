@@ -1,9 +1,9 @@
-import { Show } from "solid-js";
+import { Show, type JSX } from "solid-js";
 import { A } from "@solidjs/router";
 import Icon from "@/components/Icon";
 
 interface Props {
-	message: string;
+	children?: JSX.Element;
 	showActions: boolean;
 	showCreate: boolean;
 	importAction: () => Promise<void>;
@@ -18,7 +18,7 @@ export default function EmptyState(props: Props) {
 					<path d="M1 6v-.5a.5.5 0 0 1 1 0V6h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0V9h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1H1z"/>
 				</svg>
 			</div>
-			<p class="text-muted mb-3" innerHTML={props.message}></p>
+			<div class="text-muted mb-3">{props.children}</div>
 			<Show when={props.showActions}>
 				<div class="d-flex flex-column gap-2 align-items-center">
 					<Show when={props.showCreate}>

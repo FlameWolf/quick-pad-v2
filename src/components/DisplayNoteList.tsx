@@ -95,15 +95,6 @@ export default function DisplayNoteList(props: Props) {
 		}
 	});
 	const emptyMessage = createMemo(() => {
-		if (isSearchMode()) {
-			const message = `No results found for <mark>${notesStore.searchText()}</mark>`;
-			switch (view()) {
-				case "active":
-					return `${message}. Look in:`;
-				default:
-					return message;
-			}
-		}
 		switch (view()) {
 			case "favourited":
 				return "No favourited notes";
@@ -312,7 +303,18 @@ export default function DisplayNoteList(props: Props) {
 					</A>
 				</div>
 			</Show>
-			<Switch fallback={<EmptyState message={emptyMessage()} showActions={view() === "active"} showCreate={!isSearchMode()} importAction={handleImport}/>}>
+			<Switch fallback={
+					<EmptyState showActions={view() === "active"} showCreate={!isSearchMode()} importAction={handleImport}>
+						<Show when={isSearchMode()} fallback={emptyMessage()}>
+							<span>No results found for <mark>{notesStore.searchText()}</mark></span>
+							<Show when={view() === "active"}>
+								<div class="mt-3">
+									<em>Look in:</em>
+								</div>
+							</Show>
+						</Show>
+					</EmptyState>
+				}>
 				<Match when={notesStore.isLoading() || notesStore.isSearching()}>
 					<Spinner message={notesStore.isSearching() ? "Searching..." : "Loading notes..."}/>
 				</Match>

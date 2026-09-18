@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function SelectionActionBar(props: Props) {
-	const [dropupTrigger, setDropupTrigger] = createSignal<HTMLElement>(); // useTemplateRef("dropup-trigger");
+	const [dropupTrigger, setDropupTrigger] = createSignal<HTMLElement>();
 	const dropdown = useDropdown(dropupTrigger);
 
 	function colourSelected(colour: Colour) {

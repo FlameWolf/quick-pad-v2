@@ -81,10 +81,12 @@ export async function hydrateNotes(): Promise<void> {
 		setStore(
 			"tags",
 			mergeArrays(
-				store.notes
-					.map(note => note.tags)
-					.filter(Boolean)
-					.flat() as string[],
+				store.notes.reduce((tags, note) => {
+					if (note.tags) {
+						return tags.concat(note.tags);
+					}
+					return tags;
+				}, [] as string[]),
 				await tagsRepository.loadAll()
 			)
 		);
@@ -362,7 +364,7 @@ export async function deleteTags(tags: string[]) {
 	const tagSet = new Set(tags);
 	const affectedIds = store.notes.reduce((ids, note) => {
 		if (note.tags?.some(tag => tagSet.has(tag))) {
-			ids.push(note.id);
+			return ids.concat(note.id);
 		}
 		return ids;
 	}, [] as UUID[]);

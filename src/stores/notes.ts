@@ -175,12 +175,12 @@ export function updateNote(id: UUID, title: string, content: string) {
 	);
 }
 
-export function getNote(id: UUID): Note | undefined {
+export function getNote(id: UUID) {
 	return store.notes.find(note => note.id === id);
 }
 
-export function getNoteContent(id: UUID): Promise<string | undefined> {
-	return notesRepository.loadContent(id);
+export async function getNoteContent(id: UUID) {
+	return await notesRepository.loadContent(id);
 }
 
 async function applyToNote(id: UUID, mutator: (note: Note) => void) {
@@ -313,15 +313,15 @@ export async function permanentlyDeleteMultiple(ids: ReadonlyArray<UUID>) {
 
 export async function purgeExpiredTrash() {
 	const cutoff = Date.now() - TRASH_RETENTION_MS;
-	const expiredIds = store.notes
-		.filter(note => {
-			if (!note.deletedAt) {
-				return false;
-			}
+	const expiredIds = store.notes.reduce((ids, note) => {
+		if (note.deletedAt) {
 			const tombstoneTime = note.deletedAt.getTime();
-			return tombstoneTime > 0 && tombstoneTime < cutoff;
-		})
-		.map(expired => expired.id);
+			if (tombstoneTime < cutoff) {
+				return ids.concat(note.id);
+			}
+		}
+		return ids;
+	}, [] as UUID[]);
 	if (expiredIds.length > 0) {
 		await permanentlyDeleteMultiple(expiredIds);
 	}
@@ -330,10 +330,15 @@ export async function purgeExpiredTrash() {
 
 function addOrUpdate(updatedNote: Note) {
 	const index = store.notes.findIndex(note => note.id === updatedNote.id);
-	if (index === -1) {
-		setStore("notes", items => items.concat(updatedNote));
-	} else {
-		setStore("notes", index, updatedNote);
+	switch (index) {
+		case -1: {
+			setStore("notes", items => items.concat(updatedNote));
+			break;
+		}
+		default: {
+			setStore("notes", index, updatedNote);
+			break;
+		}
 	}
 	setStore("tags", mergeArrays(store.tags, updatedNote.tags));
 }
